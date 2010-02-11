@@ -1,0 +1,25 @@
+================================================================================
+= Magic Lego Blimps: Robot Simulator ===========================================
+================================================================================
+
+This program allows the server group to test our quality of service and 
+artificial intelligence algorithms without the need for setting up physical 
+robots, cameras, and objects of interest. It is written in Java using the Swing
+framework as this was the easiest way to get a cross-platform graphical program
+up and running.
+
+Quick compile and run:
+    
+    0) Start from the magiclegoblimps/Server/Simulator directory.
+    
+    1) Create a directory to hold the class files.
+        `mkdir build`
+    
+    2) Compile the source files.
+        `javac -d build src/magiclegoblimps/*.java`
+    
+    3) Run the program.
+        `cd build`
+        `java magiclegoblimps.Main`
+
+
