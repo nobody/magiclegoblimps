@@ -10,58 +10,55 @@ import java.util.*;
 
 class MLBController{
     MLBFrame f = null;
+    
+    // items is the union of robots and objects
     ArrayList<MovableEntity> items = new ArrayList<MovableEntity>();
-    javax.swing.Timer t = null;
+    ArrayList<Robot> robots = new ArrayList<Robot>();
+    ArrayList<ObjectOfInterest> objects = new ArrayList<ObjectOfInterest>();
+    
+    javax.swing.Timer timer = null;
     HashMap<ObjectOfInterest,Point2D.Double> lastSeen = new HashMap<ObjectOfInterest,Point2D.Double>();
     HashMap<Robot,ObjectOfInterest> assignments = new HashMap<Robot,ObjectOfInterest>();
     ObjectOfInterest monkey;
     ObjectOfInterest giraffe;
-    public MLBController(MLBFrame mlbf){
-        f = mlbf;
-
-        //Give the entities list to the map panel for drawing
-        mlbf.mp.me = items;
-        mlbf.mp.ls = lastSeen;
-        mlbf.mp.as = assignments;
-
+    
+    public void initSimulation() {
         //Robots
-        Robot r1 = new Robot("Robot_1");
-        Robot r2 = new Robot("Robot_2");
+        Robot r1 = addRobot("Robot 1");
+        Robot r2 = addRobot("Robot 2");
 
         //PoI
-        monkey = new ObjectOfInterest("Monkey");
-        giraffe = new ObjectOfInterest("Giraffe");
-
-        //Add to entity list
-        items.add(monkey);
-        items.add(giraffe);
-        items.add(r1);
-        items.add(r2);
+        monkey = addObject("Monkey", new Color(255, 167, 50));
+        giraffe = addObject("Giraffe", new Color(255, 255, 50));
 
         //Assign cameras to objects
-        assignments.put(r1, monkey);
-        assignments.put(r2,giraffe);
-
-        t = new javax.swing.Timer(25,new ActionListener(){
-
+        startTracking(r1, monkey);
+        startTracking(r2, giraffe);
+    }
+    
+    public void runSimulation() {
+        timer = new javax.swing.Timer(25, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 tick();
             }
         });
-        t.start();
-        //simulate(r1);
+        timer.start();
     }
+
     public void simulate(Robot r){
         r.go();
         r.move();
         r.swivelLeft();
     }
-    public void tick(){
-
-        for(MovableEntity o : items){ //Move everything
+    
+    public void tick() {
+        //Move everything
+        for(MovableEntity o : items) {
             o.move();
         }
-        for(Robot r : assignments.keySet()){//For each robot, if r can see an object, update it's position
+        
+        //For each robot, if r can see an object, update it's position
+        for(Robot r : assignments.keySet()){
             for(MovableEntity me : items){
                 if(me instanceof ObjectOfInterest){
                     ObjectOfInterest o = (ObjectOfInterest)me;
@@ -71,6 +68,7 @@ class MLBController{
                 }
             }
         }
+        
         for(Robot r : assignments.keySet()){
             r.goTo(lastSeen.get(assignments.get(r)));
             r.centerOnObject(lastSeen.get(assignments.get(r)),assignments.get(r));
@@ -82,12 +80,79 @@ class MLBController{
             }
         }
 
-
-
         f.mp.repaint();
-        
     }
+    
     public int avg(int a, int b, int c){
         return (a + b + c) / 3;
+    }
+    
+    public void setFrame(MLBFrame frame) {
+        f = frame;
+        
+        //Give the entities list to the map panel for drawing
+        f.mp.me = items;
+        f.mp.ls = lastSeen;
+        f.mp.as = assignments;
+        
+        initSimulation();
+    }
+    
+    /*
+    Controller protocol for user interfaces (in progress)
+    */
+    
+    // Add a new robot/camera to the simulation
+    public Robot addRobot(String name) {
+        Robot r = new Robot(name);
+        robots.add(r);
+        items.add(r);
+        simulate(r);
+        f.update();
+        return r;
+    }
+    
+    // Removes a robot from the simulation
+    public void removeRobot(Robot r) {
+        robots.remove(r);
+        items.remove(r);
+        f.update();
+    }
+    
+    // Adds a new object of interest to the simulation
+    public ObjectOfInterest addObject(String name, Color c) {
+        ObjectOfInterest ooi = new ObjectOfInterest(name, c);
+        objects.add(ooi);
+        items.add(ooi);
+        f.update();
+        return ooi;
+    }
+    
+    // Removes an object of interest from the simulation
+    public void removeObject(ObjectOfInterest ooi) {
+        objects.remove(ooi);
+        items.remove(ooi);
+        f.update();
+    }
+    
+    // Tells a robot to track a particular object.
+    // TODO: allow robots to track multiple objects???
+    public void startTracking(Robot r, ObjectOfInterest ooi) {
+        assignments.put(r, ooi);
+    }
+    
+    // Tells a robot to stop tracking any objects it is currently tracking.
+    public void stopTracking(Robot r) {
+        assignments.remove(r);
+    }
+    
+    // Returns true if the robot is currently tracking an object.
+    public boolean isTracking(Robot r) {
+        return (assignments.containsKey(r) && assignments.get(r) != null);
+    }
+    
+    // Returns the object that the robot is currently tracking.
+    public ObjectOfInterest getTrackingObject(Robot r) {
+        return assignments.get(r);   
     }
 }

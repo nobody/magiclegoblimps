@@ -15,4 +15,8 @@ abstract class MovableEntity {
     String name = "DEFAULT_NAME";
     public abstract void move();
     abstract void draw(Graphics g);
+    
+    public String toString() {
+        return name;
+    }
 }

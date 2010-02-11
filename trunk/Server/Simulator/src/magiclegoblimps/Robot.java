@@ -28,6 +28,8 @@ class Robot extends MovableEntity{
     
     public boolean left = false;
     public boolean right = false;
+    
+    public ObjectOfInterest trackingObject;
 
     private boolean[] currMoves = null;
     private Polygon viewingArea = null;
@@ -36,35 +38,45 @@ class Robot extends MovableEntity{
         name = s;
         pos = (Point2D.Double)START_POS.clone();
     }
+    
     public void swivelLeft(){
         cameraDirTheta = -SWIVEL_SPEED;
     }
+    
     public void swivelRight(){
         cameraDirTheta = SWIVEL_SPEED;
     }
+    
     public void stopSwivel(){
         cameraDirTheta = 0;
     }
+    
     public void nextLeft(){
         left = true;
         right = false;
     }
+    
     public void nextRight(){
         right = true;
         left = false;
     }
+    
     public void turnLeft(){
         dir += Math.PI/2;
     }
+    
     public void turnRight(){
         dir -= Math.PI/2;
     }
+    
     public void go(){
         accel = ROBOT_ACCEL;
     }
+    
     public void stop(){
         accel = FRICTION;
     }
+    
     public void goTo(Point2D.Double p){
         if(p==null){
             p = new Point2D.Double(MLBFrame.GRID_X*MLBFrame.SPACING/2+MLBFrame.TRIM, MLBFrame.GRID_Y*MLBFrame.SPACING/2+MLBFrame.TRIM);
@@ -150,6 +162,7 @@ class Robot extends MovableEntity{
                 System.out.println("FAIL");
             }
     }
+    
     public boolean[] validMoves(){
         double delta = .01;
         boolean[] ret = new boolean[]{false,false,false};//Can Move forward, left, right
@@ -233,9 +246,11 @@ class Robot extends MovableEntity{
 
         return ret;
     }
+    
     public double fpart(double d){
         return d - Math.floor(d);
     }
+    
     public void move(){
         currMoves = validMoves();
         //System.out.println(dir);
@@ -259,11 +274,17 @@ class Robot extends MovableEntity{
                 new int[]{(int)pos.y,(int)(pos.y-CAMERA_DIST*Math.sin(dir+cameraDir-CAMERA_ANGLE/2)),(int)(pos.y-CAMERA_DIST*Math.sin(dir+cameraDir+CAMERA_ANGLE/2))},3);
 
     }
+    
     public boolean canSee(Point2D p){
         if(p==null) return false;
         return viewingArea.contains(p);
 
     }
+    
+    public void trackObject(ObjectOfInterest ooi) {
+        // TODO
+    }
+    
     public boolean centerOnObject(Point2D.Double p, MovableEntity me){//Returns false if object is not in view
         if(p==null){
             return false;
@@ -293,6 +314,7 @@ class Robot extends MovableEntity{
         }
 
     }
+    
     void draw(Graphics g){
         g.drawString(name,(int)(pos.x-ROBOT_RADIUS-3*(name.length()/2)),(int)(pos.y-ROBOT_RADIUS-3));
         Color tmp = g.getColor();
@@ -304,9 +326,5 @@ class Robot extends MovableEntity{
         }
         g.setColor(tmp);
         g.fillOval((int)(pos.x-ROBOT_RADIUS),(int)(pos.y-ROBOT_RADIUS),(int)(2*ROBOT_RADIUS), (int)(2*ROBOT_RADIUS));
-        
-
     }
-    
-    
 }
