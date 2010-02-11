@@ -22,9 +22,13 @@ class MLBFrame extends JFrame{
     public final static int SPACING = 60;
     public final static int TRIM = 20;
     public RobotMapPanel mp;
-    public MLBFrame(){
-        
-        setSize(700,700);
+    public MLBController mc;
+    public RobotPanel robotPanel;
+    public ObjectPanel objectPanel;
+
+    public MLBFrame(MLBController controller) {
+        mc = controller;
+        setPreferredSize(new Dimension(850, 600));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         mp = new RobotMapPanel(GRID_X, GRID_Y, SPACING);
@@ -33,6 +37,7 @@ class MLBFrame extends JFrame{
 
         JButton bLeft = new JButton("Left");
         JButton bRight = new JButton("Right");
+        
         bLeft.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 for(MovableEntity o : mp.me){
@@ -42,6 +47,7 @@ class MLBFrame extends JFrame{
 
             }
         });
+        
         bRight.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 for(MovableEntity o : mp.me){
@@ -50,11 +56,24 @@ class MLBFrame extends JFrame{
                 }
             }
         });
-        buttons.add(bLeft,0);
-        buttons.add(bRight,1);
-        add(buttons,BorderLayout.SOUTH);
-
+        
+        buttons.add(bLeft, 0);
+        buttons.add(bRight, 1);
+        add(buttons, BorderLayout.SOUTH);
+        
+        robotPanel = new RobotPanel(mc);
+        objectPanel = new ObjectPanel(mc);
+        JPanel controls = new JPanel();
+        controls.setLayout(new BoxLayout(controls, BoxLayout.X_AXIS));
+        controls.add(robotPanel);
+        controls.add(objectPanel);
+        add(controls, BorderLayout.EAST);
+        pack();
         setVisible(true);
+    }
 
+    public void update() {
+        robotPanel.update();
+        objectPanel.update();
     }
 }

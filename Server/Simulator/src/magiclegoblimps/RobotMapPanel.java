@@ -52,12 +52,13 @@ class RobotMapPanel extends JPanel{
         }
         if(me!=null){
             for(MovableEntity rr : me){
-                if(rr instanceof Robot)
+                if(rr instanceof Robot) {
                     g.setColor(new Color(255,0,0));
-                else if(rr instanceof ObjectOfInterest)
-                    g.setColor(new Color(220,150,25));
-                else
+                } else if(rr instanceof ObjectOfInterest) {
+                    // OOIs set their own color
+                } else {
                     g.setColor(Color.BLACK);
+                }
                 rr.draw(g);
             }
         if(as!=null){

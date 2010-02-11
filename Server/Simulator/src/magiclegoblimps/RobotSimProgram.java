@@ -8,15 +8,15 @@ import java.awt.geom.*;
 import java.awt.image.*;
 import java.util.*;
 
-class RobotSimProgram{
+class RobotSimProgram {
     MLBFrame mlbf;
     MLBController mlbc;
-    public RobotSimProgram(){
-    }
+    public RobotSimProgram() { }
 
-    public void start(){
-         mlbf = new MLBFrame();
-         mlbc = new MLBController(mlbf);
+    public void start() {
+        mlbc = new MLBController();
+        mlbf = new MLBFrame(mlbc);
+        mlbc.setFrame(mlbf);
+        mlbc.runSimulation();
     }
-
 }
