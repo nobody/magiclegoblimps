@@ -11,6 +11,7 @@ import java.util.*;
 class ObjectOfInterest extends MovableEntity{
     public static final Point2D.Double DEFAULT_POI_POS = new Point2D.Double(100,100);
     public static final int POI_RAIDUS = 4;
+    public static final int OPTIMAL_VIEWING_DISTANCE = 70;
     public static final Color DEFAULT_COLOR = new Color(0, 150, 255);
     
     private static Random rand = new Random();
