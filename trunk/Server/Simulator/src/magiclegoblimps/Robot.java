@@ -170,7 +170,7 @@ class Robot extends MovableEntity{
     }
     
     public boolean[] validMoves(){
-        double delta = .015;
+        double delta = .02;
         boolean[] ret = new boolean[]{false,false,false};//Can Move forward, left, right
 
         if(isMovingEast()){//Moving East
@@ -276,8 +276,8 @@ class Robot extends MovableEntity{
         speed = accel<0 ? Math.max(0,speed+accel) : Math.min(ROBOT_SPEED,speed+accel);
         cameraDir += cameraDirTheta;
 
-        viewingArea = new Polygon(new int[]{(int)pos.x,(int)(pos.x+CAMERA_DIST*Math.cos(dir+cameraDir-CAMERA_ANGLE/2)),(int)(pos.x+CAMERA_DIST*Math.cos(dir+cameraDir+CAMERA_ANGLE/2))},
-                new int[]{(int)pos.y,(int)(pos.y-CAMERA_DIST*Math.sin(dir+cameraDir-CAMERA_ANGLE/2)),(int)(pos.y-CAMERA_DIST*Math.sin(dir+cameraDir+CAMERA_ANGLE/2))},3);
+        viewingArea = new Polygon(new int[]{(int)pos.x,(int)(pos.x+CAMERA_DIST*Math.cos(/*dir+*/cameraDir-CAMERA_ANGLE/2)),(int)(pos.x+CAMERA_DIST*Math.cos(/*dir+*/cameraDir+CAMERA_ANGLE/2))},
+                new int[]{(int)pos.y,(int)(pos.y-CAMERA_DIST*Math.sin(/*dir+*/cameraDir-CAMERA_ANGLE/2)),(int)(pos.y-CAMERA_DIST*Math.sin(/*dir+*/cameraDir+CAMERA_ANGLE/2))},3);
 
     }
     
@@ -298,8 +298,8 @@ class Robot extends MovableEntity{
         //Geometry is win.
         double x1 = pos.x;
         double y1 = pos.y;
-        double x2 = pos.x + Math.cos(dir+cameraDir);
-        double y2 = pos.y - Math.sin(dir+cameraDir);
+        double x2 = pos.x + Math.cos(/*dir+*/cameraDir);
+        double y2 = pos.y - Math.sin(/*dir+*/cameraDir);
         double x3 = p.x;
         double y3 = p.y;
 
