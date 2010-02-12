@@ -1,6 +1,6 @@
 package magiclegoblimps;
 
-import java.awt.geom.Point2D.Double;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -19,6 +19,9 @@ class MLBController{
     javax.swing.Timer timer = null;
     HashMap<ObjectOfInterest,Point2D.Double> lastSeen = new HashMap<ObjectOfInterest,Point2D.Double>();
     HashMap<Robot,ObjectOfInterest> assignments = new HashMap<Robot,ObjectOfInterest>();
+    HashMap<ObjectOfInterest,Double> demand = new HashMap<ObjectOfInterest,Double>();
+    HashMap<ObjectOfInterest,Robot> viewedFrom = new HashMap<ObjectOfInterest,Robot>();
+    HashMap<ObjectOfInterest,Double> QoS = new HashMap<ObjectOfInterest,Double>();
     ObjectOfInterest monkey;
     ObjectOfInterest giraffe;
     
@@ -68,7 +71,9 @@ class MLBController{
                 }
             }
         }
-        
+        //For each robot, tell the robot to track its assigned object
+        //If a robot can see where an object is supposed to be but it is not there,
+        //update the lastSeen map with null.
         for(Robot r : assignments.keySet()){
             r.goTo(lastSeen.get(assignments.get(r)));
             r.centerOnObject(lastSeen.get(assignments.get(r)),assignments.get(r));
@@ -79,7 +84,11 @@ class MLBController{
                 }
             }
         }
+        optimizeQoS();
 
+
+        f.graphPanel.update();
+        f.graphPanel.repaint();
         f.mp.repaint();
     }
     
@@ -94,7 +103,9 @@ class MLBController{
         f.mp.me = items;
         f.mp.ls = lastSeen;
         f.mp.as = assignments;
-        
+        f.mp.vf = viewedFrom;
+        f.mp.qos = QoS;
+        f.graphPanel.qos=QoS;
         initSimulation();
     }
     
@@ -154,5 +165,32 @@ class MLBController{
     // Returns the object that the robot is currently tracking.
     public ObjectOfInterest getTrackingObject(Robot r) {
         return assignments.get(r);   
+    }
+    public double getSystemQoS(){
+        double ret = 0;
+        for(ObjectOfInterest ooi : objects){
+            ret += getQoS(ooi,viewedFrom.get(ooi))*demand.get(ooi);
+        }
+        return ret;
+    }
+    private void optimizeQoS() {
+        for(ObjectOfInterest ooi : objects){
+            Robot maxQoS = null;
+            double d = 0;
+            for(Robot r : robots){
+                if(getQoS(ooi,r)>0&&(maxQoS==null||getQoS(ooi,r)>d)){
+                    maxQoS = r;
+                    d = getQoS(ooi,r);
+                }
+            }
+            viewedFrom.put(ooi,maxQoS);
+            QoS.put(ooi,d);
+        }
+    }
+    public double getQoS(ObjectOfInterest ooi, Robot r){
+        if(lastSeen.get(ooi)==null){
+            return 0;
+        }
+        return Math.exp(-Math.abs(lastSeen.get(ooi).distance(r.pos))/100)*(r.canSee(ooi.pos)?1:0);
     }
 }

@@ -25,16 +25,26 @@ class MLBFrame extends JFrame{
     public MLBController mc;
     public RobotPanel robotPanel;
     public ObjectPanel objectPanel;
+    public GraphPanel graphPanel;
 
     public MLBFrame(MLBController controller) {
         mc = controller;
-        setPreferredSize(new Dimension(950, 700));
+        setPreferredSize(new Dimension(950, 800));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
+        JPanel center = new JPanel();
+        center.setLayout(new BoxLayout(center,BoxLayout.PAGE_AXIS));
         mp = new RobotMapPanel(GRID_X, GRID_Y, SPACING);
-        add(mp, BorderLayout.CENTER);
-        JPanel buttons = new JPanel(new GridLayout(0,2));
+        center.add(mp);
+        graphPanel = new GraphPanel();
+        //add(graphPanel,BorderLayout.CENTER);
+       center.add(graphPanel);
+       add(center,BorderLayout.CENTER);
+        
 
+
+        /*
+        JPanel buttons = new JPanel(new GridLayout(0,2));
         JButton bLeft = new JButton("Left");
         JButton bRight = new JButton("Right");
         
@@ -60,7 +70,7 @@ class MLBFrame extends JFrame{
         buttons.add(bLeft, 0);
         buttons.add(bRight, 1);
         add(buttons, BorderLayout.SOUTH);
-        
+        */
         robotPanel = new RobotPanel(mc);
         objectPanel = new ObjectPanel(mc);
 
