@@ -7,10 +7,11 @@ import java.awt.event.*;
 import java.awt.geom.*;
 import java.awt.image.*;
 import java.util.*;
+import java.text.*;
 
 class RobotMapPanel extends JPanel{
     Color backgroundColor = Color.GRAY;
-    BufferedImage bi = null;
+   
     int x_count;
     int y_count;
     int spacing;
@@ -18,10 +19,14 @@ class RobotMapPanel extends JPanel{
     ArrayList<MovableEntity> me = null;
     HashMap<ObjectOfInterest, Point2D.Double> ls;
     HashMap<magiclegoblimps.Robot, ObjectOfInterest> as;
-
+    HashMap<ObjectOfInterest, magiclegoblimps.Robot> vf;
+    HashMap<ObjectOfInterest, java.lang.Double> qos;
+    DecimalFormat df = new DecimalFormat("0.00");
 
     public RobotMapPanel(int x, int y, int s){
-        setSize(500,500);
+
+        setPreferredSize(new Dimension(500,600));
+        
         x_count = x;
         y_count = y;
         spacing = s;
@@ -32,13 +37,7 @@ class RobotMapPanel extends JPanel{
     @Override
     public void paintComponent(Graphics g){
 
-           bi = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
-           paintMe(bi.getGraphics());
-           g.drawImage(bi,0,0,null);
-
-        
-    }
-    public void paintMe(Graphics g){
+    
         //Clear Screen
         g.setColor(backgroundColor);
         ((Graphics2D)g).setStroke(new BasicStroke(4));
@@ -61,14 +60,23 @@ class RobotMapPanel extends JPanel{
                 }
                 rr.draw(g);
             }
-        if(as!=null){
+        if(as!=null && vf != null && qos != null){
             int i = 0;
             g.setColor(Color.BLUE);
-            g.drawString("Assignments:",MLBFrame.TRIM, MLBFrame.GRID_Y*MLBFrame.SPACING+MLBFrame.TRIM*2 + i*14);
-            i++;
-            for(Robot r : as.keySet()){
-                
-                g.drawString(r.name + " : " + as.get(r).name, MLBFrame.TRIM, MLBFrame.GRID_Y*MLBFrame.SPACING+MLBFrame.TRIM*2 + i*14);
+            g.drawString("Assignments: Name Tracking ViewedFrom QoS",MLBFrame.TRIM, MLBFrame.GRID_Y*MLBFrame.SPACING+MLBFrame.TRIM*2 + i*14);
+            i+=2;
+            for(ObjectOfInterest ooi : vf.keySet()){
+                String s = "";
+                for(Robot r : as.keySet()){
+                    if(as.get(r).equals(ooi)){
+                        s+= r.name + " ";
+                    }
+                }
+                if(s.length() == 0){
+                    s = "null";
+                }
+                String s2 = vf.get(ooi)==null?"null":vf.get(ooi).name;
+                g.drawString(ooi.name + ":  " + s +"  "+s2+"  " +  df.format(qos.get(ooi)),MLBFrame.TRIM, MLBFrame.GRID_Y*MLBFrame.SPACING+MLBFrame.TRIM*2 + i*14);
                 
                 i++;
             }
