@@ -34,7 +34,7 @@ class ObjectOfInterest extends MovableEntity{
     }
     
     public void move(){
-        System.out.println(name + " " + (int)(dir/(Math.PI/2)));
+        //System.out.println(name + " " + (int)(dir/(Math.PI/2)));
         double d = rand.nextDouble();
         if(d>.5){
             dir += .1;

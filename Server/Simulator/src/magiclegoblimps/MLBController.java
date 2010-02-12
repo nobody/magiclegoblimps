@@ -24,19 +24,29 @@ class MLBController{
     HashMap<ObjectOfInterest,Double> QoS = new HashMap<ObjectOfInterest,Double>();
     ObjectOfInterest monkey;
     ObjectOfInterest giraffe;
+    ObjectOfInterest penguin;
+    ObjectOfInterest squirrel;
     
     public void initSimulation() {
         //Robots
         Robot r1 = addRobot("Robot 1");
         Robot r2 = addRobot("Robot 2");
-
+        Robot r3 = addRobot("Robot 3");
         //PoI
         monkey = addObject("Monkey", new Color(255, 167, 50));
         giraffe = addObject("Giraffe", new Color(255, 255, 50));
+        penguin = addObject("Penguin",new Color(255,0,255));
+        squirrel = addObject("Squirrel",new Color(255,100,200));
 
         //Assign cameras to objects
         startTracking(r1, monkey);
         startTracking(r2, giraffe);
+        startTracking(r3, penguin);
+
+        demand.put(monkey,.2);
+        demand.put(giraffe,.3);
+        demand.put(penguin,.4);
+        demand.put(squirrel,.1);
     }
     
     public void runSimulation() {
@@ -86,6 +96,7 @@ class MLBController{
         }
         optimizeQoS();
 
+        System.out.println(getSystemQoS());
 
         f.graphPanel.update();
         f.graphPanel.repaint();
@@ -186,11 +197,47 @@ class MLBController{
             viewedFrom.put(ooi,maxQoS);
             QoS.put(ooi,d);
         }
+        for(ObjectOfInterest ooi : viewedFrom.keySet()){
+            if(viewedFrom.get(ooi)!=null){
+                if(assignments.containsValue(ooi)){
+                    Robot trackedBy = null;
+                    for(Robot r : assignments.keySet()){
+                        if(assignments.get(r)==ooi){
+                            trackedBy = r;
+                        }
+                    }
+                    if(trackedBy!=null){
+                        if(trackedBy!=viewedFrom.get(ooi)){
+                            ObjectOfInterest tmp = assignments.get(viewedFrom.get(ooi));
+                            assignments.put(viewedFrom.get(ooi),ooi);
+                            assignments.put(trackedBy, tmp);
+                        }
+                    }
+                }
+            }
+        }
     }
     public double getQoS(ObjectOfInterest ooi, Robot r){
-        if(lastSeen.get(ooi)==null){
+        if(ooi==null || r==null){
             return 0;
         }
-        return Math.exp(-Math.abs(lastSeen.get(ooi).distance(r.pos))/100)*(r.canSee(ooi.pos)?1:0);
+        double distMetric = 0;
+        double visibleMetric = 0;
+        if(!lastSeen.containsKey(ooi)||lastSeen.get(ooi)==null){
+            return 0;
+        }
+        if(!r.canSee(lastSeen.get(ooi))){
+            visibleMetric = 0;
+        }else{
+            visibleMetric = 1;
+        }
+
+        if(lastSeen.get(ooi).distance(r.pos)<ooi.OPTIMAL_VIEWING_DISTANCE){
+            distMetric =  lastSeen.get(ooi).distance(r.pos)/(ooi.OPTIMAL_VIEWING_DISTANCE);
+        }else{
+            distMetric =  ooi.OPTIMAL_VIEWING_DISTANCE/(lastSeen.get(ooi).distance(r.pos));
+        }
+        return distMetric * visibleMetric;
+        //return Math.exp(-Math.abs(lastSeen.get(ooi).distance(r.pos))/100)*(r.canSee(ooi.pos)?1:0);
     }
 }
