@@ -50,6 +50,7 @@ class GraphPanel extends JPanel{
         g.drawLine(TRIM,TRIM,TRIM,120);
         g.drawLine(TRIM,SCALE_TO+TRIM,TRIM+HIST_LENGTH,SCALE_TO+TRIM);
         g.drawLine(TRIM,SCALE_TO/2+TRIM,TRIM+HIST_LENGTH,SCALE_TO/2+TRIM);
+        g.drawLine(TRIM,4*SCALE_TO/5+TRIM,TRIM+HIST_LENGTH,4*SCALE_TO/5+TRIM);
         for(int i = 0; i <HIST_LENGTH; i++){
             for(ObjectOfInterest ooi : history.keySet()){
              //  System.out.println(history.get(ooi)[i]);
