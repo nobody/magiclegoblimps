@@ -28,7 +28,7 @@ class MLBFrame extends JFrame{
 
     public MLBFrame(MLBController controller) {
         mc = controller;
-        setPreferredSize(new Dimension(850, 600));
+        setPreferredSize(new Dimension(950, 700));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         mp = new RobotMapPanel(GRID_X, GRID_Y, SPACING);
@@ -63,6 +63,8 @@ class MLBFrame extends JFrame{
         
         robotPanel = new RobotPanel(mc);
         objectPanel = new ObjectPanel(mc);
+
+
         JPanel controls = new JPanel();
         controls.setLayout(new BoxLayout(controls, BoxLayout.X_AXIS));
         controls.add(robotPanel);
