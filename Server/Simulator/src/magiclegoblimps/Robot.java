@@ -17,8 +17,8 @@ class Robot extends MovableEntity{
     public static final Point2D.Double START_POS = new Point2D.Double(20,20); //Robot starting position
     public static final int GRID_WIDTH = MLBFrame.SPACING;//grid width in pixles
     public static final int TRIM = MLBFrame.TRIM;//border trim in pixles
-    public static final double CAMERA_ANGLE = Math.PI/3;//viewing angle of camera
-    public static final double CAMERA_DIST = 450;//how far the camera can see
+    public static final double CAMERA_ANGLE = Math.PI/4;//viewing angle of camera
+    public static final double CAMERA_DIST = 300;//how far the camera can see
     public static final double SWIVEL_SPEED = .02;//how fast the camera rotates
 
     
@@ -170,7 +170,7 @@ class Robot extends MovableEntity{
     }
     
     public boolean[] validMoves(){
-        double delta = .01;
+        double delta = .015;
         boolean[] ret = new boolean[]{false,false,false};//Can Move forward, left, right
 
         if(isMovingEast()){//Moving East
