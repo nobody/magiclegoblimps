@@ -15,14 +15,16 @@ class ObjectOfInterest extends MovableEntity{
     public static final Color DEFAULT_COLOR = new Color(0, 150, 255);
     
     private static Random rand = new Random();
-    
+
+    double speed;
+
     public Color color;
     
     public ObjectOfInterest(String s, Color c){
         super();
         name = s;
         color = c;
-        speed = 2;
+        speed = 1.5;
         pos = (Point2D.Double)DEFAULT_POI_POS.clone();
         dir = 0;
     }
