@@ -76,21 +76,35 @@ class Robot extends MovableEntity{
     public void stop(){
         accel = FRICTION;
     }
-    
+    public boolean isMovingEast(){
+        return Math.abs(Math.sin(dir))<.00001&&Math.abs(Math.cos(dir)-1)<.00001;
+    }
+    public boolean isMovingWest(){
+        return Math.abs(Math.sin(dir))<.00001 && Math.abs(Math.cos(dir)+1)<.00001;
+    }
+    public boolean isMovingNorth(){
+        return Math.abs(Math.sin(dir)-1)<.00001 && Math.abs(Math.cos(dir))<.00001;
+    }
+    public boolean isMovingSouth(){
+        return Math.abs(Math.sin(dir)+1)<.00001 && Math.abs(Math.cos(dir))<.00001;
+    }
     public void goTo(Point2D.Double p){
-        if(p==null){
+        if(p==null){// "Search" algorithm: Go to the center of the map and look around
             p = new Point2D.Double(MLBFrame.GRID_X*MLBFrame.SPACING/2+MLBFrame.TRIM, MLBFrame.GRID_Y*MLBFrame.SPACING/2+MLBFrame.TRIM);
-
+            if(cameraDirTheta==0){
+                swivelRight();
+            }
         }
        // System.out.println(p.toString());
-        if(Math.abs(Math.sin(dir))<.00001&&Math.abs(Math.cos(dir)-1)<.00001){//Moving East
+        if(p.distance(pos)<ObjectOfInterest.OPTIMAL_VIEWING_DISTANCE){
+            stop();
+        }
+        else if(isMovingEast()){//Moving East
            // System.out.println("Moving East"+ "(" + pos.x + ","+pos.y +")");
-            if(p.x<pos.x-MLBFrame.SPACING/2||Math.abs(p.x-pos.x)<MLBFrame.SPACING/2){
 
-                if(Math.abs(p.x-pos.x)<MLBFrame.SPACING/2&&Math.abs(p.y-pos.y)<MLBFrame.SPACING/2){
-                    stop();
-                }
-                else if(p.y < pos.y){
+            if(p.x < pos.x){//if object is in behind us
+
+                if(p.y < pos.y){
                     go();
                     nextLeft();
                 }else{
@@ -101,15 +115,13 @@ class Robot extends MovableEntity{
                 go();
             }
         }
-        else if (Math.abs(Math.sin(dir)-1)<.00001 && Math.abs(Math.cos(dir))<.00001){//Moving North
+        else if (isMovingNorth()){//Moving North
            // System.out.println("Moving North"+ "(" + pos.x + ","+pos.y +")");
 
-            if(p.y<pos.y-MLBFrame.SPACING/2||Math.abs(p.y-pos.y)<MLBFrame.SPACING/2){
+            if(p.y > pos.y){
 
-                if(Math.abs(p.y-pos.y)<MLBFrame.SPACING/2&&Math.abs(p.x-pos.x)<MLBFrame.SPACING/2){
-                    stop();
-                }
-                else if(p.x < pos.x){
+                
+                if(p.x < pos.x){
                     go();
                     nextLeft();
                 }else{
@@ -120,14 +132,11 @@ class Robot extends MovableEntity{
                 go();
             }
         }
-        else if(Math.abs(Math.sin(dir))<.00001 && Math.abs(Math.cos(dir)+1)<.00001){//Moving West
+        else if(isMovingWest()){//Moving West
             //System.out.println("Moving West"+ "(" + pos.x + ","+pos.y +")");
-            if(p.x>pos.x-MLBFrame.SPACING/2||Math.abs(p.x-pos.x)<MLBFrame.SPACING/2){
+            if(p.x > pos.x){
 
-                if(Math.abs(p.x-pos.x)<MLBFrame.SPACING/2&&Math.abs(p.y-pos.y)<MLBFrame.SPACING/2){
-                    stop();
-                }
-                else if(p.y < pos.y){
+                if(p.y < pos.y){
                     go();
                     nextRight();
                 }else{
@@ -138,14 +147,11 @@ class Robot extends MovableEntity{
                 go();
             }
         }
-        else if(Math.abs(Math.sin(dir)+1)<.00001 && Math.abs(Math.cos(dir))<.00001){//Moving South
+        else if(isMovingSouth()){//Moving South
            // System.out.println("Moving South"+ "(" + pos.x + ","+pos.y +")");
-            if(p.y>pos.y-MLBFrame.SPACING/2||Math.abs(p.y-pos.y)<MLBFrame.SPACING/2){
+            if(p.y < pos.y){
 
-                if(Math.abs(p.y-pos.y)<MLBFrame.SPACING/2&&Math.abs(p.x-pos.x)<MLBFrame.SPACING/2){
-                    stop();
-                }
-                else if(p.x < pos.x){
+                if(p.x < pos.x){
                     go();
                     nextRight();
                 }else{
@@ -167,7 +173,7 @@ class Robot extends MovableEntity{
         double delta = .01;
         boolean[] ret = new boolean[]{false,false,false};//Can Move forward, left, right
 
-        if(Math.abs(Math.sin(dir))<.00001&&Math.abs(Math.cos(dir)-1)<.00001){//Moving East
+        if(isMovingEast()){//Moving East
            // System.out.println("Moving East"+ "(" + pos.x + ","+pos.y +")");
             //Can continue in +X Direction?
             if( pos.x < TRIM + GRID_WIDTH * MLBFrame.GRID_X)
@@ -184,7 +190,7 @@ class Robot extends MovableEntity{
                 }
             }
         }
-        else if (Math.abs(Math.sin(dir)-1)<.00001 && Math.abs(Math.cos(dir))<.00001){//Moving North
+        else if (isMovingNorth()){//Moving North
            // System.out.println("Moving North"+ "(" + pos.x + ","+pos.y +")");
             //Can continue in -Y Direction?
             if( pos.y > TRIM )
@@ -201,7 +207,7 @@ class Robot extends MovableEntity{
                 }
             }
         }
-        else if(Math.abs(Math.sin(dir))<.00001 && Math.abs(Math.cos(dir)+1)<.00001){//Moving West
+        else if(isMovingWest()){//Moving West
            // System.out.println("Moving West"+ "(" + pos.x + ","+pos.y +")");
             //Can continue in -X Direction?
             if( pos.x > TRIM )
@@ -218,7 +224,7 @@ class Robot extends MovableEntity{
                 }
             }
         }
-        else if(Math.abs(Math.sin(dir)+1)<.00001 && Math.abs(Math.cos(dir))<.00001){//Moving South
+        else if(isMovingSouth()){//Moving South
           //  System.out.println("Moving South"+ "(" + pos.x + ","+pos.y +")");
             //Can continue in +Y Direction?
            
@@ -238,7 +244,7 @@ class Robot extends MovableEntity{
             
         
        
-        }else{
+        }else{//Robot is not moving on the X or Y axis
                 System.out.println("FAIL");
             }
 
@@ -281,7 +287,7 @@ class Robot extends MovableEntity{
 
     }
     
-    public void trackObject(ObjectOfInterest ooi) {
+    public void trackObject(ObjectOfInterest ooi) { //This is done by sending a coordinate to the goTo(point) function.
         // TODO
     }
     
@@ -289,30 +295,22 @@ class Robot extends MovableEntity{
         if(p==null){
             return false;
         }
-        if(!canSee(p)){  //If the camera can't see the object, dont try to center on it
-            if(p.x > pos.x && p.y > pos.y){
-                if(Math.atan((p.x-pos.x)/(p.y-pos.y))<0){
-                    swivelLeft();
-                }else{
-                    swivelRight();
-                }
-            }
-            return false;
-        }
-        else{
-            if(canSee(p)&&!canSee(me.pos)){
-                return false;
-            }
-            Polygon lView = new Polygon(new int[]{viewingArea.xpoints[0],viewingArea.xpoints[1],(viewingArea.xpoints[1]+viewingArea.xpoints[2])/2},
-                    new int[]{viewingArea.ypoints[0],viewingArea.ypoints[1],(viewingArea.ypoints[1]+viewingArea.ypoints[2])/2},3);
-            if(lView.contains(p)){
-                swivelLeft();
-            }else{
-                swivelRight();
-            }
-            return true;
+        //Geometry is win.
+        double x1 = pos.x;
+        double y1 = pos.y;
+        double x2 = pos.x + Math.cos(dir+cameraDir);
+        double y2 = pos.y - Math.sin(dir+cameraDir);
+        double x3 = p.x;
+        double y3 = p.y;
+
+        if(y3*(x2-x1)-x3*(y2-y1) < y1*(x2-x1)-x1*(y2-y1)){
+            swivelRight();
+        }else{
+            swivelLeft();
         }
 
+        return canSee(p);
+       
     }
     
     void draw(Graphics g){
