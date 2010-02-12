@@ -14,7 +14,7 @@ import java.awt.*;
 class GraphPanel extends JPanel{
     public static final int HIST_LENGTH = 500;
     public static final int TRIM = 20;
-    public static final int SCALE_TO = 100;
+    public static final int SCALE_TO = 120;
     HashMap<ObjectOfInterest,double[]> history = new HashMap<ObjectOfInterest,double[]>();
     HashMap<ObjectOfInterest,Double> qos = null;
     public GraphPanel(){
@@ -47,7 +47,7 @@ class GraphPanel extends JPanel{
         g.setColor(Color.GRAY);
         g.fillRect(0,0,getWidth(),getHeight());
         g.setColor(Color.BLACK);
-        g.drawLine(TRIM,TRIM,TRIM,120);
+        g.drawLine(TRIM,TRIM,TRIM,SCALE_TO+TRIM);
         g.drawLine(TRIM,SCALE_TO+TRIM,TRIM+HIST_LENGTH,SCALE_TO+TRIM);
         g.drawLine(TRIM,SCALE_TO/2+TRIM,TRIM+HIST_LENGTH,SCALE_TO/2+TRIM);
         g.drawLine(TRIM,4*SCALE_TO/5+TRIM,TRIM+HIST_LENGTH,4*SCALE_TO/5+TRIM);
