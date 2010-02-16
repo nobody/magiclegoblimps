@@ -3,9 +3,7 @@
 
 #include <string>
 
-#include "NXTBluetooth/include/nxt.h"
-
-#pragma comment(lib, "NXTBluetooth/lib/NXTBluetooth.lib")
+#include "NXTBluetooth/nxt.h"
 
 class NXT
 {
@@ -32,7 +30,6 @@ public:
 	string GetMessage(int box, bool remove);
 	void StartProgram(string name);
 	void StopPrograms();
-
 
 private:
 	static const int DRIVE_SPEED = 20;
