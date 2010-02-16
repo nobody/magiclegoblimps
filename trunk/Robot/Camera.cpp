@@ -10,6 +10,10 @@ Camera::Camera(string ip, bool dLinkCam)
 
 bool Camera::Connect()
 {
+	//gives cameras a window for testing
+	//need a better way to set this before a connect
+	localDisplay_ = true;
+
 	capture_ = 0;
 
 	dLinkUrl_ = "/video.cgi?a=.mjpg";
@@ -32,7 +36,18 @@ bool Camera::Connect()
 	if (capture_ == 0)
 		return false;
 
+	if (localDisplay_)
+		StartDisplay();
+
 	return true;
+}
+
+void Camera::Disconnect()
+{
+	if (localDisplay_)
+		StopDisplay();
+
+	capture_ = 0;
 }
 
 void Camera::SetIP(string ip)
@@ -45,9 +60,15 @@ void Camera::SetDLinkCam(bool dLinkCam)
 	dLinkCam_ = dLinkCam;
 }
 
+void Camera::SetLocalDisplay(bool display)
+{
+	localDisplay_ = display;
+}
+
 void Camera::StartDisplay()
 {
-	cvNamedWindow("TestWindow", CV_WINDOW_AUTOSIZE);
+	displayWindowName_ = "RobotView " + ip_;
+	cvNamedWindow(displayWindowName_.c_str(), CV_WINDOW_AUTOSIZE);
 }
 
 void Camera::DisplayFrame()
@@ -61,11 +82,11 @@ void Camera::DisplayFrame()
 		return;
 	}		
 
-	cvShowImage("TestWindow", frame);
+	cvShowImage(displayWindowName_.c_str(), frame);
 }
 
 void Camera::StopDisplay()
 {
 	cvReleaseCapture(&capture_);
-	cvDestroyWindow("TestWindow");
+	cvDestroyWindow(displayWindowName_.c_str());
 }
