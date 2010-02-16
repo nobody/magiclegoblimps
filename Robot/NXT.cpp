@@ -37,6 +37,8 @@ void NXT::Disconnect()
 	motorB_->stop();
 	motorC_->stop();
 
+	StopPrograms();
+
 	connection_->disconnect();
 }
 

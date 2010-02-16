@@ -21,6 +21,8 @@ public:
 	void SetCamEnabled(bool enabled);
 
 private:
+	int id_;
+
 	Camera* camera_;
 	NXT* nxt_;
 

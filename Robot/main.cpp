@@ -7,15 +7,17 @@
 using namespace std;
 
 Robot* robot;
-int port = 6;
-string ip = "192.168.1.100";
+//Robot* robot2;
 
 int main()
 {
-	robot = new Robot(port, ip, true);
+	robot = new Robot(6, "192.168.1.100", true);
+	//robot2 = new Robot(9, "192.168.1.100", true);
 
 	if (robot->GetCamEnabled())
 		robot->GetCamera()->StartDisplay();
+
+	cout << "CONNECTED!" << endl;
 
 	while (true)
 	{
@@ -24,7 +26,18 @@ int main()
 		if (robot->GetCamEnabled())
 			robot->GetCamera()->DisplayFrame();
 
-		c = cvWaitKey(10);
+		if (robot->GetCamEnabled())
+		{
+			//this doesn't seem work when camera isn't connected
+			//need to add non-blocking alternative for testing
+			//deployment won't be waiting for direct input (use threads?)
+			c = cvWaitKey(10);
+		}
+		else
+		{
+			cout << "Key:" << endl;
+			c = getch();
+		}
 
 		if (robot->GetNXTEnabled())
 		{

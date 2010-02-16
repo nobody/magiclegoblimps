@@ -1,5 +1,7 @@
 #include "Camera.h"
 
+#include <iostream>
+
 Camera::Camera(string ip, bool dLinkCam)
 {
 	ip_ = ip;
