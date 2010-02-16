@@ -11,14 +11,20 @@ class Robot
 {
 public:
 	Robot(int port, string ip, bool dLinkCam);
+
+	int GetID() { return id_; }
 	
 	Camera* GetCamera() { return camera_; }
 	NXT* GetNXT() { return nxt_; }
 
-	bool GetNXTEnabled() { return nxtEnabled_; }
-	void SetNXTEnabled(bool enabled);
-	bool GetCamEnabled() { return camEnabled_; }
-	void SetCamEnabled(bool enabled);
+	void Connect();
+	void Disconnect();
+
+	bool GetNXTConnected() { return nxtConnected_; }
+	bool GetCamConnected() { return camConnected_; }
+	bool GetRobotOnline() { return robotOnline_; }
+
+	void ExecuteCommand(string command);
 
 private:
 	int id_;
@@ -26,10 +32,11 @@ private:
 	Camera* camera_;
 	NXT* nxt_;
 
-	bool nxtEnabled_;
-	bool camEnabled_;
+	bool nxtConnected_;
+	bool camConnected_;
 
 	bool robotOnline_;
+	bool robotActive_;
 };
 
 #endif

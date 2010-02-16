@@ -17,15 +17,29 @@
 
 using namespace std;
 
+enum ObjectColor
+{
+	RED = 0,
+	GREEN = 1,
+	BLUE = 2,
+	CYAN = 3,
+	YELLOW = 4,
+	MAGENTA = 5,
+};
+
 class Camera
 {
 public:
 	Camera(string ip, bool dLinkCam);
 
 	bool Connect();
+	void Disconnect();
 
 	void SetIP(string ip);
 	void SetDLinkCam(bool dLinkCam);
+
+	void SetLocalDisplay(bool display);
+	bool GetLocalDisplay() { return localDisplay_; }
 
 	void StartDisplay();
 	void DisplayFrame();
@@ -41,6 +55,9 @@ private:
 	string pass_;
 
 	CvCapture* capture_;
+
+	bool localDisplay_;
+	string displayWindowName_;
 };
 
 #endif

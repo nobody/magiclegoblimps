@@ -18,8 +18,6 @@ public:
 	void TurnRight();
 	void Stop();
 
-	void FollowLine();
-
 	void PanLeft();
 	void PanRight();
 

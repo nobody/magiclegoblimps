@@ -1,32 +1,27 @@
 #include <string>
 #include <conio.h>
+
 #include "Camera.h"
+#include "Controller.h"
 #include "NXT.h"
 #include "Robot.h"
 
 using namespace std;
 
 Robot* robot;
-//Robot* robot2;
 
 int main()
 {
 	robot = new Robot(6, "192.168.1.100", true);
-	//robot2 = new Robot(9, "192.168.1.100", true);
-
-	if (robot->GetCamEnabled())
-		robot->GetCamera()->StartDisplay();
-
-	cout << "CONNECTED!" << endl;
 
 	while (true)
 	{
 		int c;
 
-		if (robot->GetCamEnabled())
+		if (robot->GetCamConnected() && robot->GetCamera()->GetLocalDisplay())
 			robot->GetCamera()->DisplayFrame();
 
-		if (robot->GetCamEnabled())
+		if (robot->GetCamConnected())
 		{
 			//this doesn't seem work when camera isn't connected
 			//need to add non-blocking alternative for testing
@@ -39,7 +34,7 @@ int main()
 			c = getch();
 		}
 
-		if (robot->GetNXTEnabled())
+		if (robot->GetNXTConnected())
 		{
 			if (c == 'w')
 				robot->GetNXT()->Drive();
@@ -51,8 +46,6 @@ int main()
 				robot->GetNXT()->PanLeft();
 			else if (c == 'c')
 				robot->GetNXT()->PanRight();
-			else if (c == 'l')
-				robot->GetNXT()->FollowLine();
 			else if (c == 'x')
 				robot->GetNXT()->Stop();
 		}
@@ -61,10 +54,7 @@ int main()
 			break;
 	}
 	
-	if (robot->GetNXTEnabled())
-		robot->GetNXT()->Disconnect();
-	if (robot->GetCamEnabled())
-		robot->GetCamera()->StopDisplay();
+	robot->Disconnect();
 
 	return 0;
 }

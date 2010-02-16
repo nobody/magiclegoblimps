@@ -67,27 +67,6 @@ void NXT::Stop()
 	motorC_->stop();
 }
 
-void NXT::FollowLine()
-{
-	lSensorL_->set(LED_ON);
-	lSensorR_->set(LED_ON);
-
-	int pos, left, right;
-
-    for(int i = 0; i < 500; i++)
-    {
-        pos = lSensorR_->read() - lSensorL_->read();
-        left = DRIVE_SPEED - pos / 5;
-        right = DRIVE_SPEED + pos / 5;
-        motorA_->on(right);
-        motorC_->on(left);
-    }
-
-    motorA_->off();
-	motorB_->stop();
-    motorC_->off();
-}
-
 void NXT::PanLeft()
 {
 	motorB_->on(PAN_SPEED);
