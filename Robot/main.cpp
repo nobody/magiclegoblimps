@@ -12,7 +12,8 @@ Robot* robot;
 
 int main()
 {
-	robot = new Robot(6, "192.168.1.100", true);
+	//robot = new Robot(6, "192.168.1.100", true);
+	robot = new Robot(6, "192.168.1.102", false);
 
 	while (true)
 	{

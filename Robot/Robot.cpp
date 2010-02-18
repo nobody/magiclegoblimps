@@ -3,19 +3,22 @@
 Robot::Robot(int port, string ip, bool dLink)
 {
 	nxt_ = new NXT(port);
-	camera_ = new Camera(ip, true);
+	camera_ = new Camera(ip, dLink);
 
 	id_ = port;
 
-	cout << "Bringing Robot " << id_ << "online..." << endl;
+	nxtConnected_ = false;
+	camConnected_ = false;
+	robotOnline_ = false;
+	robotActive_ = false;
+
+	cout << "Bringing Robot " << id_ << " online..." << endl;
 
 	Robot::Connect();
 }
 
 void Robot::Connect()
 {
-	//not sure if the false conditions (can't connect/error) are working
-	//might need to just comment out the one you're not testing
 	if (!nxtConnected_)
 	{
 		if (nxt_->Connect())
@@ -56,8 +59,11 @@ void Robot::Connect()
 
 void Robot::Disconnect()
 {
-	nxt_->Disconnect();
-	camera_->Disconnect();
+	if (nxtConnected_)
+		nxt_->Disconnect();
+
+	if (camConnected_)
+		camera_->Disconnect();
 
 	robotOnline_ = false;
 

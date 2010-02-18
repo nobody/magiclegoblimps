@@ -7,6 +7,14 @@
 
 using namespace std;
 
+enum RobotFacing
+{
+	POSITIVE_X = 0,
+	NEGATIVE_X = 1,
+	POSITIVE_Y = 2,
+	NEGATIVE_Y = 3,
+};
+
 class Robot
 {
 public:
@@ -37,6 +45,12 @@ private:
 
 	bool robotOnline_;
 	bool robotActive_;
+
+	float locationX_;
+	float locationY_;
+
+	RobotFacing robotFacing_;
+	float cameraFacing_;
 };
 
 #endif
