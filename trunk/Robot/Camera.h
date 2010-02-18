@@ -58,6 +58,8 @@ private:
 
 	bool localDisplay_;
 	string displayWindowName_;
+
+	vector<ObjectColor> visibleObjects_;
 };
 
 #endif

@@ -75,6 +75,10 @@ void Camera::DisplayFrame()
 {
 	IplImage* frame = cvQueryFrame(capture_);
 
+	//this function (and any not in highgui.dll) causes the error on Win7 x64
+	//just here right now for testing purposes
+	//IplImage* image = cvCreateImage(cvGetSize(frame), 8, 3);
+
 	if(!frame) 
 	{
 		fprintf(stderr, "ERROR: Frame is NULL! \n");
