@@ -1,0 +1,291 @@
+#define OUTBOX 0
+
+#DEFINE INBOX 1
+
+// motors
+#DEFINE LEFT_MOTOR OUT_A
+#DEFINE RIGHT_MOTOR OUT_C
+#DEFINE CAMERA OUT_B
+
+const int SPEED = 50;
+const int ADJUST_SPEED 5; // > 0
+const int TURN_SPEED 20;
+const int PAN_SPEED 10;
+const int TURN_TIME 300;	// milliseconds
+
+// light sensors
+#DEFINE LEFT_SENSOR SENSOR_2
+#DEFINE RIGHT_SENSOR SENSOR_3
+
+#DEFINE THRESHOLD 20
+
+// errors
+#DEFINE ERR_CAMERA "Camera motor error"
+#DEFINE ERR_SENSOR "Sensor error"
+#DEFINE ERR_COMM "Remote PC communication error"
+#DEFINE ERR_MOTOR "Wheel motor error"
+
+// location and heading
+int curX;
+int curY;
+int destX;
+int destY;
+int heading; // 0-north 1-east 2-south 3-west
+int destPan;
+int curPan;
+
+// light sensors
+int LEFT_LIGHT;
+int LEFT_DARK;
+int RIGHT_LIGHT;
+int RIGHT_DARK;
+
+int active = 0;
+
+/*
+*
+*	DEPENDENT CODE
+*
+*/
+
+void motorPower(int left, int right)
+{
+  OnFwd(LEFT_MOTOR, left);
+  OnFwd(RIGHT_MOTOR, right);
+}
+
+int battery_level()
+{
+	return -1;
+}
+
+
+/*
+*
+*	INDEPENDENT CODE
+*
+*/
+
+task receiveCommand()
+{
+ string request;
+ while(1)
+ {
+  ReceiveMessage(INBOX, true, request);
+ }
+}
+
+void SendFeedBack()
+{
+ //send( ""+ curX +" "+ curY +" "+ heading +" "+ curPan +" "+ batteryLevel() + "\0" );
+}
+
+void adjustRight()
+{
+// left motor increased by ADJUST_SPEED for ADJUST_TIME
+// reset motors back to MOTOR_SPEED_NORMAL
+
+}
+
+void adjustLeft()
+{
+// right motor increased by ADJUST_SPEED for ADJUST_TIME
+// reset motors back to MOTOR_SPEED_NORMAL
+
+}
+
+void forward()
+{
+	motorPower( SPEED, SPEED );
+}
+
+void reverse()
+{
+	motorPower( -SPEED, -SPEED );
+}
+
+void stopMotors()
+{
+	motorPower( 0, 0 );
+}
+
+void turnLeft()
+{
+	motorPower( -TURN_SPEED / 2, TURN_SPEED );
+
+	heading = ( heading==0 ) ? 3 : ( heading - 1 );
+}
+
+void turnRight()
+{
+	motorPower( TURN_SPEED, -TURN_SPEED / 2 );
+
+	heading = (heading + 1) % 4;
+}
+
+void turnAround()
+{
+	motorPower( TURN_SPEED, -TURN_SPEED );
+
+	heading = ( heading + 2 ) % 4;
+}
+
+void arrived()
+{
+	while(1)
+	{
+		active = 0;
+	}
+}
+
+void error()
+{
+	// determine error
+	// determine action (fix, back to base, stop)
+}
+
+/*
+*
+* TASKS
+*
+*/
+task Sensors()
+{
+
+};
+
+
+/*	checks heading with new destination
+	checks distance
+*/
+task lineFollower()
+{
+	int x, y, pos, left, right;
+
+	while(1)
+	{
+		while(!active);
+
+		x = destX - curX;
+		y = destY - curY;
+
+		if( ( heading==0 && y<=0 )
+			|| ( heading==1 && x<=0 )
+			|| ( heading==2 && y>0 )
+			|| ( heading==3 && x>0 ) )
+		{
+			turnAround();
+		}
+
+		/*
+		while( active )
+		{
+			forward();
+
+			if( LEFT_LIGHT && RIGHT_DARK ) adjustRight();
+			else if( LEFT_DARK && RIGHT_LIGHT ) adjustLeft();
+		}
+		*/
+
+		while( active )
+		{
+			pos = SENSOR_3 - SENSOR_2;
+
+			// 1) pos / ADJUST_SPEED		// lower ADJUST_SPEED
+			// 2) pos * pos / ADJUST_SPEED	// higher ADJUST_SPEED
+			left = SPEED - (pos / ADJUST_SPEED);
+			right = SPEED + (pos / ADJUST_SPEED);
+
+			motorPower( left, right );
+		}
+
+		//wait(100); // 100 milliseconds
+	}
+}
+
+// looks for an intersection, determines next direction, updates location
+task intersection()
+{
+	int direction; // 0-straight 1-left 2-right 3-arrived
+	int x, y;
+
+	while(1)
+	{
+		// coordinate relation
+		x = destX - curX;
+		y = destY - curY;
+
+		// next intersection
+		switch( heading )
+		{
+			case 0 : y++; break;
+			case 1 : x++; break;
+			case 2 : y--; break;
+			case 3 : x--; break;
+			default : error();
+		}
+
+		// next action
+		if( x==0 && y==0 )	// arrived
+		{
+			direction = 3;
+		}
+		else if( heading==0 && y==0 )	// heading north approaching destY
+		{
+			direction = ( x<0 ) ? 1 : 2;
+		}
+		else if( heading==1 && x==0 )	// heading east approaching destX
+		{
+			direction = ( y<0 ) ? 2 : 1;
+		}
+		else if( heading==2 && y==0 )	// heading west approaching destY
+		{
+			direction = ( x<0 ) ? 2 : 1;
+		}
+		else if ( heading==3 && x==0 )	// heading south approaching destX
+		{
+			direction = ( y<0 ) ? 1 : 2;
+		}
+		else							// keep going forward
+		{
+			direction = 0;
+		}
+
+		// found intersection
+		if( LEFT_DARK && RIGHT_DARK )	// revise?
+		{
+			// increment current position
+			switch( heading )
+			{
+				case 0 : curX++; break;
+				case 1 : curY++; break;
+				case 2 : curX--; break;
+				case 3 : curY--; break;
+				default : error();
+			}
+
+			// perform required turn/action
+			if( direction )
+			{
+				active = 0;
+
+				stopMotors();
+
+				switch( direction )
+				{
+					case 1 : turnLeft(); break;
+					case 2 : turnRight(); break;
+					case 3 : arrived(); break;		// stays in arrived() until new coords
+					default : error();
+				}
+			}
+		}
+
+		active = 1;
+	}
+}
+
+task main()
+{
+ OnFwd(LEFT_MOTOR,10);
+}

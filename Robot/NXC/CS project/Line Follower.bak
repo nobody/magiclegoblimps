@@ -1,0 +1,76 @@
+
+// motors
+#define MOTOR_LEFT OUT_A
+#define MOTOR_RIGHT OUT_C
+
+#define SPEED 30
+#define SPEED_ADJUST 1
+
+// sensors
+#define SENSOR_LEFT SENSOR_2
+#define SENSOR_RIGHT SENSOR_3
+
+#define THRESHOLD 30
+
+int active = 1;
+int last_sensor;
+
+void motorPower(int left, int right)
+{
+   OnFwd(MOTOR_LEFT,left);
+   OnFwd(MOTOR_RIGHT,right);
+}
+
+task line_follower()
+{
+ int pos, left, right, adj;
+ while(1)
+ while(active)
+ {
+ {
+  pos = SENSOR_RIGHT - SENSOR_LEFT;
+  adj = pos / SPEED_ADJUST;
+  left = SPEED - adj;
+  right = SPEED + adj;
+  motorPower(left,right);
+  
+  if (!pos) last_sensor = (pos<0)?0:1;
+ }
+ }
+}
+
+task sensors()
+{
+ Wait(1000);
+ while(1)
+ {
+   ClearScreen();
+  TextOut(20, LCD_LINE5, NumToStr(SENSOR_2));
+  TextOut(70, LCD_LINE5, NumToStr(SENSOR_3));
+  TextOut(50, LCD_LINE4, NumToStr(last_sensor));
+  Wait(100);
+  
+  if((SENSOR_RIGHT<THRESHOLD) && (SENSOR_LEFT<THRESHOLD))
+  {
+   active = 0;
+   if(last_sensor)
+   {
+    motorPower(SPEED,0);
+   }
+   else
+   {
+    motorPower(0,SPEED);
+   }
+  }
+ }
+}
+
+task main()
+{
+ Precedes(line_follower);
+ 
+  SetSensorType(S2,SENSOR_TYPE_LIGHT_ACTIVE);
+  SetSensorType(S3,SENSOR_TYPE_LIGHT_ACTIVE);
+ SetSensorMode(S2,SENSOR_MODE_PERCENT);
+ SetSensorMode(S3,SENSOR_MODE_PERCENT);
+}

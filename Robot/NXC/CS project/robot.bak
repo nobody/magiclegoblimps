@@ -1,0 +1,260 @@
+
+// mailboxes
+#define OUTBOX 0  // remote computer
+#define INDEX 1   // unique to NXT
+
+// motors
+#define MOTOR_LEFT OUT_A
+#define MOTOR_RIGHT OUT_C
+#define MOTOR_CAMERA OUT_B
+
+#define SPEED 50
+#define SPEED_ADJUST 5    // > 0
+#define SPEED_TURN 20
+#define SPEED_PAN 10
+#define TIME_TURN 300     // milliseconds
+
+// sensors
+#define _SENSOR_LEFT S2
+#define _SENSOR_RIGHT S3
+#define SENSOR_LEFT SENSOR_2
+#define SENSOR_RIGHT SENSOR_3
+
+#define THRESHOLD 100
+#define SENSOR_MAX 1023
+
+// errors
+
+
+// location and heading
+int curX;
+int curY;
+int destX;
+int destY;
+int maxX;
+int maxY;
+int heading;    // 0-north 1-east 2-south 3-west
+int curPan;
+int destPan;
+
+// sensors
+int LEFT_DARK;
+int LEFT_LIGHT;
+int RIGHT_DARK;
+int RIGHT_LIGHT;
+
+// others
+int MODE = 0; // 0-dest 1-moving 2-intersection
+int last_sensor = 0;
+
+/*
+ *   DEPENDENT FUNTIONS
+ */
+
+void motorPower(int left, int right)
+{
+ OnFwd(MOTOR_LEFT, left);
+ OnFwd(MOTOR_RIGHT, right);
+}
+
+int bettery_level()
+{
+ return BatteryLevel();
+}
+
+void SendFeedBack()
+{
+ //SendMessage(OUTBOX, NumToStr(INBOX));
+}
+
+/*
+ *    INDEPENDINT FUNCTIONS
+ */
+ 
+void forward()
+{
+ motorPower(SPEED, SPEED);
+}
+
+void reverse()
+{
+ motorPower( -SPEED, -SPEED);
+}
+
+void stopMotors()
+{
+ motorPower(0,0);
+}
+
+void turnRight()
+{
+ motorPower(SPEED_TURN, -SPEED_TURN / 2);
+ Wait(TIME_TURN);
+ heading = (heading + 1) % 4;
+}
+
+void turnLeft()
+{
+ motorPower(-SPEED_TURN / 2, SPEED_TURN);
+ Wait(TIME_TURN);
+ heading = (heading) ? 3 : (heading - 1);
+}
+
+void turnAround()
+{
+ motorPower(SPEED_TURN, -SPEED_TURN);
+ Wait(TIME_TURN);
+ heading = (heading + 2) % 4;
+}
+
+void arrived()
+{
+ MODE = 0;
+}
+
+/*
+ *      TASKS
+ */
+ 
+task lineFollower()
+{
+  int x, y, pos, left, right;
+  
+  while(1)
+  {
+   while(MODE==0)
+   {
+    x = destX - curX;
+    y = destY - curY;
+    
+    if( (heading==0 && y<=0)
+        || (heading==1 && x<=0)
+        || (heading==2 && y>0)
+        || (heading==3 && x>0) )
+        {
+         turnAround();
+        }
+
+     Wait(100);
+    }
+
+    while(MODE==1)
+    {
+     pos = SENSOR_RIGHT - SENSOR_LEFT;
+     left = SPEED + pos / SPEED_ADJUST;
+     right = SPEED - pos / SPEED_ADJUST;
+     motorPower(left,right);
+     
+     if (!pos) last_sensor = (pos>0)? 0 : 1;
+    }
+  }
+}
+
+
+task intersection()
+{
+ int direction; // 0-straight 1-left 2-right 3-arrived
+ int x, y;
+ 
+ while(1)
+ {
+  x = destX - curX;
+  y = destY - curY;
+  
+  // next intersection
+  switch (heading)
+  {
+   case 0 : y++; break;
+   case 1 : x++; break;
+   case 2 : y--; break;
+   case 3 : x--; break;
+   default : break;
+  }
+  
+  // next action
+  if (x==0 && y==0)
+  {
+   direction = 3;
+  }
+  else if (heading==0 && y==0) // heading north approaching destY
+  {
+   direction = (x<0) ? 1 : 2;
+  }
+  else if (heading==1 && x==0) // heading east approaching destX
+  {
+   direction = (y<0) ? 2 : 1;
+  }
+  else if (heading==2 && y==0) // heading west approaching destY
+  {
+   direction = (x<0) ? 2 : 1;
+  }
+  else if (heading==3 && x==0) // heading south approaching dextX
+  {
+   direction = (y<0) ? 1 : 2;
+  }
+  else // keep going forward
+  {
+   direction = 0;
+  }
+  
+  // found intersection
+  if (LEFT_DARK && RIGHT_DARK)
+  {
+   // increment current position
+   switch (heading)
+   {
+    case 0 : curX++; break;
+    case 1 : curY++; break;
+    case 2 : curX--; break;
+    case 3 : curY--; break;
+    default: break;
+   }
+   
+   // proferm required turn/action
+   if( direction )
+   {
+    MODE = 2;
+    
+    stopMotors();
+    
+    switch (direction)
+    {
+     case 1 : turnLeft(); break;
+     case 2 : turnRight(); break;
+     case 3 : arrived(); break;
+     default: break;
+    }
+   }
+  }
+ }
+}
+
+task sensors()
+{
+ int left, right;
+ while(1)
+ {
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+  
+  LEFT_DARK = left < THRESHOLD;
+  LEFT_LIGHT = left > (SENSOR_MAX - THRESHOLD);
+  RIGHT_DARK = right < THRESHOLD;
+  RIGHT_LIGHT = right < (SENSOR_MAX - THRESHOLD);
+ }
+}
+
+task receiveCommand()
+{
+}
+
+task main()
+{
+ Precedes(lineFollower,intersection,sensors,receiveCommand);
+
+ // set light sensors
+ SetSensorType(_SENSOR_LEFT, SENSOR_TYPE_LIGHT_ACTIVE);
+ SetSensorType(_SENSOR_RIGHT, IN_TYPE_LIGHT_ACTIVE);
+ SetSensorMode(_SENSOR_LEFT, SENSOR_MODE_RAW);
+ SetSensorMode(_SENSOR_RIGHT, SENSOR_MODE_RAW);
+ }

@@ -1,0 +1,23 @@
+#define OUTBOX 0
+#define INBOX 1
+
+task main()
+{
+ ClearScreen();
+ string msg ="";
+ string temp = "";
+ int start = 0, end = 0;
+ while(1)
+ {
+  ReceiveMessage(INBOX,true,msg);
+  
+  if(StrLen(msg)>0)
+  {
+   ClearScreen();
+   TextOut(0,LCD_LINE1,SubStr(msg, 0, 2));
+   TextOut(0,LCD_LINE2,SubStr(msg, 2, 2));
+   TextOut(0,LCD_LINE3,SubStr(msg, 4, StrLen(msg)-4));
+   msg="";
+  }
+ }
+}

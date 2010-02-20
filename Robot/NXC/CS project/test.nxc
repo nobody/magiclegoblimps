@@ -1,0 +1,11 @@
+task main()
+{
+ int t = 1>0;
+ int f = 1<0;
+ 
+ ClearScreen();
+ 
+ TextOut(0,0,NumToStr(t));
+ TextOut(0,50,NumToStr(f));
+ Wait(10000);
+}
