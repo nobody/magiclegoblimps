@@ -1,0 +1,9 @@
+task main()
+{
+ int b = BatteryLevel();
+ string sb = NumToStr(b);
+ string sp = NumToStr((b-6000)/30);
+ TextOut(40,LCD_LINE4,StrCat(sp,"%"),true);
+ TextOut(30,LCD_LINE5,StrCat(sb,"mV"));
+ while(!ButtonPressed(BTNCENTER,true));
+}

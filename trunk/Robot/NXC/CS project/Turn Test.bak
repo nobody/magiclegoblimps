@@ -1,0 +1,14 @@
+#define SPEED 50
+
+task main()
+{
+ Wait(2000);
+
+ ResetTachoCount(OUT_A);
+ OnFwd(OUT_A,SPEED);
+ OnFwd(OUT_C,-SPEED);
+ while(MotorTachoCount(OUT_A)<360);
+ OnFwd(OUT_AC,0);
+
+
+}
