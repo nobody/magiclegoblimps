@@ -18,18 +18,21 @@
 
 
 class controller {
-	public:
-		controller();
-		virtual ~controller();
-		int testdb();
+    public:
+        controller();
+        virtual ~controller();
+        int testdb();
 
-	private:
-		DbManager *db;
-		AdminSocket *admin;
+    private:
+        DbManager *db;
+        AdminSocket *admin;
 
-		demand_t demand_;
+        demand_t demand_;
 
 };
 
 
 #endif /* CONTROLLER_H_ */
+
+
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

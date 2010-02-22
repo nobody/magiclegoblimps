@@ -11,8 +11,11 @@
 
 class RobotController {
 public:
-	RobotController();
-	virtual ~RobotController();
+    RobotController();
+    virtual ~RobotController();
 };
 
 #endif /* ROBOTCONTROLLER_H_ */
+
+
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

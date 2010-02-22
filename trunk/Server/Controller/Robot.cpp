@@ -9,10 +9,13 @@
 #include "Robot.h"
 
 Robot::Robot() {
-	// TODO Auto-generated constructor stub
+    // TODO Auto-generated constructor stub
 
 }
 
 Robot::~Robot() {
-	// TODO Auto-generated destructor stub
+    // TODO Auto-generated destructor stub
 }
+
+
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

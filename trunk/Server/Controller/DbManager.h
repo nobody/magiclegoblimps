@@ -34,26 +34,29 @@ typedef std::map<int, boost::rational<int> > demand_t;
 
 
 class DbManager {
-	public:
-		DbManager();
-		virtual ~DbManager();
+    public:
+        DbManager();
+        virtual ~DbManager();
 
-		void printRequests();
+        void printRequests();
 
-		bool getRequests( demand_t* );
-		bool updateCameras( std::map<int, Robot>* );
+        bool getRequests( demand_t* );
+        bool updateCameras( std::map<int, Robot>* );
 
 
-	private:
-		static const char* db_uri;
-		static const char* db_user;
-		static const char* db_pass;
-		static const char* db_database;
-		static const char* tbl_requests;
+    private:
+        static const char* db_uri;
+        static const char* db_user;
+        static const char* db_pass;
+        static const char* db_database;
+        static const char* tbl_requests;
 
-		sql::mysql::MySQL_Driver *driver;
+        sql::mysql::MySQL_Driver *driver;
 
 };
 
 
 #endif /* DBMANAGER_H_ */
+
+
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
