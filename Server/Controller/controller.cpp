@@ -11,29 +11,32 @@
 #include "controller.h"
 
 controller::controller() {
-	std::cout << "In controller constructor\n";
-	db = new DbManager();
-	admin = new AdminSocket();
+    std::cout << "In controller constructor\n";
+    db = new DbManager();
+    admin = new AdminSocket();
 }
 
 controller::~controller() {
-	delete db;
-	delete admin;
+    delete db;
+    delete admin;
 }
 
 int controller::testdb() {
-	db->printRequests();
-	std::cout << "\n-----------------------------\n";
+    db->printRequests();
+    std::cout << "\n-----------------------------\n";
 
-	std::map<int, boost::rational<int> > *demand = new demand_t();
-	db->getRequests(demand);
+    std::map<int, boost::rational<int> > *demand = new demand_t();
+    db->getRequests(demand);
 
-	demand_t::iterator iter;
-	for (iter = demand->begin(); iter != demand->end(); ++iter) {
-		std::cout << "Demand for " << iter->first << ": " << iter->second << "\n";
-	}
+    demand_t::iterator iter;
+    for (iter = demand->begin(); iter != demand->end(); ++iter) {
+        std::cout << "Demand for " << iter->first << ": " << iter->second << "\n";
+    }
 
-	delete demand;
+    delete demand;
 
-	return 0;
+    return 0;
 }
+
+
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

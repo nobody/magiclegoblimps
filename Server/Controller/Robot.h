@@ -11,8 +11,11 @@
 
 class Robot {
 public:
-	Robot();
-	virtual ~Robot();
+    Robot();
+    virtual ~Robot();
 };
 
 #endif /* ROBOT_H_ */
+
+
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

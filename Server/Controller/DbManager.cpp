@@ -22,90 +22,107 @@ const char* DbManager::tbl_requests = "requests";
 
 DbManager::DbManager() {
 
-	std::cout << "In database constructor\n";
-	driver = sql::mysql::get_mysql_driver_instance();
+    std::cout << "In database constructor\n";
+    driver = sql::mysql::get_mysql_driver_instance();
 
 }
 
 DbManager::~DbManager() {
-	delete driver;
 }
 
 bool DbManager::getRequests( demand_t* m ) {
-	sql::Connection *con;
-	sql::Statement *stmt;
+    sql::Connection *con;
+    sql::Statement *stmt;
+    sql::ResultSet *rs;
+    std::string cmd;
 
-	con = driver->connect(db_uri, db_user, db_pass);
+    try {
+        con = driver->connect(db_uri, db_user, db_pass);
+    } catch (...) {
+        std::cout << "Failed to connect to database\n";
+        return false;
+    }
 
-	stmt = con->createStatement();
-	std::string cmd("USE ");
-	cmd += DbManager::db_database;
-	stmt->execute(cmd);
+    stmt = con->createStatement();
+    cmd = "USE ";
+    cmd += DbManager::db_database;
+    stmt->execute(cmd);
 
-	cmd = "SELECT DISTINCT request_animal FROM ";
-	cmd += DbManager::tbl_requests;
+    cmd = "SELECT DISTINCT request_animal FROM ";
+    cmd += DbManager::tbl_requests;
 
-	sql::ResultSet *rs;
-	try{
-		rs = stmt->executeQuery(cmd);
-	}catch(...){
-		std::cout << "Failed query: " << cmd << "\n";
-		return false;
-	}
+    try{
+        rs = stmt->executeQuery(cmd);
+    }catch(...){
+        std::cout << "Failed query: " << cmd << "\n";
+        
+        delete stmt;
+        delete con;
 
-	while(rs->next()) {
+        return false;
+    }
 
-		int req_obj = rs->getInt("request_animal");
+    while(rs->next()) {
+        sql::ResultSet *rs_obj;
 
-		cmd = "SELECT count(*) FROM ";
-		cmd += DbManager::tbl_requests;
-		cmd += " WHERE request_animal = ";
-		cmd.append(1, (char)(req_obj + 0x30));
+        int req_obj = rs->getInt("request_animal");
 
-		std::cout << "Executing query: " << cmd << "\n";
-		sql::ResultSet *rs_obj;
-		try{
-			 rs_obj = stmt->executeQuery(cmd);
-		}catch(...){
-			std::cout << "Failed query: " << cmd << "\n";
-			return false;
-		}
+        cmd = "SELECT count(*) FROM ";
+        cmd += DbManager::tbl_requests;
+        cmd += " WHERE request_animal = ";
+        cmd.append(1, (char)(req_obj + 0x30)); // convert int to ascii 
 
-		rs_obj->first();
-		m->insert(std::pair<int, int>(req_obj, rs_obj->getInt(1)));
-		delete rs_obj;
-	}
+        std::cout << "Executing query: " << cmd << "\n";
+        try{
+             rs_obj = stmt->executeQuery(cmd);
+        }catch(...){
+            std::cout << "Failed query: " << cmd << "\n";
+            
+            delete rs;
+            delete stmt;
+            delete con;
 
-	delete rs;
-	delete stmt;
-	delete con;
+            return false;
+        }
 
-	return true;
+        rs_obj->first();
+        m->insert(std::pair<int, int>(req_obj, rs_obj->getInt(1)));
+        delete rs_obj;
+    }
+
+    delete rs;
+    delete stmt;
+    delete con;
+
+    return true;
 }
 
 void DbManager::printRequests() {
-	sql::Connection *con;
+    sql::Connection *con;
 
-	sql::Statement *stmt;
+    sql::Statement *stmt;
 
-	con = driver->connect(db_uri, db_user, db_pass);
+    con = driver->connect(db_uri, db_user, db_pass);
 
-	stmt = con->createStatement();
-	std::string cmd("USE ");
-	cmd += DbManager::db_database;
-	stmt->execute(cmd);
+    stmt = con->createStatement();
+    std::string cmd("USE ");
+    cmd += DbManager::db_database;
+    stmt->execute(cmd);
 
-	cmd = "SELECT * FROM ";
-	cmd += DbManager::tbl_requests;
-	sql::ResultSet *rs = stmt->executeQuery(cmd);
-	while(rs->next()) {
-		std::cout << "Time: " << rs->getString("request_time")
-				<< "\tZone: " << rs->getString("request_zone")
-				<< "\tObject: " << rs->getString("request_animal") << "\n";
-	}
+    cmd = "SELECT * FROM ";
+    cmd += DbManager::tbl_requests;
+    sql::ResultSet *rs = stmt->executeQuery(cmd);
+    while(rs->next()) {
+        std::cout << "Time: " << rs->getString("request_time")
+                << "\tZone: " << rs->getString("request_zone")
+                << "\tObject: " << rs->getString("request_animal") << "\n";
+    }
 
-	delete rs;
-	delete stmt;
-	delete con;
+    delete rs;
+    delete stmt;
+    delete con;
 }
 
+
+
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

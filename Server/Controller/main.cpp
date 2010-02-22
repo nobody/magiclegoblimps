@@ -11,9 +11,12 @@
 #include "controller.h"
 
 int main(int argc, const char **argv) {
-	std::cout << "In main()\n";
+    std::cout << "In main()\n";
 
-	controller c;
-	c.testdb();
+    controller c;
+    c.testdb();
 
 }
+
+
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

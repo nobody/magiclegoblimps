@@ -11,8 +11,11 @@
 
 class AdminSocket {
 public:
-	AdminSocket();
-	virtual ~AdminSocket();
+    AdminSocket();
+    virtual ~AdminSocket();
 };
 
 #endif /* ADMINSOCKET_H_ */
+
+
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
