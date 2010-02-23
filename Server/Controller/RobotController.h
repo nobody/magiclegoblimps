@@ -9,10 +9,23 @@
 #ifndef ROBOTCONTROLLER_H_
 #define ROBOTCONTROLLER_H_
 
+#include<boost/asio.hpp>
+
+
 class RobotController {
 public:
-    RobotController();
+    RobotController(boost::asio::io_service& io_service);
     virtual ~RobotController();
+
+    //connection methods
+    void listen();
+    //msg methods
+private:
+
+    boost::asio::io_service *ioService;
+    //connection methods
+    void onConnect();
+    //msg methods
 };
 
 #endif /* ROBOTCONTROLLER_H_ */
