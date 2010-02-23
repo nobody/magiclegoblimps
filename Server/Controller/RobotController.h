@@ -10,6 +10,7 @@
 #define ROBOTCONTROLLER_H_
 
 #include<boost/asio.hpp>
+#include<boost/bind.hpp>
 
 
 class RobotController {
@@ -22,9 +23,9 @@ public:
     //msg methods
 private:
 
-    boost::asio::io_service *ioService;
+    boost::asio::io_service &ioService;
     //connection methods
-    void onConnect();
+    void onConnect(const boost::system::error_code& error);
     //msg methods
 };
 

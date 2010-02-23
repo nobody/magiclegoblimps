@@ -11,21 +11,25 @@
 
 #include <map>
 
+#include <boost/asio.hpp>
 #include <boost/rational.hpp>
 
 #include "DbManager.h"
 #include "AdminSocket.h"
+#include "RobotController.h"
 
 
 class controller {
     public:
-        controller();
+        controller(boost::asio::io_service&);
         virtual ~controller();
         int testdb();
 
     private:
+        boost::asio::io_service& io_;
         DbManager *db;
         AdminSocket *admin;
+        RobotController *robotCon;
 
         demand_t demand_;
 

@@ -10,15 +10,24 @@
 
 #include "controller.h"
 
-controller::controller() {
+controller::controller(boost::asio::io_service& io_service) 
+    : io_(io_service)
+{
     std::cout << "In controller constructor\n";
+    
     db = new DbManager();
-    admin = new AdminSocket();
+
+    admin = new AdminSocket(io_service);
+
+    robotCon = new RobotController(io_service);
+
+
 }
 
 controller::~controller() {
     delete db;
     delete admin;
+    delete robotCon;
 }
 
 int controller::testdb() {
