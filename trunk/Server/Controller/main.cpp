@@ -13,8 +13,11 @@
 int main(int argc, const char **argv) {
     std::cout << "In main()\n";
 
-    controller c;
+    boost::asio::io_service io;
+    controller c(io);
     c.testdb();
+
+    io.run();
 
 }
 

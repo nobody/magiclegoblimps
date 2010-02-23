@@ -17,7 +17,7 @@ OBJS = AdminSocket.o \
 
 all: ServerController
 
--include *.d
+include *.d
 
 
 ServerController: ${OBJS}
