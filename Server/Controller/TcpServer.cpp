@@ -38,7 +38,8 @@ void TcpServer::handle_accept(TcpServer::TcpConnection::pointer conn, const boos
             conn->start();
         }
 
-    listen();
+        // Begin listening for a new connection
+        listen();
     }
 }
 

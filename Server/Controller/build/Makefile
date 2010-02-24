@@ -8,8 +8,7 @@ INCLUDES = -I ../include
 DEBUG = -g3
 
 
-OBJS = AdminSocket.o \
-	   controller.o \
+OBJS = controller.o \
 	   DbManager.o \
 	   main.o \
 	   RobotController.o \

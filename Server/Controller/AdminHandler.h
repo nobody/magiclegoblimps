@@ -1,9 +1,9 @@
 /*
  * AdminSocket.h
  *
- * Modified on:    $Date: 2010-02-23 19:48:07 -0600 (Tue, 23 Feb 2010) $
- * Last Edited By: $Author: mealey.patrick $
- * Revision:       $Revision: 59 $
+ * Modified on:    $Date$
+ * Last Edited By: $Author$
+ * Revision:       $Revision$
  */
 
 #ifndef ADMINHANDLER_H_
@@ -12,10 +12,7 @@
 #include <iostream>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/asio.hpp>
+#include <boost/thread.hpp>
 
 #include "TcpServer.h"
 
@@ -29,6 +26,10 @@ class AdminHandler : public TcpServer::ConnHandler {
 
     private:
        void handle_write(const boost::system::error_code&, size_t);
+
+       void threaded_on_connect(int connIndex);
+
+       static std::vector<TcpServer::TcpConnection::pointer> connections;
 
 };
 
