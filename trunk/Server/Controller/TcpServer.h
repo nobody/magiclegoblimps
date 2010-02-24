@@ -1,8 +1,8 @@
 /*
  * TcpServer.h
  *
- * Modified on:    $Date: 2010-02-23 13:14:01 -0600 (Tue, 23 Feb 2010) $
- * Last Edited By: $Author: mealey.patrick $
+ * Modified on:    $Date$
+ * Last Edited By: $Author$
  * Revision:       $Revision: 58 $
  */
 
