@@ -28,6 +28,12 @@
 // status flags
 #define INTERSECTION 1
 
+//bearings
+#define NORTH 0
+#define EAST 1
+#define SOUTH 2
+#define WEST 3
+
 
 // location and heading
 int curX;
@@ -140,10 +146,10 @@ task lineFollower()
     x = destX - curX;
     y = destY - curY;
     
-    if( (heading==0 && y<=0)
-        || (heading==1 && x<=0)
-        || (heading==2 && y>0)
-        || (heading==3 && x>0) )
+    if( (heading==NORTH && y<=0)
+        || (heading==EAST && x<=0)
+        || (heading==SOUTH && y>0)
+        || (heading==WEST && x>0) )
      {
       turnAround();
      }
@@ -174,10 +180,10 @@ task intersection()
   // next intersection
   switch (heading)
   {
-   case 0 : y++; break;
-   case 1 : x++; break;
-   case 2 : y--; break;
-   case 3 : x--; break;
+   case NORTH : y++; break;
+   case EAST : x++; break;
+   case SOUTH : y--; break;
+   case WEST : x--; break;
    default : break;
   }
   
@@ -186,19 +192,19 @@ task intersection()
   {
    direction = 3;
   }
-  else if (heading==0 && y==0) // heading north approaching destY
+  else if (heading==NORTH && y==0) // heading north approaching destY
   {
    direction = (x<0) ? 1 : 2;
   }
-  else if (heading==1 && x==0) // heading east approaching destX
+  else if (heading==EAST && x==0) // heading east approaching destX
   {
    direction = (y<0) ? 2 : 1;
   }
-  else if (heading==2 && y==0) // heading south approaching destY
+  else if (heading==SOUTH && y==0) // heading south approaching destY
   {
    direction = (x<0) ? 2 : 1;
   }
-  else if (heading==3 && x==0) // heading west approaching dextX
+  else if (heading==WEST && x==0) // heading west approaching dextX
   {
    direction = (y<0) ? 1 : 2;
   }
@@ -213,10 +219,10 @@ task intersection()
    // increment current position
    switch (heading)
    {
-    case 0 : curX++; break;
-    case 1 : curY++; break;
-    case 2 : curX--; break;
-    case 3 : curY--; break;
+    case NORTH : curX++; break;
+    case EAST : curY++; break;
+    case SOUTH : curX--; break;
+    case WEST : curY--; break;
     default: break;
    }
    
@@ -267,7 +273,7 @@ task receiveCommand()
   
   if(StrLen(msg)>0)
   {
-   print(msg);
+   //print(msg);
   }
  }
 }
