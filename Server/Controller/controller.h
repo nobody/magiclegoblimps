@@ -15,8 +15,7 @@
 #include <boost/rational.hpp>
 
 #include "DbManager.h"
-#include "AdminSocket.h"
-#include "RobotController.h"
+#include "AdminHandler.h"
 #include "TcpServer.h"
 
 
@@ -29,9 +28,9 @@ class controller {
     private:
         boost::asio::io_service& io_;
         DbManager *db;
-        AdminSocket *admin;
-        TcpServer *admin2;
-        RobotController *robotCon;
+        AdminHandler *admin;
+        TcpServer *adminSrv;
+        TcpServer *roboSrv;
 
         demand_t demand_;
 

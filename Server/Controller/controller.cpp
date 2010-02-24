@@ -9,6 +9,7 @@
 #include <iostream>
 
 #include "controller.h"
+#include "AdminHandler.h"
 
 controller::controller(boost::asio::io_service& io_service) 
     : io_(io_service)
@@ -17,19 +18,18 @@ controller::controller(boost::asio::io_service& io_service)
     
     db = new DbManager();
 
-    //admin = new AdminSocket(io_service);
-    admin2 = new TcpServer(io_service, 10000, NULL);
+    admin = new AdminHandler;
+    adminSrv = new TcpServer(io_service, 10000, admin);
 
-    robotCon = new RobotController(io_service);
-
+    roboSrv = new TcpServer(io_service, 9999, NULL);
 
 }
 
 controller::~controller() {
     delete db;
-    //delete admin;
-    delete admin2;
-    delete robotCon;
+    delete admin;
+    delete adminSrv;
+    delete roboSrv;
 }
 
 int controller::testdb() {
