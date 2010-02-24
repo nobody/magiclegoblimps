@@ -11,7 +11,7 @@ DEBUG = -g3
 OBJS = controller.o \
 	   DbManager.o \
 	   main.o \
-	   RobotController.o \
+	   RobotHandler.o \
 	   Robot.o \
 	   TcpServer.o \
 	   AdminHandler.o
