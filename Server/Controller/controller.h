@@ -17,6 +17,7 @@
 #include "DbManager.h"
 #include "AdminSocket.h"
 #include "RobotController.h"
+#include "TcpServer.h"
 
 
 class controller {
@@ -29,6 +30,7 @@ class controller {
         boost::asio::io_service& io_;
         DbManager *db;
         AdminSocket *admin;
+        TcpServer *admin2;
         RobotController *robotCon;
 
         demand_t demand_;
