@@ -3,7 +3,7 @@
  *
  * Modified on:    $Date$
  * Last Edited By: $Author$
- * Revision:       $Revision: 58 $
+ * Revision:       $Revision$
  */
 
 #ifndef TCPSERVER_H_
