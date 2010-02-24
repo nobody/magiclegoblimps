@@ -1,0 +1,68 @@
+/*
+ * TcpServer.h
+ *
+ * Modified on:    $Date: 2010-02-23 13:14:01 -0600 (Tue, 23 Feb 2010) $
+ * Last Edited By: $Author: mealey.patrick $
+ * Revision:       $Revision: 58 $
+ */
+
+#ifndef TCPSERVER_H_
+#define TCPSERVER_H_
+
+#include <boost/lexical_cast.hpp>
+#include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/asio.hpp>
+
+
+using boost::asio::ip::tcp;
+
+class TcpServer {
+    public:
+        class TcpConnection 
+            : public boost::enable_shared_from_this<TcpConnection>
+        {
+            public:
+                typedef boost::shared_ptr<TcpConnection> pointer;
+
+                static pointer create(boost::asio::io_service& io_service);
+
+                tcp::socket& socket();
+
+                void start();
+
+            private:
+                TcpConnection(boost::asio::io_service& io_service);
+
+                void handle_write(const boost::system::error_code& /*error*/, size_t /*bytes_transferred*/);
+
+                tcp::socket socket_;
+                std::string message_;
+        };
+        
+        class ConnHandler {
+            public:
+                virtual void onConnect(TcpServer::TcpConnection::pointer tcp_connection) = 0;
+        };
+
+        TcpServer(boost::asio::io_service& io_service, int ListenPort, ConnHandler *connHandler);
+        virtual ~TcpServer();
+
+    private:
+
+        void listen();
+        void handle_accept(TcpConnection::pointer, const boost::system::error_code&);
+
+
+        tcp::acceptor acceptor_;
+        int ListenPort_;
+        ConnHandler *connHandler_;
+
+};
+
+
+#endif /* TCPSERVER_H_ */
+
+
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

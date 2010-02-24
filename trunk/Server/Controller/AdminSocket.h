@@ -9,6 +9,7 @@
 #ifndef ADMINSOCKET_H_
 #define ADMINSOCKET_H_
 
+#include <boost/lexical_cast.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -44,6 +45,10 @@ private:
           void start()
           {
             message_ = "Testing, 1, 2, 3...\n";
+            message_ += socket_.remote_endpoint().address().to_string();
+            message_ += ":";
+            message_ += boost::lexical_cast<std::string>(socket_.remote_endpoint().port());
+            message_ += "\n";
 
             boost::asio::async_write(socket_, boost::asio::buffer(message_),
                 boost::bind(&tcp_connection::handle_write, shared_from_this(),

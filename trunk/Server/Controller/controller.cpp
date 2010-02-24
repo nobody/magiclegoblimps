@@ -17,7 +17,8 @@ controller::controller(boost::asio::io_service& io_service)
     
     db = new DbManager();
 
-    admin = new AdminSocket(io_service);
+    //admin = new AdminSocket(io_service);
+    admin2 = new TcpServer(io_service, 10000, NULL);
 
     robotCon = new RobotController(io_service);
 
@@ -26,7 +27,8 @@ controller::controller(boost::asio::io_service& io_service)
 
 controller::~controller() {
     delete db;
-    delete admin;
+    //delete admin;
+    delete admin2;
     delete robotCon;
 }
 

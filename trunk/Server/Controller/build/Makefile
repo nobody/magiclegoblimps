@@ -13,11 +13,12 @@ OBJS = AdminSocket.o \
 	   DbManager.o \
 	   main.o \
 	   RobotController.o \
-	   Robot.o
+	   Robot.o \
+	   TcpServer.o
 
 all: ServerController
 
-include *.d
+-include *.d
 
 
 ServerController: ${OBJS}
