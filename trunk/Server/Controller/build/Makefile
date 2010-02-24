@@ -14,7 +14,8 @@ OBJS = AdminSocket.o \
 	   main.o \
 	   RobotController.o \
 	   Robot.o \
-	   TcpServer.o
+	   TcpServer.o \
+	   AdminHandler.o
 
 all: ServerController
 
