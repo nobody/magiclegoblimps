@@ -52,7 +52,11 @@ TcpServer::TcpConnection::pointer TcpServer::TcpConnection::create(boost::asio::
 
 tcp::socket& TcpServer::TcpConnection::socket()
 {
+    socketMutex.lock();
     return socket_;
+}
+void TcpServer::TcpConnection::releaseSocket(){
+    socketMutex.unlock();
 }
 
 void TcpServer::TcpConnection::start()

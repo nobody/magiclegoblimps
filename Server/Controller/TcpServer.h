@@ -14,6 +14,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
+#include <boost/thread/mutex.hpp>
 
 
 using boost::asio::ip::tcp;
@@ -32,7 +33,10 @@ class TcpServer {
 
                 void start();
 
+                void releaseSocket();
+
             private:
+                boost::mutex socketMutex;
                 TcpConnection(boost::asio::io_service& io_service);
 
                 void handle_write(const boost::system::error_code& /*error*/, size_t /*bytes_transferred*/);
