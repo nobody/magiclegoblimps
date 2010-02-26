@@ -25,9 +25,17 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 }
 
 void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
-        std::string msg = "your robot socket is being handled";
+        /*std::string msg = "your robot socket is being handled";
         boost::asio::write(connections[connEP]->socket(), boost::asio::buffer(msg));
-        connections[connEP]->socket().close();
+        connections[connEP]->socket().close();*/
+
+	bool connected = true;
+
+	while(connected){
+		connections[connEP]->socket();
+		connections[connEP]->releaseSocket();
+
+	}
 }
 
 /*vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4:*/
