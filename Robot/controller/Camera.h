@@ -2,18 +2,29 @@
 #define CAMERA_H
 
 #define CV_NO_BACKWARD_COMPATIBILITY
+#define HIGHGUI_NO_BACKWARD_COMPATIBILITY
 
 #include <cv.h>
-#include <cxcore.h>
 #include <highgui.h>
 #include <string>
 
-#pragma comment(lib, "libcv200.dll.a")
-#pragma comment(lib, "libcvaux200.dll.a")
-#pragma comment(lib, "libcxcore200.dll.a")
-#pragma comment(lib, "libcxts200.dll.a")
-#pragma comment(lib, "libhighgui200.dll.a")
-#pragma comment(lib, "libml200.dll.a")
+#ifdef _DEBUG
+#pragma comment(lib, "cv200d.lib")
+#pragma comment(lib, "cvaux200d.lib")
+#pragma comment(lib, "cxcore200d.lib")
+#pragma comment(lib, "cxts200d.lib")
+#pragma comment(lib, "highgui200d.lib")
+#pragma comment(lib, "ml200d.lib")
+#pragma comment(lib, "opencv_ffmpeg200d.lib")
+#else
+#pragma comment(lib, "cv200.lib")
+#pragma comment(lib, "cvaux200.lib")
+#pragma comment(lib, "cxcore200.lib")
+#pragma comment(lib, "cxts200.lib")
+#pragma comment(lib, "highgui200.lib")
+#pragma comment(lib, "ml200.lib")
+#pragma comment(lib, "opencv_ffmpeg200.lib")
+#endif
 
 using namespace std;
 
@@ -38,7 +49,6 @@ public:
 	void SetIP(string ip);
 	void SetDLinkCam(bool dLinkCam);
 
-	void SetLocalDisplay(bool display);
 	bool GetLocalDisplay() { return localDisplay_; }
 
 	void StartDisplay();
@@ -59,6 +69,7 @@ private:
 	bool localDisplay_;
 	string displayWindowName_;
 
+	ObjectColor trackingObject_;
 	vector<ObjectColor> visibleObjects_;
 };
 
