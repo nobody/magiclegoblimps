@@ -6,14 +6,12 @@ Camera::Camera(string ip, bool dLinkCam)
 {
 	ip_ = ip;
 	dLinkCam_ = dLinkCam;
+
+	localDisplay_ = false;
 }
 
 bool Camera::Connect()
 {
-	//gives cameras a window for testing
-	//need a better way to set this before a connect
-	localDisplay_ = true;
-
 	capture_ = 0;
 
 	dLinkUrl_ = "/video.cgi?a=.mjpg";
@@ -36,9 +34,6 @@ bool Camera::Connect()
 	if (capture_ == 0)
 		return false;
 
-	if (localDisplay_)
-		StartDisplay();
-
 	return true;
 }
 
@@ -47,6 +42,7 @@ void Camera::Disconnect()
 	if (localDisplay_)
 		StopDisplay();
 
+	cvReleaseCapture(&capture_);
 	capture_ = 0;
 }
 
@@ -60,29 +56,24 @@ void Camera::SetDLinkCam(bool dLinkCam)
 	dLinkCam_ = dLinkCam;
 }
 
-void Camera::SetLocalDisplay(bool display)
-{
-	localDisplay_ = display;
-}
-
 void Camera::StartDisplay()
 {
+	localDisplay_ = true;
+
 	displayWindowName_ = "RobotView " + ip_;
 	cvNamedWindow(displayWindowName_.c_str(), CV_WINDOW_AUTOSIZE);
 }
 
 void Camera::DisplayFrame()
 {
-	IplImage* frame = cvQueryFrame(capture_);
+	if (capture_ == 0 || !localDisplay_)
+		return;
 
-	//this function (and any not in highgui.dll) causes the error on Win7 x64
-	//just here right now for testing purposes
-	//IplImage* image = cvCreateImage(cvGetSize(frame), 8, 3);
+	IplImage* frame = cvQueryFrame(capture_);
 
 	if(!frame) 
 	{
-		fprintf(stderr, "ERROR: Frame is NULL! \n");
-		getchar();
+		cout << "ERROR! " + displayWindowName_ + " Frame is NULL!" << endl;
 		return;
 	}		
 
@@ -91,6 +82,7 @@ void Camera::DisplayFrame()
 
 void Camera::StopDisplay()
 {
-	cvReleaseCapture(&capture_);
 	cvDestroyWindow(displayWindowName_.c_str());
+
+	localDisplay_ = false;
 }

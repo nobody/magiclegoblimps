@@ -9,23 +9,16 @@ class NXT
 {
 public:
 	NXT(int port);
+	~NXT();
 
 	bool Connect();
 	void Disconnect();
 	
-	void Drive();
-	void TurnLeft();
-	void TurnRight();
-	void Stop();
-
-	void PanLeft();
-	void PanRight();
-
 	void SetPort(int port);
 
-	int GetBatteryLevel();
-	void SendMessage(string message, int box);
-	string GetMessage(int box, bool remove);
+	void SendMessage(string message);
+	string ReadMessage();
+
 	void StartProgram(string name);
 	void StopPrograms();
 
@@ -33,6 +26,9 @@ private:
 	static const int DRIVE_SPEED = 20;
 	static const int TURN_SPEED = 30;
 	static const int PAN_SPEED = 10;
+
+		static const int IN_MAILBOX = 0;
+	static const int OUT_MAILBOX = 1;
 
 	int bluetoothPort_;
 

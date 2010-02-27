@@ -19,6 +19,7 @@ class Robot
 {
 public:
 	Robot(int port, string ip, bool dLinkCam);
+	~Robot();
 
 	int GetID() { return id_; }
 	

@@ -5,6 +5,17 @@ NXT::NXT(int port)
 	bluetoothPort_ = port;
 }
 
+NXT::~NXT()
+{
+	delete connection_;
+	delete brick_;
+	delete motorA_;
+	delete motorB_;
+	delete motorC_;
+	delete lSensorL_;
+	delete lSensorR_;
+}
+
 bool NXT::Connect()
 {
 	connection_ = new Bluetooth();
@@ -42,54 +53,14 @@ void NXT::Disconnect()
 	connection_->disconnect();
 }
 
-void NXT::Drive()
+void NXT::SendMessage(string message)
 {
-	motorA_->on(DRIVE_SPEED);
-	motorC_->on(DRIVE_SPEED);
+	brick_->write_msg(message, OUT_MAILBOX, false);
 }
 
-void NXT::TurnLeft()
+string NXT::ReadMessage()
 {
-	motorA_->on(TURN_SPEED);
-	motorC_->on(-TURN_SPEED / 2);
-}
-
-void NXT::TurnRight()
-{
-	motorA_->on(-TURN_SPEED / 2);
-	motorC_->on(TURN_SPEED);
-}
-
-void NXT::Stop()
-{
-	motorA_->stop();
-	motorB_->stop();
-	motorC_->stop();
-}
-
-void NXT::PanLeft()
-{
-	motorB_->on(PAN_SPEED);
-}
-
-void NXT::PanRight()
-{
-	motorB_->on(-PAN_SPEED);
-}
-
-int NXT::GetBatteryLevel()
-{
-	return brick_->get_battery_level();
-}
-
-void NXT::SendMessage(string message, int box)
-{
-	brick_->write_msg(message, box, false);
-}
-
-string NXT::GetMessage(int box, bool remove)
-{
-	return brick_->read_msg(box, remove); 
+	return brick_->read_msg(IN_MAILBOX, true); 
 }
 
 void NXT::StartProgram(string name)
