@@ -18,18 +18,19 @@
 
 class AdminHandler : public TcpServer::ConnHandler {
     public:
-       AdminHandler(); 
+        AdminHandler(); 
+        virtual ~AdminHandler();
 
-       virtual ~AdminHandler();
+        typedef std::map<boost::asio::ip::tcp::endpoint, TcpServer::TcpConnection::pointer> conn_map;
 
-       virtual void onConnect(TcpServer::TcpConnection::pointer tcp_connection);
+        virtual void onConnect(TcpServer::TcpConnection::pointer tcp_connection);
 
     private:
-       void handle_write(const boost::system::error_code&, size_t);
+        //void threaded_on_connect(int connIndex);
+        void threaded_on_connect(boost::asio::ip::tcp::endpoint);
+        void write_handler(const boost::system::error_code& error,  std::size_t bytes_transferred);
 
-       void threaded_on_connect(int connIndex);
-
-       static std::vector<TcpServer::TcpConnection::pointer> connections;
+        static conn_map connections;
 
 };
 
