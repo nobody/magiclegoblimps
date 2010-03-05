@@ -26,6 +26,7 @@ void TcpServer::listen() {
 
     acceptor_.async_accept(new_con->socket(), 
         boost::bind(&TcpServer::handle_accept, this, new_con, boost::asio::placeholders::error));
+    new_con->releaseSocket();
 }
 
 void TcpServer::handle_accept(TcpServer::TcpConnection::pointer conn, const boost::system::error_code &error) {
