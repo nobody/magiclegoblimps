@@ -16,8 +16,10 @@
 
 #include "DbManager.h"
 #include "AdminHandler.h"
+#include "RobotHandler.h"
 #include "TcpServer.h"
-
+#include "Vector_ts.h"
+#include "Robot.h"
 
 class controller {
     public:
@@ -29,10 +31,13 @@ class controller {
         boost::asio::io_service& io_;
         DbManager *db;
         AdminHandler *admin;
+        RobotHandler *robo;
         TcpServer *adminSrv;
         TcpServer *roboSrv;
 
-        demand_t demand_;
+        Vector_ts<Robot>* robots;
+
+        demand_t demand;
 
 };
 

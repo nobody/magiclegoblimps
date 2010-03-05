@@ -10,6 +10,8 @@
 #include "TcpServer.h"
 #include <boost/thread.hpp>
 #include <map>
+#include "Vector_ts.h"
+#include "Robot.h"
 
 typedef std::map<boost::asio::ip::tcp::endpoint,TcpServer::TcpConnection::pointer> conn_map;
 
@@ -17,13 +19,17 @@ class RobotHandler :public TcpServer::ConnHandler
 {   
     public:
     RobotHandler();
+    RobotHandler(Vector_ts<Robot>* robots_);
     ~RobotHandler();
     virtual void onConnect(TcpServer::TcpConnection::pointer tcp_connection);
+    void setRobots(Vector_ts<Robot>* robots_);
     
     private:
     void threaded_listen(boost::asio::ip::tcp::endpoint connEP);
+    const int fields = 1;
 
     static conn_map connections;
+    Vector_ts<Robot>* robots;
 
 };
 
