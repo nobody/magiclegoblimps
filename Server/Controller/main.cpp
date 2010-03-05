@@ -15,7 +15,7 @@ int main(int argc, const char **argv) {
 
     boost::asio::io_service io;
     controller c(io);
-    c.testdb();
+    //c.testdb();
 
     io.run();
 
