@@ -225,9 +225,11 @@ int main(int argc, char* argv[]) {
     boost::thread worker(work, boost::ref(io));
 
     char line[message::max_length + 1];
-    while(std::cin.getline(line, message::max_length + 1)) {
+    while(std::cin.getline(line, message::max_length)) {
         message msg;
-        msg.from_string(line, std::strlen(line));
+        size_t len = strlen(line);
+        line[len] = '\n';
+        msg.from_string(line, len + 1);
         ac.write(msg);
     }
 
