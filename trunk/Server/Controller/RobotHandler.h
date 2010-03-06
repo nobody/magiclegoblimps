@@ -26,7 +26,9 @@ class RobotHandler :public TcpServer::ConnHandler
     
     private:
     void threaded_listen(boost::asio::ip::tcp::endpoint connEP);
-    const int fields = 1;
+    //void parseString(std::string msg, boost::asio::ip::tcp::endpoint connEP);
+    const static int fields = 1;
+
 
     static conn_map connections;
     Vector_ts<Robot>* robots;
