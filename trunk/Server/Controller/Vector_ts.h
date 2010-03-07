@@ -1,8 +1,8 @@
  /* Vector_ts.h 
  *
- * Modified on:    $Date: 2010-02-24 17:28:32 -0600 (Wed, 24 Feb 2010) $
- * Last Edited By: $Author: JoeGebhard $
- * Revision:       $Revision: 67 $
+ * Modified on:    $Date$
+ * Last Edited By: $Author$
+ * Revision:       $Revision$
 */
 #ifndef VECTOR_TS_H_
 #define VECTOR_TS_H_
