@@ -9,13 +9,20 @@
 #include "Robot.h"
 //#include <boost/asio.hpp>
 
-Robot::Robot() {
+Robot::Robot() : xCord(0), yCord(0) {
+    // TODO Auto-generated constructor stub
+
+}
+
+
+Robot::Robot(boost::asio::ip::tcp::endpoint EP, int RID) : xCord(0), yCord(0) {
     // TODO Auto-generated constructor stub
 
 }
 
 Robot::~Robot() {
-    // TODO Auto-generated destructor stub
+    robotMutex.lock();
+    robotMutex.unlock();
 }
 
 //locks and unlocks the robot's private mutex
@@ -37,6 +44,19 @@ int Robot::getRID(){
 //that this robot is on
 boost::asio::ip::tcp::endpoint Robot::getEndpoint(){
     return robotEP;
+}
+
+void Robot::setXCord(int x){
+    xCord = x;
+}
+void Robot::setYCord(int y){
+    yCord = y;
+}
+int Robot::getXCord(){
+    return xCord;
+}
+int Robot::getYCord(){
+    return xCord;
 }
 
 

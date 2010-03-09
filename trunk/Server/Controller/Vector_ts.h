@@ -28,7 +28,7 @@ template <class T> class Vector_ts{
     }
     
     int size(){
-        return theVector.size();
+        return theVector->size();
     }
 
     T &operator[](int index){
@@ -37,12 +37,21 @@ template <class T> class Vector_ts{
 
     iterator begin(){
         typename std::vector<T>::iterator it;
-        it = theVector.begin();
+        it = theVector->begin();
         return it;
+    }
+    iterator end(){
+	typename std::vector<T>::iterator it;
+	it = theVector->end();
+	return it;
     }
 
     iterator erase(iterator position){
-        return theVector.erase(position);
+        return theVector->erase(position);
+    }
+
+    void push_back(const T& x){
+	theVector->push_back(x);
     }
 
     void lock(){
