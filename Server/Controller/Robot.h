@@ -24,6 +24,12 @@ public:
     int getRID();
     boost::asio::ip::tcp::endpoint getEndpoint();
 
+    int getXCord();
+    int getYCord();
+
+    void setXCord(int x);
+    void setYCord(int y);
+
 
 private:
     //mutex for thread safety
@@ -34,6 +40,11 @@ private:
     
     //endpoint of the controller this robot is on
     boost::asio::ip::tcp::endpoint robotEP;
+
+    //coordinate position of the robot
+    int xCord;
+    int yCord;
+
     
 };
 

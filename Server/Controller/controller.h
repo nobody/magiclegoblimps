@@ -35,7 +35,7 @@ class controller {
         TcpServer *adminSrv;
         TcpServer *roboSrv;
 
-        Vector_ts<Robot>* robots;
+        Vector_ts<Robot*>* robots;
 
         demand_t demand;
 

@@ -17,7 +17,7 @@ controller::controller(boost::asio::io_service& io_service)
     
     db = new DbManager();
 
-    robots = new Vector_ts<Robot>();
+    robots = new Vector_ts<Robot*>();
 
     admin = new AdminHandler;
     adminSrv = new TcpServer(io_service, 10000, admin);
