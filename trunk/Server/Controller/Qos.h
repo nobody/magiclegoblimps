@@ -11,11 +11,18 @@
 
 class Qos {
     public:
-        Qos();
+        Qos(Robot* r, POI* o, double* d);
         virtual ~Qos();
+		calcQos();
+		calcQos(Robot r, POI o);
+		const double OPTIMAL_DIST = 10;
+		
 
     private:
-
+		Robot* robots;
+		POI* objects;
+		double* demand;
+		
 };
 
 
