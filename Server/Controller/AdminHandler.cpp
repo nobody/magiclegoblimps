@@ -18,8 +18,6 @@ AdminHandler::~AdminHandler(){
 }
 
 void AdminHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection) {
-    // need to lock for multithreading so that .size() will always be the new item
-    //connections.push_back(tcp_connection);
     boost::asio::ip::tcp::endpoint endpoint = tcp_connection->socket().remote_endpoint();
     
     tcp_connection->releaseSocket();

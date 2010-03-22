@@ -14,7 +14,10 @@ OBJS = controller.o \
 	   RobotHandler.o \
 	   Robot.o \
 	   TcpServer.o \
-	   AdminHandler.o
+	   AdminHandler.o \
+	   VideoHandler.o \
+	   #Qos.o \
+	   Point.o
 
 
 all: ServerController

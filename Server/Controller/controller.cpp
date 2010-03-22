@@ -18,6 +18,7 @@ controller::controller(boost::asio::io_service& io_service)
     db = new DbManager();
 
     robots = new Vector_ts<Robot*>();
+    objs = new Vector_ts<Object*>();
 
     admin = new AdminHandler;
     adminSrv = new TcpServer(io_service, 10000, admin);
@@ -25,15 +26,23 @@ controller::controller(boost::asio::io_service& io_service)
     robo = new RobotHandler(robots);
     roboSrv = new TcpServer(io_service, 9999, robo);
 
+    vids = new VideoHandler(robots, objs);
+    vidsSrv = new TcpServer(io_service, 20000, vids);
+
 }
 
 controller::~controller() {
     delete db;
+
     delete admin;
     delete adminSrv;
+
     delete robo;
     delete roboSrv;
     delete robots;
+
+    delete vids;
+    delete vidsSrv;
 }
 
 int controller::testdb() {

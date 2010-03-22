@@ -1,9 +1,9 @@
 /*
  * Point.cpp
  *
- * Modified on:    $Date: 2010-03-07 14:20:29 -0600 (Sun, 07 Mar 2010) $
- * Last Edited By: $Author: mealey.patrick $
- * Revision:       $Revision: 75 $
+ * Modified on:    $Date$
+ * Last Edited By: $Author$
+ * Revision:       $Revision$
  */
 
 #include "Point.h"

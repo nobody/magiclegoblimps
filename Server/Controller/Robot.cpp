@@ -56,7 +56,7 @@ int Robot::getXCord(){
     return xCord;
 }
 int Robot::getYCord(){
-    return xCord;
+    return yCord;
 }
 
 
