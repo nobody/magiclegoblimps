@@ -1,4 +1,4 @@
-/* AdminHandler.cpp
+/* RobotHandler.cpp
  *
  * Modified on:    $Date$
  * Last Edited By: $Author$
@@ -93,7 +93,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 void RobotHandler::parseRobots(std::string* msg, boost::asio::ip::tcp::endpoint connEP, int use){
 	
 	bool moreRobots = true;
-	int end = 0;
+	size_t end = 0;
 	int robotID = 0;
 	int x = 0; 
 	int y = 0;

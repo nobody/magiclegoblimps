@@ -17,9 +17,11 @@
 #include "DbManager.h"
 #include "AdminHandler.h"
 #include "RobotHandler.h"
+#include "VideoHandler.h"
 #include "TcpServer.h"
 #include "Vector_ts.h"
 #include "Robot.h"
+#include "Object.h"
 
 class controller {
     public:
@@ -32,10 +34,13 @@ class controller {
         DbManager *db;
         AdminHandler *admin;
         RobotHandler *robo;
+        VideoHandler *vids;
         TcpServer *adminSrv;
         TcpServer *roboSrv;
+        TcpServer *vidsSrv;
 
         Vector_ts<Robot*>* robots;
+        Vector_ts<Object*>* objs;
 
         demand_t demand;
 
