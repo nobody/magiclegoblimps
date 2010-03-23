@@ -8,18 +8,18 @@ import java.awt.geom.*;
 import java.awt.image.*;
 import java.util.*;
 
-class Robot extends MovableEntity{
+class RobotCopy extends MovableEntity{
 
     public static final int ROBOT_RADIUS = 6; //in pixles for drawing
     public static final double ROBOT_ACCEL = 1; //pixles per tick^2 Not really used...
-    public static final double ROBOT_SPEED = 2.5; //pixles per tick
+    public static final double ROBOT_SPEED = 3; //pixles per tick
     public static final double FRICTION = -.3; //stopping accel... again not really used
     public static final Point2D.Double START_POS = new Point2D.Double(20,20); //Robot starting position
     public static final int GRID_WIDTH = MLBFrame.SPACING;//grid width in pixles
     public static final int TRIM = MLBFrame.TRIM;//border trim in pixles
     public static final double CAMERA_ANGLE = Math.PI/4;//viewing angle of camera
-    public static final double CAMERA_DIST = 300;//how far the camera can see
-    public static final double SWIVEL_SPEED = .02;//how fast the camera rotates
+    public static final double CAMERA_DIST = 350;//how far the camera can see
+    public static final double SWIVEL_SPEED = .03;//how fast the camera rotates
 
     
     public double accel = 0;
@@ -34,7 +34,7 @@ class Robot extends MovableEntity{
     private boolean[] currMoves = null;
     private Polygon viewingArea = null;
 
-    public Robot(String s){
+    public RobotCopy(String s){
         name = s;
         pos = (Point2D.Double)START_POS.clone();
     }

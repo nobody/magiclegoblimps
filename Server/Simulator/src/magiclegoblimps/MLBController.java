@@ -96,7 +96,7 @@ class MLBController{
         }
         optimizeQoS();
 
-        System.out.println(getSystemQoS());
+        //System.out.println(getSystemQoS());
 
         f.graphPanel.update();
         f.graphPanel.repaint();
