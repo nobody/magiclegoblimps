@@ -1,0 +1,6 @@
+To run this program:
+	1) python server-sim.py
+	   This will run a simulator for the QoS server.
+	2) python vidcontrol.py
+	   This will run the process management and config file generator program
+	   for the video delivery server.

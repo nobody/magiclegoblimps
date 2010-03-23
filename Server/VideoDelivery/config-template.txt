@@ -1,0 +1,38 @@
+Port $port 
+BindAddress 0.0.0.0 
+MaxClients 1000 
+MaxBandwidth 10000 
+NoDaemon 
+
+<Feed $feed.ffm> 
+File /tmp/$feed.ffm 
+FileMaxSize $tmp_file_size 
+</Feed> 
+
+<Stream $stream.flv> 
+Feed $feed.ffm 
+Format flv 
+VideoCodec flv 
+VideoFrameRate $frame_rate 
+VideoBufferSize $buf_size 
+VideoBitRate $bit_rate 
+VideoQMin $q_min 
+VideoQMax $q_max 
+VideoSize $size
+PreRoll 0 
+Noaudio 
+</Stream> 
+
+<Stream $stream.swf>
+Feed $feed.ffm
+Format swf
+VideoCodec flv
+VideoFrameRate $frame_rate
+VideoBufferSize $buf_size
+VideoBitRate $bit_rate
+VideoQMin $q_min
+VideoQMax $q_max
+VideoSize $size
+PreRoll 0
+Noaudio
+</Stream>
