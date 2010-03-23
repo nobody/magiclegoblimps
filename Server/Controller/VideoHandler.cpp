@@ -82,7 +82,7 @@ void VideoHandler::session::start(){
             msg_ss << (*it)->getXCord();
             msg_ss << ":";
             msg_ss << (*it)->getYCord();
-
+            msg_ss << ":";
         }
         robots_->unlock();
     }

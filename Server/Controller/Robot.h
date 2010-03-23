@@ -26,9 +26,11 @@ public:
 
     int getXCord();
     int getYCord();
+    std::string getVideoURL();
 
     void setXCord(int x);
     void setYCord(int y);
+    void setVideoURL(std::string);
 
 
 private:
@@ -44,6 +46,8 @@ private:
     //coordinate position of the robot
     int xCord;
     int yCord;
+
+    std::string videoURL;
 
     
 };

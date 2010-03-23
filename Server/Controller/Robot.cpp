@@ -15,7 +15,7 @@ Robot::Robot() : xCord(0), yCord(0) {
 }
 
 
-Robot::Robot(boost::asio::ip::tcp::endpoint EP, int RID) : xCord(0), yCord(0) {
+Robot::Robot(boost::asio::ip::tcp::endpoint EP, int RID) : RID(RID), xCord(0), yCord(0) {
     // TODO Auto-generated constructor stub
 
 }
@@ -57,6 +57,14 @@ int Robot::getXCord(){
 }
 int Robot::getYCord(){
     return yCord;
+}
+
+
+std::string Robot::getVideoURL() {
+    return videoURL;
+}
+void Robot::setVideoURL(std::string url) {
+    videoURL = url;
 }
 
 
