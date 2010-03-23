@@ -1,20 +1,52 @@
+/*
+  @ start up receive
+  - line type (black/white)
+  - homeX
+  - homeY
+  - maxX
+  - maxY
+  - destX
+  - destY
+  
+  @ start up send
+  - battery level
+  
+  @ feedback
+  - curX
+  - curY
+  - tachometer count
+  - heading
+  - battery level
+  - pan deg
+*/
+
+// controller
+#define USE_CONTROLLER 0   // 0-no 1-yes
 
 // mailboxes
-#define OUTBOX 0  // remote computer
-#define INBOX 1   // unique to NXT
+#define OUTBOX 0  // to controller
+#define INBOX 1   // from controller
 
-// motors
+// wheels
 #define MOTOR_LEFT OUT_A
 #define MOTOR_RIGHT OUT_C
-#define MOTOR_CAMERA OUT_B
+#define MOTORS OUT_AC
 
-#define SPEED 50
+#define SPEED 40
 #define SPEED_ADJUST 5    // > 0
 #define SPEED_TURN 20
 #define SPEED_PAN 10
 #define TIME_TURN 300     // milliseconds
+#define TURN90 180
+#define TURN180 360
 
-// sensors
+// camera
+#define MOTOR_CAMERA OUT_B
+
+#define PAN_RATIO 7 / 3
+#define PAN_SPEED 50
+
+// light sensors
 #define _SENSOR_LEFT S2
 #define _SENSOR_RIGHT S3
 #define SENSOR_LEFT SENSOR_2
@@ -23,17 +55,43 @@
 #define THRESHOLD 100
 #define SENSOR_MAX 1023
 
+// sonar sensor
+#define _SONAR S4
+#define SONAR SensorUS(_SONAR)
+
+#define NEAR 15        // cm
+
 // errors
 
-// status flags
-#define INTERSECTION 1
+// MODE
+#define DESTINATION 0
+#define LINE_FOLLOW 1
+#define INTERSECTION 2
 
-//bearings
+// heading
 #define NORTH 0
 #define EAST 1
 #define SOUTH 2
 #define WEST 3
 
+// destination
+#define STRAIGHT 0
+#define LEFT 1
+#define RIGHT 2
+#define ARRIVED 3
+
+// action
+#define CLEARED -1
+#define STOP 0
+#define LEFT 1
+#define RIGHT 2
+#define TURNAROUND 3
+#define PAN 4
+#define FORWARD 5
+#define FORWARD_X 6
+
+// other
+#define FOREVER while(1)
 
 // location and heading
 int curX;
@@ -42,6 +100,9 @@ int destX;
 int destY;
 int maxX;
 int maxY;
+int homeX;
+int homeY;
+int tacho = 0;
 int heading;    // 0-north 1-east 2-south 3-west
 int curPan;
 int destPan;
@@ -52,10 +113,17 @@ int LEFT_LIGHT;
 int RIGHT_DARK;
 int RIGHT_LIGHT;
 
+int LEFT_MAX = 0;
+int LEFT_MIN = 100;
+int RIGHT_MAX = 0;
+int RIGHT_MIN = 100;
+
 // others
 int MODE = 0; // 0-dest 1-moving 2-intersection
 int last_sensor = 0;
 int status = 0; // flags
+int action = 0;
+int actionValue = 0;
 
 /*
  *   DEPENDENT FUNTIONS
@@ -67,7 +135,7 @@ void motorPower(int left, int right)
  OnFwd(MOTOR_RIGHT, right);
 }
 
-int battery_level()
+int battery()
 {
  return BatteryLevel() / 90;
 }
@@ -77,14 +145,31 @@ void send(string s)
  SendMessage(OUTBOX,s);
 }
 
+string read( int box, int clear )
+{
+ string msg;
+ ReceiveMessage( box, clear, msg );
+ return msg;
+}
 
 /*
  *    INDEPENDINT FUNCTIONS
  */
- 
+void stopMotors()
+{
+ motorPower(0,0);
+}
+
 void forward()
 {
  motorPower(SPEED, SPEED);
+}
+
+void forwardWait(int ms)
+{
+ forward();
+ Wait(ms);
+ stopMotors();
 }
 
 void reverse()
@@ -92,43 +177,108 @@ void reverse()
  motorPower( -SPEED, -SPEED);
 }
 
-void stopMotors()
-{
- motorPower(0,0);
-}
-
 void turnRight()
 {
  motorPower(SPEED_TURN, -SPEED_TURN / 2);
- Wait(TIME_TURN);
+ //Wait(TIME_TURN);
+ while(MotorRotationCount(MOTOR_LEFT)<TURN90);
  stopMotors();
  heading = (heading + 1) % 4;
+}
+
+void turnRightWait(int before, int after)
+{
+ forwardWait(before);
+ turnRight();
+ forwardWait(after);
 }
 
 void turnLeft()
 {
  motorPower(-SPEED_TURN / 2, SPEED_TURN);
- Wait(TIME_TURN);
+ //Wait(TIME_TURN);
+ while(MotorRotationCount(MOTOR_LEFT)<TURN90);
  stopMotors();
- heading = (heading) ? 3 : (heading - 1);
+ heading = (heading) ? WEST : (heading - 1);
+}
+
+void turnLeftWait(int before, int after)
+{
+ forwardWait(before);
+ turnLeft();
+ forwardWait(after);
 }
 
 void turnAround()
 {
  motorPower(SPEED_TURN, -SPEED_TURN);
- Wait(TIME_TURN);
+ //Wait(TIME_TURN);
+ while(MotorRotationCount(MOTOR_LEFT)<TURN180);
  stopMotors();
  heading = (heading + 2) % 4;
 }
 
 void arrived()
 {
- MODE = 0;
+ MODE = DESTINATION;
 }
 
 void setStatus(int s)
 {
  status |= s;
+}
+
+void calibrate()
+{
+ int left, right;
+ 
+ motorPower(25,-25);
+ repeat(5)
+ {
+  Wait(100);
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ }
+ stopMotors();
+ motorPower(-25,25);
+ repeat(10);
+ {
+  Wait(100);
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ }
+ stopMotors();
+ motorPower(25,-25);
+ repeat(5);
+ {
+  Wait(100);
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ }
+}
+
+void pan(int deg)
+{
+ int t = deg * PAN_RATIO;
+ RotateMotor(MOTOR_CAMERA,PAN_SPEED,t);
 }
 
 /*
@@ -137,11 +287,36 @@ void setStatus(int s)
  
 task lineFollower()
 {
-  int x, y, pos, left, right;
-  
-  while(1)
+ int pos, adj, left, right;
+ 
+ FOREVER
+ {
+  while(MODE==LINE_FOLLOW)
   {
-   while(MODE==0);
+   if(SONAR<=NEAR)
+   {
+    stopMotors();
+    while(SONAR<=NEAR);
+   }
+
+   pos = SENSOR_RIGHT - SENSOR_LEFT;
+   adj = pos / SPEED_ADJUST;
+   left = SPEED + adj;
+   right = SPEED - adj;
+   motorPower(left,right);
+
+   if (!pos) last_sensor = (pos>0)? 0 : 1;
+  }
+ }
+}
+
+task lineFollower_auto()
+{
+  int x, y, pos, left, right, adj;
+  
+  FOREVER
+  {
+   while(MODE!=LINE_FOLLOW);
 
     x = destX - curX;
     y = destY - curY;
@@ -154,11 +329,18 @@ task lineFollower()
       turnAround();
      }
 
-    while(MODE==1)
+    while(MODE==LINE_FOLLOW)
     {
+     if(SONAR<=NEAR)
+     {
+      stopMotors();
+      while(SONAR<=NEAR);
+     }
+     
      pos = SENSOR_RIGHT - SENSOR_LEFT;
-     left = SPEED + pos / SPEED_ADJUST;
-     right = SPEED - pos / SPEED_ADJUST;
+     adj = pos / SPEED_ADJUST;
+     left = SPEED + adj;
+     right = SPEED - adj;
      motorPower(left,right);
      
      if (!pos) last_sensor = (pos>0)? 0 : 1;
@@ -166,13 +348,60 @@ task lineFollower()
   }
 }
 
+/* turn the camera by a degree
+   +deg : clockwise
+   -deg : counter-clockwise
+*/
+task camera()
+{
+ int deg;
+ 
+ FOREVER
+ {
+  while( action != PAN );
+  
+  deg = actionValue;
+  action = CLEARED;
+
+  pan( deg );
+ }
+}
 
 task intersection()
 {
- int direction; // 0-straight 1-left 2-right 3-arrived
- int x, y;
+ int value, curAction;
  
- while(1)
+ FOREVER
+ {
+  while( (!LEFT_DARK || !RIGHT_DARK) || MODE!=INTERSECTION);
+  
+  MODE = INTERSECTION;
+  
+  Wait(10);
+  
+  value = actionValue;
+  curAction = action;
+  action = CLEARED;
+  
+  switch( curAction )
+  {
+   case STOP : break;
+   case LEFT : turnLeftWait( 400, 200 ); break;
+   case RIGHT : turnRightWait( 400, 200 ); break;
+   case TURNAROUND : turnAround(); break;
+   case FORWARD : MODE = LINE_FOLLOW; break;
+   case FORWARD_X : forwardWait( value ); break;
+   default: break;
+  }
+
+ }
+}
+
+task intersection_auto()
+{
+ int direction, x, y;
+ 
+ FOREVER
  {
   x = destX - curX;
   y = destY - curY;
@@ -180,41 +409,42 @@ task intersection()
   // next intersection
   switch (heading)
   {
-   case NORTH : y++; break;
-   case EAST : x++; break;
-   case SOUTH : y--; break;
-   case WEST : x--; break;
+   case NORTH : y--; break;
+   case EAST : x--; break;
+   case SOUTH : y++; break;
+   case WEST : x++; break;
    default : break;
   }
   
   // next action
   if (x==0 && y==0)
   {
-   direction = 3;
+   direction = ARRIVED;
   }
   else if (heading==NORTH && y==0) // heading north approaching destY
   {
-   direction = (x<0) ? 1 : 2;
+   direction = (x<0) ? LEFT : RIGHT;
   }
   else if (heading==EAST && x==0) // heading east approaching destX
   {
-   direction = (y<0) ? 2 : 1;
+   direction = (y<0) ? RIGHT : LEFT;
   }
   else if (heading==SOUTH && y==0) // heading south approaching destY
   {
-   direction = (x<0) ? 2 : 1;
+   direction = (x<0) ? RIGHT : LEFT;
   }
   else if (heading==WEST && x==0) // heading west approaching dextX
   {
-   direction = (y<0) ? 1 : 2;
+   direction = (y<0) ? LEFT : RIGHT;
   }
   else // keep going straight
   {
-   direction = 0;
+   direction = STRAIGHT;
   }
   
   // found intersection
-  if (LEFT_DARK && RIGHT_DARK)
+  //if (LEFT_DARK && RIGHT_DARK)
+  while( !LEFT_DARK || !RIGHT_DARK );
   {
    // increment current position
    switch (heading)
@@ -231,15 +461,15 @@ task intersection()
    // perform required turn/action
    if( direction )
    {
-    MODE = 2;
+    MODE = INTERSECTION;
     
     stopMotors();
     
     switch (direction)
     {
-     case 1 : turnLeft(); break;
-     case 2 : turnRight(); break;
-     case 3 : arrived(); break;
+     case LEFT : turnLeftWait( 400, 200 ); break;
+     case RIGHT : turnRightWait( 400, 200 ); break;
+     case ARRIVED : arrived(); break;
      default: break;
     }
    }
@@ -247,10 +477,12 @@ task intersection()
  }
 }
 
-task sensors()
+// dark line, light ground
+task sensor()
 {
  int left, right;
- while(1)
+ 
+ FOREVER
  {
   left = SENSOR_LEFT;
   right = SENSOR_RIGHT;
@@ -262,18 +494,91 @@ task sensors()
  }
 }
 
+// light line, dark ground
+task sensors_white()
+{
+ int left, right;
+ 
+ FOREVER
+ {
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  LEFT_LIGHT = left < THRESHOLD;
+  LEFT_DARK = left > (SENSOR_MAX - THRESHOLD);
+  RIGHT_LIGHT = right < THRESHOLD;
+  RIGHT_DARK = right < (SENSOR_MAX - THRESHOLD);
+ }
+}
+
 task receiveCommand()
 {
- ClearScreen();
  string msg = "";
+ string cmd = "";
+ int space;
+ int value;
+ int i;
+ int len;
  
- while(1)
+ FOREVER
  {
   ReceiveMessage(INBOX,true,msg);
-  
-  if(StrLen(msg)>0)
+
+  len = StrLen(msg);
+
+  if(len>0)
   {
-   //print(msg);
+   space = -1;
+   value = -1;
+   
+   for( i=0; i<len; i++ )
+   {
+    if( SubStr(msg,i,i+1) == " " )
+    {
+     space = i;
+     break;
+    }
+   }
+   
+   cmd = SubStr(msg,0,space);
+   msg = SubStr(msg,i+1,len);
+   value = StrToNum(msg);
+   value = (space>0)?value:0;
+   
+   while( action != CLEARED );
+   
+   switch( cmd )
+   {
+    case "left" :
+         action = LEFT;
+         break;
+    case "right" :
+         action = RIGHT;
+         break;
+    case "turnaround" :
+         action = TURNAROUND;
+         break;
+    case "stop" :
+         action = STOP;
+         break;
+    case "forward" :
+         if( value )
+         {
+          action = FORWARD_X;
+          actionValue = value;
+         }
+         else
+         {
+          action = FORWARD;
+         }
+         break;
+    case "pan" :
+         action = PAN;
+         actionValue = value;
+         break;
+    default :
+         break;
+   }
   }
  }
 }
@@ -281,28 +586,38 @@ task receiveCommand()
 /*
  * 1. current location (x,y)
  * 2. current heading
- * 3. current camera pan
- * 4. battery life percent
- * 5. status flags
+ * 3. current tachometer count
+ * 4. current camera pan
+ * 5. battery life percent
+ * 6. status flags
+ *
+ * if OUTBOX is empty then fill it
  */
 task sendFeedBack()
 {
    const string d = " ";
-   string x, y, h, c, b, s, stat;
+   string x, y, t, h, c, b, s, stat, msg;
 
-   while(1)
+   FOREVER
    {
-      while(!status) { Wait(100); }
-
-      x = NumToStr(curX);
-      y = NumToStr(curY);
-      h = NumToStr(heading);
-      c = NumToStr(curPan);
-      b = NumToStr(battery_level());
-      stat = NumToStr(status);
-      s = StrCat(x,d,y,d,h,d,c,d,b,d,stat);
-
-      send(s);
+      ReceiveMessage(OUTBOX,false,msg);
+      
+      if( StrLen(msg) > 0 )
+      {
+       x = NumToStr(curX);
+       y = NumToStr(curY);
+       t = NumToStr(tacho);
+       h = NumToStr(heading);
+       c = NumToStr(curPan);
+       b = NumToStr(battery());
+       stat = NumToStr(status);
+       s = StrCat(x,d,y,d,t,d,h,d,c,d,b,d,stat);
+      
+       ReceiveMessage(OUTBOX,true,msg);
+       SendMessage(OUTBOX,s);
+      }
+      
+      Wait(25);
 
       status = 0;
    }
@@ -310,12 +625,43 @@ task sendFeedBack()
 
 task main()
 {
- Precedes(lineFollower,intersection,sensors,receiveCommand,sendFeedBack);
+ string msg;
+ 
+ if(USE_CONTROLLER)
+ {
+  ReceiveMessage(INBOX,true,msg);
+  
+  do {
+    ReceiveMessage(INBOX,true,msg);
+  } while( msg != "start" );
+  
+  Precedes(lineFollower,intersection,receiveCommand,sendFeedBack);
+ }
+ else // without controller
+ {
+  Precedes(lineFollower_auto,intersection_auto,sensor);
 
+  // initials
+  curX = 1;
+  curY = 0;
+  maxX = 2;
+  maxY = 2;
+  heading = 0;
+  MODE = 1;
+  destX = 2;
+  destY= 1;
+ }
+ 
  // set light sensors
  SetSensorType(_SENSOR_LEFT, SENSOR_TYPE_LIGHT_ACTIVE);
  SetSensorType(_SENSOR_RIGHT, IN_TYPE_LIGHT_ACTIVE);
  SetSensorMode(_SENSOR_LEFT, SENSOR_MODE_RAW);
  SetSensorMode(_SENSOR_RIGHT, SENSOR_MODE_RAW);
-
+ 
+ // set sonar sensor
+ SetSensorLowspeed(_SONAR);
+ 
+ //calibrate();
+ 
+ Wait(1000);
  }
