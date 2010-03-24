@@ -35,6 +35,35 @@ int DataFile::write(void* data)
                 std::cout << "Writing ROBOT data\n";
                 Vector_ts<Robot*>* robots = (Vector_ts<Robot*>*)data;
                 
+                Vector_ts<Robot*>::iterator it;
+                Vector_ts<Robot*>::iterator it_end = robots->end();
+                
+                // build array of robotInit structs
+                robotInit* r = new robotInit[robots->size()];
+                int i = 0;
+                for (it = robots->begin(); it < it_end; ++it) {
+                    r[i].RID = (*it)->getRID();
+                    r[i].x =(*it)->getXCord();
+                    r[i].y =(*it)->getYCord();
+                    r[i].VideoURL = new std::string((*it)->getVideoURL());
+
+                    ++i; 
+                }
+
+                byteArray byteArr;
+                write_data(r, i, &byteArr);
+
+                // delete robotInit array
+                while (i > 0) {
+                    --i;
+                    delete r[i].VideoURL;
+                }
+                delete[] r;
+
+                std::cout << "Writing data to ROBOT file\n";
+                file.write(byteArr.array, byteArr.size);
+
+                delete[] byteArr.array;
             }
             break;
 

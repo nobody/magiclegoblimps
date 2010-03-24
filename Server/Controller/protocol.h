@@ -47,15 +47,15 @@ struct byteArray{
     int size;
 };
 
-inline void write(robotInit* data, short number, byteArray* byte_ptr){
+inline void write_data(robotInit* data, short number, byteArray* byte_ptr){
     char* array;
     unsigned short* sizes = new unsigned short[number];
     int overall_size = 0;
     char** structs = new char*[number];
     for(int i = 0; i < number; ++i){
-        short str_len = data[i].VideoURL->size();
+        short str_len = data[i].VideoURL->size() + 1;
         const char* url = data[i].VideoURL->c_str();
-        short size = sizeof(int)*3 + str_len + 2;
+        short size = sizeof(int)*3 + str_len + sizeof(short)*2;
         structs[i] = new char[size];
 
         //put the size on the top of the array
@@ -128,7 +128,7 @@ inline void write(robotInit* data, short number, byteArray* byte_ptr){
 }
 
 
-inline void write(robotUpdate* data, short number, byteArray* byte_ptr){
+inline void write_data(robotUpdate* data, short number, byteArray* byte_ptr){
     char* array;
     unsigned short* sizes = new unsigned short[number]; 
     int overall_size = 0;
@@ -146,7 +146,7 @@ inline void write(robotUpdate* data, short number, byteArray* byte_ptr){
 
     }
 }
-inline int read(){
+inline int read_data(){
 
 }
 
