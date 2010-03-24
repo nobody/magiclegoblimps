@@ -22,6 +22,7 @@
 #include "Vector_ts.h"
 #include "Robot.h"
 #include "Object.h"
+#include "DataFile.h"
 
 class controller {
     public:
@@ -41,6 +42,9 @@ class controller {
 
         Vector_ts<Robot*>* robots;
         Vector_ts<Object*>* objs;
+
+        static DataFile *robofile;
+        static DataFile *objfile;
 
         demand_t demand;
 
