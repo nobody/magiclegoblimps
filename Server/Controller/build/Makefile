@@ -16,6 +16,7 @@ OBJS = controller.o \
 	   TcpServer.o \
 	   AdminHandler.o \
 	   VideoHandler.o \
+	   DataFile.o \
 	   #Qos.o \
 	   Point.o
 

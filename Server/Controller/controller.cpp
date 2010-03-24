@@ -10,15 +10,34 @@
 
 #include "controller.h"
 
+DataFile* controller::robofile;
+DataFile* controller::objfile;
+
 controller::controller(boost::asio::io_service& io_service) 
     : io_(io_service)
 {
     std::cout << "In controller constructor\n";
+
+    // check if static variables are NULL and initialize them if necessary
+    if (!robofile)
+        robofile = new DataFile("robots.dat",  DataFile::ROBOT);
+    if(!objfile)
+        objfile  = new DataFile("objects.dat", DataFile::OBJECT);
     
     db = new DbManager();
 
-    robots = new Vector_ts<Robot*>();
-    objs = new Vector_ts<Object*>();
+    //robots = new Vector_ts<Robot*>();
+    robots = (Vector_ts<Robot* >*) robofile->read();
+    objs   = (Vector_ts<Object*>*)  objfile->read();
+    //objs = new Vector_ts<Object*>();
+    if (!robots) {
+        std::cerr << "!!WARNING!! Robot data file unreadable. Creating new vector\n";
+        robots = new Vector_ts<Robot*>();
+    }
+    if (!objs) {
+        std::cerr << "!!WARNING!! Object data file unreadable. Creating new vector\n";
+        objs = new Vector_ts<Object*>();
+    }
 
     admin = new AdminHandler;
     adminSrv = new TcpServer(io_service, 10000, admin);
@@ -43,6 +62,9 @@ controller::~controller() {
 
     delete vids;
     delete vidsSrv;
+
+    delete robofile;
+    delete objfile;
 }
 
 int controller::testdb() {
