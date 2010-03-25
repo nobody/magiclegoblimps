@@ -27,7 +27,7 @@ private:
 	static const int TURN_SPEED = 30;
 	static const int PAN_SPEED = 10;
 
-		static const int IN_MAILBOX = 0;
+	static const int IN_MAILBOX = 0;
 	static const int OUT_MAILBOX = 1;
 
 	int bluetoothPort_;

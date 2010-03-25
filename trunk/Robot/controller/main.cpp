@@ -1,6 +1,5 @@
 #include <string>
 #include <conio.h>
-#include <process.h>
 
 #include "Tokenizer.h"
 
@@ -15,39 +14,8 @@ Controller* controller;
 
 bool running = true;
 
-void UpdateLoop(void* params)
-{
-	while (running)
-	{
-		controller->Update();
-	}
-
-	_endthread();
-}
-
-void LocalDisplay(void* params)
-{
-	while (running)
-	{
-		vector<Robot*> robots = controller->GetRobotVector();
-		vector<Robot*>::iterator it;
-
-		for (it = robots.begin(); it != robots.end(); it++)
-		{
-			if ((*it)->GetCamConnected())
-				(*it)->GetCamera()->DisplayFrame();
-		}
-
-		cvWaitKey(10);
-	}
-
-	_endthread();
-}
-
 void LocalInput()
 {
-	//handle input on local machine
-
 	//all of this needs serious error checking and cleaning up
 
 	cout << "INPUT: ";
@@ -68,6 +36,23 @@ void LocalInput()
 	if (tokens[0].compare("quit") == 0)
 		running = false;
 
+	//connectserver ip
+	if (tokens[0].compare("connectserver") == 0)
+	{
+		string ip = tokens[1];
+	}
+
+	//testconnect
+	if (tokens[0].compare("testconnect") == 0)
+	{
+		//lazy connection for repeat testing
+		Robot* robot = new Robot(1, "192.168.1.113", false);
+
+		robot->Connect();
+
+		controller->AddRobot(robot);
+	}
+
 	//addrobot port/id ip true/false
 	if (tokens[0].compare("addrobot") == 0)
 	{
@@ -80,6 +65,8 @@ void LocalInput()
 			robot = new Robot(port, ip, true);
 		else if (tokens[3].compare("false") == 0)
 			robot = new Robot(port, ip, false);
+
+		robot->Connect();
 
 		controller->AddRobot(robot);
 	}
@@ -144,21 +131,42 @@ void LocalInput()
 
 int main(int argc, char* argv[])
 {
-	//grab server IP from args
-
 	controller = new Controller();
-
-	_beginthread(UpdateLoop, 0, NULL);
-	_beginthread(LocalDisplay, 0, NULL);
 
 	cout << "ROBOT CONTROLLER" << endl;
 	cout << "----------------" << endl;
 
 	while (running)
 	{	
-		if (kbhit())
+		if (_kbhit())
 			LocalInput();
+
+		controller->Update();
+
+		int c = cvWaitKey(10);
+
+		vector<Robot*> robots = controller->GetRobotVector();
+		vector<Robot*>::iterator it;
+
+		for (it = robots.begin(); it != robots.end(); it++)
+		{
+			(*it)->GetCamera()->Update();
+
+			if ((*it)->GetCamera()->GetLocalDisplay())
+			{
+				if (c != -1)
+					(*it)->GetCamera()->SendKey(c);
+
+				(*it)->GetCamera()->DisplayFrame();
+			}
+		}
 	}
+
+	controller->Disconnect();
+
+	delete controller;
 
 	return 0;
 }
+
+//http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml

@@ -1,5 +1,4 @@
 #include "Robot.h"
-#include "Tokenizer.h" 
 
 Robot::Robot(int port, string ip, bool dLink)
 {
@@ -12,10 +11,6 @@ Robot::Robot(int port, string ip, bool dLink)
 	camConnected_ = false;
 	robotOnline_ = false;
 	robotActive_ = false;
-
-	cout << "Bringing Robot " << id_ << " online..." << endl;
-
-	Robot::Connect();
 }
 
 Robot::~Robot()
@@ -26,6 +21,8 @@ Robot::~Robot()
 
 void Robot::Connect()
 {
+	cout << "Bringing Robot " << id_ << " online..." << endl;
+
 	if (!nxtConnected_)
 	{
 		if (nxt_->Connect())
@@ -111,5 +108,10 @@ void Robot::ExecuteCommand(string command)
 		{
 			nxt_->SendMessage("turn right " + tokens[2]);
 		}
+	}
+
+	if (tokens[0].compare("target") == 0)
+	{
+		camera_->SetTarget(atoi(tokens[1].c_str()));
 	}
 }
