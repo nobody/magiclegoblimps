@@ -1,10 +1,13 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
+#include <time.h>
 #include <vector>
-#include <process.h>
+#include <Windows.h>
 
 #include "Robot.h"
+#include "Tokenizer.h" 
+#include "TrackingObject.h"
 
 using namespace std;
 
@@ -24,7 +27,14 @@ public:
 
 	vector<Robot*> GetRobotVector();
 
+	void Disconnect();
+
 	void Update();
+
+	static vector<TrackingObject*> GetTrackableObjects() 
+	{ 
+		return trackableObjects_;
+	}
 
 private:
 	static const int POLL_INTERVAL = 10;
@@ -33,6 +43,8 @@ private:
 
 	float timer_;
 	time_t lastTime_;
+
+	static vector<TrackingObject*> trackableObjects_;
 };
 
 #endif

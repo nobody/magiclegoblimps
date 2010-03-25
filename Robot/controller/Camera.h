@@ -4,9 +4,16 @@
 #define CV_NO_BACKWARD_COMPATIBILITY
 #define HIGHGUI_NO_BACKWARD_COMPATIBILITY
 
+#include <iostream>
+#include <string>
+#include <time.h>
+#include <vector>
+
 #include <cv.h>
 #include <highgui.h>
-#include <string>
+
+//#include "Controller.h"
+#include "TrackingObject.h"
 
 #ifdef _DEBUG
 #pragma comment(lib, "cv200d.lib")
@@ -28,16 +35,6 @@
 
 using namespace std;
 
-enum ObjectColor
-{
-	RED = 0,
-	GREEN = 1,
-	BLUE = 2,
-	CYAN = 3,
-	YELLOW = 4,
-	MAGENTA = 5,
-};
-
 class Camera
 {
 public:
@@ -54,10 +51,28 @@ public:
 	void StartDisplay();
 	void DisplayFrame();
 	void StopDisplay();
+	
+	void SetTarget(int id) { target_ = id; }
+
+	void SendKey(int key);
+
+	void Update();
 
 private:
+	static const int SCAN_INTERVAL = 3;
+	static const int LOCK_TIME = 1;
+
+	static const int MIN_AREA = 850;
+	static const int MAX_AREA = 115000;
+
+	static const int CENTERED_EPSILON = 15;
+
 	string dLinkUrl_;
 	string ciscoUrl_;
+
+	float scanTimer_;
+	float lockTimer_;
+	time_t lastTime_;
 
 	string ip_;
 	bool dLinkCam_;
@@ -65,12 +80,27 @@ private:
 	string pass_;
 
 	CvCapture* capture_;
+	IplImage* image_;
 
 	bool localDisplay_;
 	string displayWindowName_;
+	bool histDisplay_;
+	string histWindowName_;
 
-	ObjectColor trackingObject_;
-	vector<ObjectColor> visibleObjects_;
+	int inKey_;
+	bool waitingKey_;
+
+	bool showTracking_;
+	vector<TrackingObject*> trackableObjects_;
+	vector<TrackingObject*> possibleObjects_;
+	vector<TrackingObject*> visibleObjects_;
+
+	int target_;
+
+	bool locked_;
+
+	void Scan();
+	void Lock();
 };
 
 #endif

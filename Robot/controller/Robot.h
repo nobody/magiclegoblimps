@@ -2,8 +2,10 @@
 #define ROBOT_H
 
 #include <string>
+
 #include "Camera.h"
 #include "NXT.h"
+#include "Tokenizer.h"
 
 using namespace std;
 
@@ -52,6 +54,8 @@ private:
 
 	RobotFacing robotFacing_;
 	float cameraFacing_;
+
+
 };
 
 #endif

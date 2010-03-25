@@ -1,7 +1,4 @@
 #include "Controller.h"
-#include "Tokenizer.h" 
-
-#include <time.h>
 
 Controller::Controller()
 {
@@ -10,7 +7,20 @@ Controller::Controller()
 
 bool Controller::ConnectToServer(string ip)
 {
-	//connect to server
+	//because we're using Windows we'll use WinSock
+	//http://msdn.microsoft.com/en-us/library/ms737591(VS.85).aspx
+
+	WSADATA wsaData;
+	SOCKET connectSocket = INVALID_SOCKET;
+	//struct addrinfo *result = NULL, *ptr = NULL, hints;
+	char* sendBuf = "This is a test";
+	char recvBuf[512];
+	int iResult;
+	int recvBufLen = 512;
+
+	//iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
+
+	//ZeroMemory(&hints, sizeof(hints));
 
 	return false;
 }
@@ -22,10 +32,12 @@ void Controller::TestCommand(string command)
 
 	//temporary format (needs discussing with server group)
 	//very likely to change
-	//[command] [robotnumber] [subcommand] [value]
+	//[command]$[robotnumber]$[subcommand]$[value]
+
+	//see main.cpp for (badly implemented) usage
 
 	vector<string> tokens;
-	tokenize(command, tokens, " ");
+	tokenize(command, tokens, "$");
 
 	if (tokens.size() == 0)
 		return;
@@ -43,6 +55,8 @@ Robot* Controller::GetRobot(int id)
 		if (robots_[i]->GetID() == id)
 			return robots_[i];
 	}
+
+	return NULL;
 }
 
 void Controller::RemoveRobot(int id)
@@ -61,6 +75,25 @@ void Controller::RemoveRobot(int id)
 vector<Robot*> Controller::GetRobotVector()
 {
 	return robots_;
+}
+
+void Controller::Disconnect()
+{
+	for (int i = 0; i < robots_.size(); i++)
+	{
+		robots_[i]->Disconnect();
+		delete robots_[i];
+		robots_.erase(robots_.begin() + i);
+	}
+
+	//need to delete trackable objects after disconnect
+	/*
+	for (int i = 0; i < trackableObjects_.size(); i++)
+	{
+		delete trackableObjects_[i];
+		trackableObjects_.erase(trackableObjects_.begin() + i);
+	}
+	*/
 }
 
 void Controller::Update()
