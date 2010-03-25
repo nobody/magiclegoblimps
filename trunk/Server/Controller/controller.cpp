@@ -67,6 +67,28 @@ controller::~controller() {
     delete objfile;
 }
 
+
+int controller::writeRobots(Vector_ts<Robot*>* robots) {
+    if (robofile == NULL)
+        return -1;
+
+    robots->lock();
+    int ret = robofile->write(robots);
+    robots->unlock();
+
+    return ret;
+}
+int controller::writeObjects(Vector_ts<Object*>* objects) {
+    if (objfile == NULL)
+        return -1;
+
+    objects->lock();
+    int ret = objfile->write(objects);
+    objects->unlock();
+
+    return ret;
+}
+
 int controller::testdb() {
     db->printRequests();
     std::cout << "\n-----------------------------\n";
