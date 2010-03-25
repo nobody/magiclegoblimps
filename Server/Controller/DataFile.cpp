@@ -29,6 +29,7 @@ int DataFile::write(void* data)
     std::string fn("data/");
     fn.append(filename_);
     std::fstream file(fn.c_str(), std::fstream::out | std::fstream::trunc | std::fstream::binary);
+    int retVal = -1;
     switch (t_) {
         case ROBOT:
             {
@@ -64,6 +65,8 @@ int DataFile::write(void* data)
                 file.write(byteArr.array, byteArr.size);
 
                 delete[] byteArr.array;
+
+                retVal = 1;
             }
             break;
 
@@ -71,7 +74,8 @@ int DataFile::write(void* data)
             std::cout << "Writing OBJECT data\n";
             break;
     }
-    return -1;
+    file.close();
+    return retVal;
 }
 
 void* DataFile::read()
@@ -85,12 +89,51 @@ void* DataFile::read()
     std::string fn("data/");
     fn.append(filename_);
     std::fstream file(fn.c_str(), std::fstream::in | std::fstream::binary);
+    void* retVal = NULL;
     switch (t_) {
         case ROBOT:
             std::cout << "Reading ROBOT data\n";
             if (file.good()){
                 // read the data here.
                 std::cout << "ROBOT Datafile good.\n";
+
+                // get length of file:
+                file.seekg (0, std::fstream::end);
+                int length = file.tellg();
+                file.seekg (0, std::fstream::beg);
+
+                if (length > 1024*1024*1024) {
+                    std::cerr << "ROBOT datafile too large\n";
+                    break;
+                }
+                char* buffer = new char[length];
+
+                file.read(buffer, length);
+
+                readReturn* readRet;
+                read_data(buffer, readRet);
+
+                delete buffer;
+
+                // take array and construct Vector_ts from it
+                Vector_ts<Robot*>* robots = new Vector_ts<Robot*>;
+
+                robotInit* array = (robotInit*)readRet->array;
+
+                for (int i = 0; i < readRet->size; ++i) {
+                    boost::asio::ip::tcp::endpoint ep;
+                    Robot* r = new Robot(ep, array[i].RID);
+                    r->setXCord(array[i].x);
+                    r->setYCord(array[i].x);
+                    r->setVideoURL(*array[i].VideoURL);
+
+                    robots->push_back(r);
+
+                    delete array[i].VideoURL;
+                }
+                delete[] array;;
+
+                retVal = robots;
             }
             break;
 
@@ -103,7 +146,7 @@ void* DataFile::read()
             break;
     }
 
-    return NULL;
+    return retVal;
 }
 
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

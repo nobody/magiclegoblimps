@@ -46,6 +46,11 @@ struct byteArray{
     char* array;
     int size;
 };
+struct readReturn{
+    void* array;
+    int size;
+    int type;
+};
 
 inline void write_data(robotInit* data, short number, byteArray* byte_ptr){
     char* array;
@@ -146,8 +151,107 @@ inline void write_data(robotUpdate* data, short number, byteArray* byte_ptr){
 
     }
 }
-inline int read_data(){
 
+inline int readRobotInit(void* array, robotInit* &robots) {
+    char* arr = (char*)array;
+    char* current = arr+1;
+    char* ref;
+
+    // overall size
+    short overall_size;
+    ref = (char*)&overall_size;
+    ref[0] = current[0]; current++;
+    ref[1] = current[0]; current++;
+
+    robots = new robotInit[overall_size];
+
+    for (int i = 0; i < overall_size; ++i) {
+        short size;
+        int rid;
+        int x;
+        int y;
+        short str_len;
+        char* url;
+
+        
+        // retreive size
+        ref = (char*)&size;
+        ref[0] = current[0]; current++;
+        ref[1] = current[0]; current++;
+
+        // retrieve RID
+        ref = (char*)&rid;
+        for (int j = 0; j < sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        // retrieve x
+        ref = (char*)&x;
+        for (int j = 0; j < sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        // retrieve y
+        ref = (char*)&y;
+        for (int j = 0; j < sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        // retrieve str_len
+        ref = (char*)&str_len;
+        for (int j = 0; j < sizeof(short); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        // retrieve url
+        url = new char[str_len];
+        for (int j = 0; j < str_len; ++j) {
+            url[j] = current[0]; current++;
+        }
+
+        // build the robotInit struct
+        robots[i].RID = rid;
+        robots[i].x = x;
+        robots[i].y = y;
+        robots[i].VideoURL = new std::string(url);
+
+        delete[] url;
+    }
+    return overall_size;
+}
+
+// takes a void pointer to the data as output from write_data and an 
+inline int read_data(void* array, readReturn* ret){
+
+    switch( (char) ((char*)array)[0] ) {
+        case P_ROBOT_INIT:
+            {
+                robotInit* arr;
+                int count = readRobotInit(array, arr);
+
+                // Create a readReturn if we have a NULL pointer
+                if (!ret)
+                    ret = new readReturn;
+                ret->array = (void*)arr;
+                ret->size = count;
+                ret->type = P_ROBOT_INIT;
+
+                return count;
+            }
+
+        case P_ROBOT_UPDATE:
+
+            break;
+
+        case P_OBJECT:
+
+            break;
+
+        default:
+
+            std::cerr << "Attempt to read unknown type\n";
+    }
+    return -1;
 }
 
 #endif /* PROTOCOL_H_ */

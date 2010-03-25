@@ -30,6 +30,9 @@ class controller {
         virtual ~controller();
         int testdb();
 
+        static int writeRobots(Vector_ts<Robot*>*);
+        static int writeObjects(Vector_ts<Object*>*);
+
     private:
         boost::asio::io_service& io_;
         DbManager *db;
