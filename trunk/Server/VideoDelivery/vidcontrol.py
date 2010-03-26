@@ -6,9 +6,11 @@ incoming camera feeds, and all live feed urls. Polls the QoS server for updated
 feed and QoS status.
 """
 
+import os
 import time
 import socket
 import config
+import ffserver
 
 class VidFeed():
     """
@@ -20,24 +22,24 @@ class VidFeed():
     def __init__(self, obj=None):
         self.port = 0
         self.config_file = ''
-        self.ffserver_proc = None
-        self.ffmpeg_proc = None
-        self.feed_url = ''
-        self.stream_urls = ('', '') # (flv, swf)
-        self.encoding = {}
+        self.feed_url = '' # input from IP cams
+        self.feed_name = '' # from ffmpeg
+        self.stream_name = '' # flv/swf output
         self.objects = [] # list of tuples (object_id, QoS_rating)
 
+        self.encoding = {}
+        self.ffserver_proc = None
+        self.ffmpeg_proc = None
+
         if not obj == None:
-            self.stream_urls = (obj['cam'], '')
+            self.feed_url = obj['cam']
             self.objects.append((obj['object'], obj['QoS']))
 
     def __eq__(self, obj):
         if type(obj) is VidFeed:
-            pass
+            return obj.feed_url == self.feed_url
         else:
-            return self.stream_urls[0] == obj['cam'] \
-                   and self.objects[0][0] == obj['object'] \
-                   and self.objects[0][1] == obj['QoS']
+            return obj['cam'] == self.feed_url
 
     def update(self, obj):
         self.objects[0] = (obj['object'], obj['QoS'])
@@ -52,7 +54,6 @@ class VidControl():
     
     def __init__(self):
         # "constants"
-        self.CONFIG_FILE_TEMPLATE = 'config-template.txt'
         self.BUFFER_SIZE = 4096
         self.CONFIG_FILE_PREFIX = 'ffserver-'
         self.CONFIG_FILE_EXT = '.conf'
@@ -69,7 +70,6 @@ class VidControl():
         self.ports = []
         self.config_files = []
         self.next_port = 8090
-        self.next_id = 1
 
     def connect_QoS(self, addr=DEFAULT_ADDR, port=DEFAULT_PORT):
         """
@@ -98,22 +98,17 @@ class VidControl():
         2. Find and launch feeds not in self.feeds that are in vfeeds
         """
         for f in self.feeds:
-            if not f in vfeeds:
-                # TODO: delete feed
-                pass
+            if not f in vfeeds: # kill feed
+                self.kill_feed(f)
 
         for f in vfeeds:
-            print(f['cam'], f['object'], f['QoS'])
-            if f in self.feeds:
-                # TODO: update feed
+            if f in self.feeds: # update feed
                 i = self.feeds.index(f)
                 self.feeds[i].update(f)
-                pass
-            else: # create feed
+            else: # launch feed
                 feed = VidFeed(f)
                 self.feeds.append(feed)
                 self.launch_feed(feed)
-                pass
 
     def launch_feed(self, vfeed):
         """
@@ -123,22 +118,25 @@ class VidControl():
         - update database
         """
         # initialize vfeed object
-        vfeed.config_file = self.CONFIG_FILE_PREFIX + str(self.next_port) + \
-                            self.CONFIG_FILE_EXT
         vfeed.port = self.next_port
-        vfeed.feed_url = 
-        vfeed.stream_urls = (,)
+        strport = str(vfeed.port)
+        vfeed.config_file = settings.CONFIG_FILE_DIR + \
+                            settings.CONFIG_FNAME.format(strport)
+        vfeed.stream_name = settings.STREAM_NAME.format(strport)
+        vfeed.feed_name = settings.FEEDNAME
+        self.next_port += 1
 
         # generate a new config file
         config_data = {
-            'port': str(self.next_port),
-            'feed': 'feed' + str(self.next_id),
-            'stream': 'stream' + str(self.next_id)
+            'port': strport,
+            'feed': vfeed.feed_name,
+            'stream': vfeed.stream_name
         }
         self.config_gen.render(config_data, self.CONFIG_FILE_TEMPLATR,
                                vfeed.config_file)
-        self.next_id += 1
-        self.next_port += 1
+
+        ffserver.launch(vfeed)
+        # TODO: update database
 
     def kill_feed(self, vfeed):
         """
@@ -147,7 +145,10 @@ class VidControl():
         - update data structures
         - update database
         """
-        pass
+        ffserver.kill(vfeed)
+        os.remove(vfeed.config_file)
+        self.feeds.remove(vfeed)
+        # TODO: update database
 
     def runserver(self):
         """
@@ -167,12 +168,19 @@ class VidControl():
                 break
                 
             self.update_feeds(latest_feeds)
+            # TODO: QoS and archiving
             time.sleep(self.POLL_TIME)
 
     def killserver(self):
+        """
+        Cleanup all existing feeds then shutdown the server.
+        """
+        while len(self.feeds) > 0:
+            self.kill_feed(self.feeds[0])
         self.QoS_server.close()
 
 if __name__ == '__main__':
+    os.chdir(settings.ROOT_DIR)
     try:
         vc = VidControl()
         vc.runserver()
