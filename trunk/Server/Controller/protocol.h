@@ -42,8 +42,8 @@ struct robotUpdate{
 struct object{
     int OID;
     std::string* name;
+    long color_size;
     char* color;
-    size_t color_size;
 };
 
 struct byteArray{
@@ -58,9 +58,17 @@ struct readReturn{
 
 
 void write_data(int type, void* data_, short number, byteArray* byte_ptr);
+
+
+// If you get a robotInit array from this function,
+// 
+// You MUST delete robotInit.VideoURL when you are done with it!!!!
+//
 int read_data(void* array, readReturn* ret);
 
 int readRobotInit(void* array, robotInit* &robots);
+
+int readRobotUpdate(void* array, robotUpdate* &robots);
 
 #endif /* PROTOCOL_H_ */
 

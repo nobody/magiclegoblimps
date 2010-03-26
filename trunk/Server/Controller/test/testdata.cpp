@@ -41,7 +41,11 @@ int main() {
         std::cout << "  Y:   " << (*it)->getYCord() << "\n";
         std::cout << "  URL: " << (*it)->getVideoURL() << "\n";
         std::cout << "\n";
+
+        delete (*it);
     }
+
+    delete robots;
 
 
     return 0;
