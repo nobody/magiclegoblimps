@@ -110,10 +110,10 @@ void* DataFile::read()
 
                 file.read(buffer, length);
 
-                readReturn* readRet;
+                readReturn* readRet = new readReturn;
                 read_data(buffer, readRet);
 
-                delete buffer;
+                delete[] buffer;
 
                 // take array and construct Vector_ts from it
                 Vector_ts<Robot*>* robots = new Vector_ts<Robot*>;
@@ -132,6 +132,8 @@ void* DataFile::read()
                     delete array[i].VideoURL;
                 }
                 delete[] array;;
+
+                delete readRet;
 
                 retVal = robots;
             }

@@ -26,15 +26,10 @@ class VideoHandler : public TcpServer::ConnHandler {
         VideoHandler(Vector_ts<Robot*>* robots, Vector_ts<Object*>* objs);
         virtual ~VideoHandler();
 
-        typedef std::map<boost::asio::ip::tcp::endpoint, TcpServer::TcpConnection::pointer> conn_map;
-
         virtual void onConnect(TcpServer::TcpConnection::pointer tcp_connection);
 
     private:
         void threaded_on_connect(TcpServer::TcpConnection::pointer);
-        //void threaded_on_connect(boost::asio::ip::tcp::endpoint);
-
-        static conn_map connections;
 
         class session {
             public:
@@ -44,6 +39,7 @@ class VideoHandler : public TcpServer::ConnHandler {
                 void start();
 
             private:
+                VideoHandler* parent_;
                 TcpServer::TcpConnection::pointer conn_;
                 message read_message_;
                 Vector_ts<Robot*>* robots_;
@@ -59,7 +55,6 @@ class VideoHandler : public TcpServer::ConnHandler {
         
         Vector_ts<Robot*>* robots_;
         Vector_ts<Object*>* objs_;
-        std::vector<boost::shared_ptr<session> > sessions;
 };
 
 

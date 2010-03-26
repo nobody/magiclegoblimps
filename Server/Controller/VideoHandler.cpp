@@ -9,7 +9,7 @@
 
 #include "VideoHandler.h"
 
-VideoHandler::conn_map VideoHandler::connections;
+//VideoHandler::conn_map VideoHandler::connections;
 
 VideoHandler::VideoHandler(Vector_ts<Robot*>* robots, Vector_ts<Object*>* objs)
     : robots_(robots), objs_(objs)
@@ -31,10 +31,8 @@ void VideoHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection) {
 
 //void VideoHandler::threaded_on_connect(boost::asio::ip::tcp::endpoint conn){
 void VideoHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_connection){
-    //TcpServer::TcpConnection::pointer tcp_connection(connections[conn]);
 
-    boost::shared_ptr<session> sess(new session(tcp_connection, robots_, objs_));
-    sessions.push_back(sess);
+    session* sess = new session(tcp_connection, robots_, objs_);
     sess->start();
 }
 
@@ -151,6 +149,8 @@ void VideoHandler::session::do_close() {
     sock.close();
 
     conn_->releaseSocket();
+
+    delete this;
 }
 
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
