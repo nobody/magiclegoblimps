@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include "Vector_ts.h"
 #include "Robot.h"
+#include "protocol.h"
 
 //some constants
 #define ROBOT_INIT 0

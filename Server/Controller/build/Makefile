@@ -17,6 +17,7 @@ OBJS = controller.o \
 	   AdminHandler.o \
 	   VideoHandler.o \
 	   DataFile.o \
+	   protocol.o \
 	   #Qos.o \
 	   Point.o
 

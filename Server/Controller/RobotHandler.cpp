@@ -45,14 +45,16 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 	boost::asio::streambuf inputBuffer;
 	std::string* str_ptr;
 	boost::system::error_code error;
-	int indexOfChar = 0;
+	size_t count = 0;
 
 	//main listening loop for a server connection
 	std::cout<<"initiating loop\n";
 	while(connected){
 		std::cout<<"looping...\n";
 		//pull data from socket and release
-		indexOfChar = boost::asio::read_until(connections[connEP]->socket(), inputBuffer, '\n', error);		
+		//indexOfChar = boost::asio::read_until(connections[connEP]->socket(), inputBuffer, '\n', error);		
+
+		count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(3), error);
 		connections[connEP]->releaseSocket();
 
 		std::cout<<"data read, socket released\n";
@@ -70,7 +72,17 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		}
 
 		std::cout<<"made it past the error traps...\n";
-		
+
+		char* size = new char[4];
+		boost::asio::streambuf::const_buffers_type data = inputBuffer.data();
+		boost::asio::buffers_iterator<boost::asio::streambuf::const_buffers_type> iter = boost::asio::buffers_begin(data);
+		iter++;
+		for(int i = 0; i < 4; ++i){
+			size[i] = *iter;
+			std::cout<<std::hex<<size[i]<<"\n";
+			iter++;
+		}
+		/*	
 		//pull desired string from data
 		boost::asio::streambuf::const_buffers_type data = inputBuffer.data();
 		str_ptr = new std::string(boost::asio::buffers_begin(data), boost::asio::buffers_begin(data)+indexOfChar);
@@ -82,68 +94,72 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		//clean up from loop iteration 
 		inputBuffer.consume(indexOfChar);
 		//delete str_ptr;
+		*/
+		
+
 
 		//sleep abit so other threads can grab a lock on the socket
 		boost::this_thread::sleep(boost::posix_time::seconds(2));
+		
 
 	}
-	//clean up stuff from connection
+//clean up stuff from connection
 }
 
 void RobotHandler::parseRobots(std::string* msg, boost::asio::ip::tcp::endpoint connEP, int use){
+
+bool moreRobots = true;
+size_t end = 0;
+int robotID = 0;
+int x = 0; 
+int y = 0;
+std::string current;
+while(moreRobots){
+
+//parse robot data from string here
+//find the end of the id
+end = msg->find('$');
+
+//check to see if there is a dollar sign
+if (end != std::string::npos){
+	//pull out the id and create a temporary string that is the 
+	//current string minus the id, delete the current string and 
+	//reassign the pointer to the new string;
+	current = msg->substr(0, end);
+	std::string* temp = new std::string(msg->substr(end+1, std::string::npos));
+	delete msg;
+	msg = temp;
+}else{
+	//complain, clean up, and return the function
+}
+robotID = atoi(current.c_str());
+
+//find the end of xcord
+end = msg->find('$');
+
+if (end != std::string::npos){
+	//pull out the id and create a temporary string that is the 
+	//current string minus the xCord, delete the current string and 
+	//reassign the pointer to the new string;
+	current = msg->substr(0, end);
+		std::string* temp = new std::string(msg->substr(end+1, std::string::npos));
+		delete msg;
+		msg = temp;
+	}else{
+		//complain, clean up, and return the function
+	}
+
+	x = atoi(current.c_str());
+
 	
-	bool moreRobots = true;
-	size_t end = 0;
-	int robotID = 0;
-	int x = 0; 
-	int y = 0;
-	std::string current;
-	while(moreRobots){
+	//find the end of Ycord
+	end = msg->find('$');
 
-		//parse robot data from string here
-		//find the end of the id
-		end = msg->find('$');
-
-		//check to see if there is a dollar sign
-		if (end != std::string::npos){
-			//pull out the id and create a temporary string that is the 
-			//current string minus the id, delete the current string and 
-			//reassign the pointer to the new string;
-			current = msg->substr(0, end);
-			std::string* temp = new std::string(msg->substr(end+1, std::string::npos));
-			delete msg;
-			msg = temp;
-		}else{
-			//complain, clean up, and return the function
-		}
-		robotID = atoi(current.c_str());
-
-		//find the end of xcord
-		end = msg->find('$');
-
-		if (end != std::string::npos){
-			//pull out the id and create a temporary string that is the 
-			//current string minus the xCord, delete the current string and 
-			//reassign the pointer to the new string;
-			current = msg->substr(0, end);
-			std::string* temp = new std::string(msg->substr(end+1, std::string::npos));
-			delete msg;
-			msg = temp;
-		}else{
-			//complain, clean up, and return the function
-		}
-
-		x = atoi(current.c_str());
-
-		
-		//find the end of Ycord
-		end = msg->find('$');
-
-		if (end != std::string::npos){
-			//pull out the id and create a temporary string that is the 
-			//current string minus the ycord, delete the current string and 
-			//reassign the pointer to the new string;
-			current = msg->substr(0, end);
+	if (end != std::string::npos){
+		//pull out the id and create a temporary string that is the 
+		//current string minus the ycord, delete the current string and 
+		//reassign the pointer to the new string;
+		current = msg->substr(0, end);
 			std::string* temp = new std::string(msg->substr(end+1, std::string::npos));
 			delete msg;
 			msg = temp;
