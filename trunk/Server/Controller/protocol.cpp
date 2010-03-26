@@ -206,9 +206,67 @@ int readRobotInit(void* array, robotInit* &robots) {
     return overall_size;
 }
 
+int readRobotUpdate(void* array, robotUpdate* &robots){
+
+    char* arr = (char*)array;
+    char* current = arr+5;
+    char* ref;
+
+    // overall size
+    short overall_size;
+    ref = (char*)&overall_size;
+    ref[0] = current[0]; current++;
+    ref[1] = current[0]; current++;
+
+    robots = new robotUpdate[overall_size];
+    
+    for (int i = 0; i < overall_size; ++i) {
+        short size;
+        int rid;
+        int x;
+        int y;
+        short str_len;
+        char* url;
+
+        
+        // retreive size
+        ref = (char*)&size;
+        ref[0] = current[0]; current++;
+        ref[1] = current[0]; current++;
+
+        // retrieve RID
+        ref = (char*)&rid;
+        for (int j = 0; j < sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        // retrieve x
+        ref = (char*)&x;
+        for (int j = 0; j < sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        // retrieve y
+        ref = (char*)&y;
+        for (int j = 0; j < sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        // build the robotInit struct
+        robots[i].RID = rid;
+        robots[i].x = x;
+        robots[i].y = y;
+    }
+
+    return overall_size;
+}
+
 // takes a void pointer to the data as output from write_data and an 
 int read_data(void* array, readReturn* ret){
-
+    
+    if(!ret || !array)
+        return P_NULL_PTR;
+    
     switch( (char) ((char*)array)[0] ) {
         case P_ROBOT_INIT:
             {
@@ -216,8 +274,8 @@ int read_data(void* array, readReturn* ret){
                 int count = readRobotInit(array, arr);
 
                 // Create a readReturn if we have a NULL pointer
-                if (!ret)
-                    ret = new readReturn;
+                //if (!ret)
+                //    ret = new readReturn
                 ret->array = (void*)arr;
                 ret->size = count;
                 ret->type = P_ROBOT_INIT;
@@ -226,7 +284,16 @@ int read_data(void* array, readReturn* ret){
             }
 
         case P_ROBOT_UPDATE:
+            {
+                robotUpdate* arr;
+                int count =readRobotUpdate(array arr);
 
+                ret->array = (void*)arr;
+                ret->size = count;
+                ret->type = P_ROBOT_UPDATE;
+
+                return count;
+            }
             break;
 
         case P_OBJECT:
