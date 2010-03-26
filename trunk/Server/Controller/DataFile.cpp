@@ -52,7 +52,7 @@ int DataFile::write(void* data)
                 }
 
                 byteArray byteArr;
-                write_data(r, i, &byteArr);
+                write_data(P_ROBOT_INIT, r, i, &byteArr);
 
                 // delete robotInit array
                 while (i > 0) {
