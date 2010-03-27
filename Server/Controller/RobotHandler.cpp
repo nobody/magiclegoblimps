@@ -26,13 +26,126 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
     connections[tcp_connection->socket().remote_endpoint()] = tcp_connection;
     tcp_connection->releaseSocket();
 
-    //insert initialization stuff here
+    //declare stuff to pull data;
+	boost::asio::streambuf inputBuffer;
+	boost::system::error_code error;
+    boost::asio::ip::tcp::endpoint connEP = tcp_connection->socket().remote_endpoint();
+    tcp_connection->releaseSocket();
+
+    //need to get the robots from the controller that just connected
+	size_t count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(3), error);
+	connections[connEP]->releaseSocket();
+
+	std::cout<<"data read, socket released\n";
+
+	//catch errors to tell when the connection closes;
+	if(error == boost::asio::error::eof){
+		std::cout<<"EOF\n";
+        //die gracefully, think i can do it by calling the cleanup connection method
+        
+        return;
+		
+	}
+	if(error == boost::asio::error::operation_aborted){
+		std::cout<<"aborted..\n";
+		//die gracefully
+
+        return;
+	}
+
+	std::cout<<"made it past the error traps...\n";
+	
+	//get the total number of bytes to read
+	char* arr = new char[4];
+	boost::asio::streambuf::const_buffers_type data = inputBuffer.data();
+	boost::asio::buffers_iterator<boost::asio::streambuf::const_buffers_type> iter = boost::asio::buffers_begin(data);
+
+	//int type = *iter;
+	iter++;
+	for(int i = 0; i < 4; ++i){
+		arr[i] = *iter;
+		std::cout<<std::hex<<arr[i]<<"\n";
+		iter++;
+	}
+	
+	//compute the total and the bytes remaing to be pulled from the socket
+	int total = *((int*)arr);
+	int remaining = total - count;
+
+	//if there are bytes remainging to be read read them
+	if(remaining > 0){
+		count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining), error);
+		connections[connEP]->releaseSocket();
+
+
+		//catch errors to tell when the connection closes;
+		if(error == boost::asio::error::eof){
+			std::cout<<"EOF\n";
+			//die gracefully;
+
+			return;
+		}
+		if(error == boost::asio::error::operation_aborted){
+			std::cout<<"aborted..\n";
+            //die gracefully 
+
+			return;
+		}
+	}
+
+	//reset all the varibles with the new data
+	delete[] arr;
+	arr = new char[total];
+	data = inputBuffer.data();
+	iter = boost::asio::buffers_begin(data);
+	for(int i = 0; i < total; ++i){
+		arr[i] = *iter;
+		iter++;
+	}
+
+	//consume the stuff in the buffer, we're done with it now;
+	//wasn't quite sure how to deal with the size_t issue...
+	inputBuffer.consume((size_t)total);
+
+	//convert the char array to a 
+	readReturn* message = new readReturn;
+	if(read_data((void*)arr, message) < 0){
+		// read failed clean up the mess
+	}
+
+	//delete the array, we're done with it now
+	delete arr;
+
+	//switch on the type of struct recovered
+	if(message->type != P_ROBOT_INIT){
+        //die gracefully
+    }	
+	
+    //initilize stuff
+	Vector_ts<Robot*>::iterator it;
+	robotInit* robotData = new robotInit[message->size];
+	robotData = (robotInit*)(message->array);
+
+    //get a lock on the vector
+	robots->lock();
+	for(int i = 0; i < message->size; ++i){
+		Robot* temp = new Robot(connEP, robotData[i].RID);
+        temp->setXCord(robotData[i].x);
+        temp->setYCord(robotData[i].y);
+        //temp->setVideoURL(std::string(robotData[i].VideoURL));
+        
+        robots->push_back(temp);
+        //might want to clean up some stuff here if patrick doesn't fix destructor
+	}
+	robots->unlock();
+	delete[] robotData;	
+
+	//clean up stuff from 
+	delete message;
     
     //spawn a thread to listen on the socket and return the function
     std::cout<<"launching threadd...\n";
-    boost::asio::ip::tcp::endpoint endpoint = tcp_connection->socket().remote_endpoint();
-    tcp_connection->releaseSocket();
-    boost::thread connThread(&RobotHandler::threaded_listen, this, endpoint);
+    boost::thread connThread(&RobotHandler::threaded_listen, this, connEP);
 
 }
 
@@ -53,6 +166,9 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		std::cout<<"looping...\n";
 		//pull data from socket and release
 		//indexOfChar = boost::asio::read_until(connections[connEP]->socket(), inputBuffer, '\n', error);		
+			
+		//should check the buffer size so that i know how much
+		//is in there before it gets to a ridiculous size
 
 		count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(3), error);
 		connections[connEP]->releaseSocket();
@@ -72,32 +188,109 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		}
 
 		std::cout<<"made it past the error traps...\n";
-
-		char* size = new char[4];
+		
+		//get the total number of bytes to read
+		char* arr = new char[4];
 		boost::asio::streambuf::const_buffers_type data = inputBuffer.data();
 		boost::asio::buffers_iterator<boost::asio::streambuf::const_buffers_type> iter = boost::asio::buffers_begin(data);
+
+		//int type = *iter;
 		iter++;
 		for(int i = 0; i < 4; ++i){
-			size[i] = *iter;
-			std::cout<<std::hex<<size[i]<<"\n";
+			arr[i] = *iter;
+			std::cout<<std::hex<<arr[i]<<"\n";
 			iter++;
 		}
-		/*	
-		//pull desired string from data
-		boost::asio::streambuf::const_buffers_type data = inputBuffer.data();
-		str_ptr = new std::string(boost::asio::buffers_begin(data), boost::asio::buffers_begin(data)+indexOfChar);
 		
-		//do stuff with string 
-		std::cout<<"robot handler:" << *str_ptr;
-		parseRobots(str_ptr, connEP, ROBOT_UPDATE);
+		//compute the total and the bytes remaing to be pulled from the socket
+		int total = *((int*)arr);
+		int remaining = total - count;
 
-		//clean up from loop iteration 
-		inputBuffer.consume(indexOfChar);
-		//delete str_ptr;
-		*/
+		//if there are bytes remainging to be read read them
+		if(remaining > 0){
+			count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining), error);
+			connections[connEP]->releaseSocket();
+
+
+			//catch errors to tell when the connection closes;
+			if(error == boost::asio::error::eof){
+				std::cout<<"EOF\n";
+				connected = false;
+				continue;
+			}
+			if(error == boost::asio::error::operation_aborted){
+				std::cout<<"aborted..\n";
+				connected = false;
+				continue;
+			}
+		}
+
+		//reset all the varibles with the new data
+		delete[] arr;
+		arr = new char[total];
+		data = inputBuffer.data();
+		iter = boost::asio::buffers_begin(data);
+		for(int i = 0; i < total; ++i){
+			arr[i] = *iter;
+			iter++;
+		}
+
+		//consume the stuff in the buffer, we're done with it now;
+		//wasn't quite sure how to deal with the size_t issue...
+		inputBuffer.consume((size_t)total);
+
+		//convert the char array to a 
+		readReturn* message = new readReturn;
+		if(read_data((void*)arr, message) < 0){
+			// read failed clean up the mess
+		}
+
+		//delete the array, we're done with it now
+		delete arr;
+
+		//switch on the type of struct recovered
+		switch(message->type){
+			case P_ROBOT_UPDATE:
+			{	
+				//initilize stuff
+				Vector_ts<Robot*>::iterator it;
+				robotUpdate* robotData = new robotUpdate[message->size];
+				robotData = (robotUpdate*)(message->array);
+
+				//get a readlock on the vector
+				robots->readLock();
+				for(int i = 0; i < message->size; ++i){
+					for(it = robots->begin(); it < robots->begin(); ++it){
+
+						//if it is the robot we are looking for, lock and update it
+						if ((*it)->getEndpoint() == connEP  && (*it)->getRID() == robotData[i].RID){
+							(*it)->lock();
+							(*it)->setXCord(robotData[i].x);
+							(*it)->setYCord(robotData[i].y);
+							(*it)->unlock();
+						}
+					}
+					
+				}
+				robots->readUnlock();
+				delete[] robotData;	
+
+			}
+			break;
+			case P_OBJECT:
+			//i don't think this should happen, but i don't know
+
+			break;
+			
+			default:
+			//its broken if it gets here, need to figure out what to do.
+            break;
+		}
+
+		//clean up stuff from iteration
+		delete message;
 		
-
-
+	
 		//sleep abit so other threads can grab a lock on the socket
 		boost::this_thread::sleep(boost::posix_time::seconds(2));
 		

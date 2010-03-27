@@ -13,12 +13,14 @@
 #include <string>
 #include <iostream>
 
+//the types 
 #define P_ROBOT_INIT 1
 #define P_ROBOT_UPDATE 2
 #define P_OBJECT 3
 
+//some error codes
 #define P_NULL_PTR -1
-
+#define P_INVD_TYPE -2
 /* the protocol converts arrays of the defined structs into byte arrays 
  * from transmission over the socket the protocol is pretty much as 
  * follows, the first byte if the type of struct in the message,

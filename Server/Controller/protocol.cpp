@@ -1,5 +1,4 @@
-/*
- * protocol.cpp 
+ /* protocol.cpp 
  *
  * Modified on:    $Date$
  * Last Edited By: $Author$
@@ -444,7 +443,7 @@ int read_data(void* array, readReturn* ret){
 
             std::cerr << "Attempt to read unknown type\n";
     }
-    return -1;
+    return P_INVD_TYPE;
 }
 
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
