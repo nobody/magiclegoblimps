@@ -9,18 +9,21 @@
 #include <vector>
 #include <boost/thread/mutex.hpp>
 
+
 template <class T> class Vector_ts{
     private:
     boost::mutex vectorMutex;
+    boost::mutex readMutex;
     std::vector<T>* theVector;
-
-    
+    int readers;
+	    
     public:
     //type defs
     typedef typename std::vector<T>::iterator iterator;
 
     Vector_ts(){
         theVector = new std::vector<T>();
+        readers = 0;
     }
 
     ~Vector_ts(){
@@ -55,11 +58,29 @@ template <class T> class Vector_ts{
     }
 
     void lock(){
+        if(readers > 0)
+            readMutex.lock();
         vectorMutex.lock();
+        readMutex.unlock();
     }
 
     void unlock(){
         vectorMutex.unlock();
+    }
+    void readLock(){
+        readMutex.lock();
+        ++readers;
+        if(readers == 1)
+            vectorMutex.lock();
+        readMutex.unlock();
+    }
+    void readUnlock(){
+        readMutex.lock();
+        --readers;
+        if(readers == 0)
+            vectorMutex.unlock();
+        readMutex.unlock();
+
     }
 
 };
