@@ -6,7 +6,10 @@
  */
 #include"protocol.h"
 
- void write_data(int type, void* data_, short number, byteArray* byte_ptr){
+ int write_data(int type, void* data_, short number, byteArray* byte_ptr){
+    if(!data_ | !byte_ptr)
+        return P_NULL_PTR;
+
     char* array;
     unsigned short* sizes = new unsigned short[number];
     int overall_size = 0;
@@ -154,7 +157,10 @@
                     sizes[i] = size;
                     overall_size += size;
                 }
+
             }
+            default:
+                return P_INVD_TYPE;
 
     }
 
@@ -191,6 +197,8 @@
     delete[] structs;
     byte_ptr->array = array;
     byte_ptr->size = overall_size + 3;
+    
+    return P_OK;
 
 }
 

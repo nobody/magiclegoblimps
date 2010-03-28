@@ -43,6 +43,9 @@ class Object {
         {
             return color_;
         }
+        int objID(){
+            return objID_;
+        }
 
     private:
         int objID_;

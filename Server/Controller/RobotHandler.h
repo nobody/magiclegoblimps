@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include "Vector_ts.h"
 #include "Robot.h"
+#include "Object.h"
 #include "protocol.h"
 
 //some constants
@@ -23,7 +24,7 @@ typedef std::map<boost::asio::ip::tcp::endpoint,TcpServer::TcpConnection::pointe
 class RobotHandler: public TcpServer::ConnHandler{
     public:
     RobotHandler();
-    RobotHandler(Vector_ts<Robot*>* robots_);
+    RobotHandler(Vector_ts<Robot*>* robots_, Vector_ts<Object*>* objects_);
     ~RobotHandler();
     virtual void onConnect(TcpServer::TcpConnection::pointer tcp_connection);
     void setRobots(Vector_ts<Robot*>* robots_);
@@ -37,6 +38,7 @@ class RobotHandler: public TcpServer::ConnHandler{
 
     static conn_map connections;
     Vector_ts<Robot*>* robots;
+    Vector_ts<Object*>* objects;
 
 };
 
