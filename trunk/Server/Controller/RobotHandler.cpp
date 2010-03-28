@@ -11,8 +11,9 @@
 conn_map RobotHandler::connections;
 
 RobotHandler::RobotHandler(){}
-RobotHandler::RobotHandler(Vector_ts<Robot*>* robots_){
-		robots = robots_;
+RobotHandler::RobotHandler(Vector_ts<Robot*>* robots_, Vector_ts<Object*>* objects_){
+	robots = robots_;
+	objects = objects_;
 }
 RobotHandler::~RobotHandler(){}
 
@@ -142,6 +143,44 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 
 	//clean up stuff from 
 	delete message;
+
+	//now that we have processed the new robots from this controller, we need to 
+	//send the controller the list of objects, first we need to construct an array of
+	//object structs;
+	
+	objects->readLock();
+	object* objArr = new object[objects->size()];
+	Vector_ts<Object*>::iterator ObjIt = objects->begin();
+
+	for(int i = 0; i < objects->size(); ++i){
+		objArr[i].OID = (*ObjIt)->objID();
+		objArr[i].name = &(*ObjIt)->name();
+		objArr[i].color_size = (*ObjIt)->colorsize();
+		objArr[i].color = (*ObjIt)->color();
+
+		++it;
+	}
+
+	//now that we have the object array we need to gett the binary stream to transmitt
+	byteArray* byte_ptr = new byteArray;
+	write_data(P_OBJECT, objArr, objects->size(), byte_ptr);
+	objects->readUnlock();
+
+	//not sure that anything past here is 
+	//need to put the array in a buffer
+	boost::asio::streambuf outputBuffer;	
+	/*data = outputBuffer.prepare(byte_ptr->size);
+	iter = boost::asio::buffers_begin(data);
+
+	//need some kind of for loop to put the array into the buffer;
+	for(int i = 0; i < byte_ptr->size; ++i){
+		*iter = byte_ptr->array[i];
+		iter++;
+	}*/
+
+	//hopefully the number of bytes is always a positive number
+	boost::asio::write(connections[connEP]->socket(), outputBuffer, boost::asio::transfer_at_least(byte_ptr->size), error);
+
     
     //spawn a thread to listen on the socket and return the function
     std::cout<<"launching threadd...\n";

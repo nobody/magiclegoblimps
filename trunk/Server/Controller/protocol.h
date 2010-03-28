@@ -19,6 +19,7 @@
 #define P_OBJECT 3
 
 //some error codes
+#define P_OK 0
 #define P_NULL_PTR -1
 #define P_INVD_TYPE -2
 /* the protocol converts arrays of the defined structs into byte arrays 
@@ -58,8 +59,7 @@ struct readReturn{
     int type;
 };
 
-
-void write_data(int type, void* data_, short number, byteArray* byte_ptr);
+int write_data(int type, void* data_, short number, byteArray* byte_ptr);
 
 
 // If you get a robotInit array from this function,
