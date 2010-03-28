@@ -12,8 +12,12 @@
 
 template <class T> class Vector_ts{
     private:
+    //locks the vector
     boost::mutex vectorMutex;
+    //locks the number of readers
     boost::mutex readMutex;
+    //prevents more readers from starting while writer is waiting
+    boost::mutex writerMutex;
     std::vector<T>* theVector;
     int readers;
 	    
@@ -44,9 +48,9 @@ template <class T> class Vector_ts{
         return it;
     }
     iterator end(){
-	typename std::vector<T>::iterator it;
-	it = theVector->end();
-	return it;
+	    typename std::vector<T>::iterator it;
+	    it = theVector->end();
+	    return it;
     }
 
     iterator erase(iterator position){
@@ -54,25 +58,27 @@ template <class T> class Vector_ts{
     }
 
     void push_back(const T& x){
-	theVector->push_back(x);
+	    theVector->push_back(x);
     }
 
     void lock(){
-        if(readers > 0)
-            readMutex.lock();
+        
+        writerMutex.lock();
         vectorMutex.lock();
-        readMutex.unlock();
+        writerMutex.unlock();
     }
 
     void unlock(){
         vectorMutex.unlock();
     }
     void readLock(){
+        writerMutex.lock();
         readMutex.lock();
         ++readers;
         if(readers == 1)
             vectorMutex.lock();
         readMutex.unlock();
+        writerMutex.unlock();
     }
     void readUnlock(){
         readMutex.lock();
