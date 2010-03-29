@@ -47,9 +47,6 @@ class Object {
         {
             return color_;
         }
-        int objID(){
-            return objID_;
-        }
 
         void setColor(char* c, long size) {
             if (size < 1) {
