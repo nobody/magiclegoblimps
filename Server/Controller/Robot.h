@@ -32,6 +32,20 @@ public:
     void setYCord(int y);
     void setVideoURL(std::string);
 
+    //some useful operators
+    inline bool operator<(Robot& aRobot) const{
+        if(robotEP < aRobot.getEndpoint())
+            return true;
+        else if(robotEP == aRobot.getEndpoint()){
+            if(RID < aRobot.getRID())
+                return true;
+            else
+                return false;
+        }
+        else
+            return false;
+    }
+
 
 private:
     //mutex for thread safety
