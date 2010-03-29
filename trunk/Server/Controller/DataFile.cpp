@@ -55,10 +55,6 @@ int DataFile::write(void* data)
                 write_data(P_ROBOT_INIT, r, i, &byteArr);
 
                 // delete robotInit array
-                while (i > 0) {
-                    --i;
-                    delete r[i].VideoURL;
-                }
                 delete[] r;
 
                 std::cout << "Writing data to ROBOT file\n";
@@ -71,7 +67,39 @@ int DataFile::write(void* data)
             break;
 
         case OBJECT:
-            std::cout << "Writing OBJECT data\n";
+            {
+                std::cout << "Writing OBJECT data\n";
+
+                Vector_ts<Object*>* objects = (Vector_ts<Object*>*)data;
+
+                Vector_ts<Object*>::iterator it;
+                Vector_ts<Object*>::iterator it_end = objects->end();
+
+                // build array of object structs
+                object* o = new object[objects->size()];
+                int i = 0;
+                for (it = objects->begin(); it < it_end; ++it) {
+                    o[i].OID = (*it)->getOID();
+                    o[i].name = new std::string((*it)->getName());
+                    o[i].color_size = (*it)->getColorsize();
+                    o[i].color = (*it)->getColor();
+
+                    ++i;
+                }
+
+                byteArray byteArr;
+                write_data(P_OBJECT, o, i, &byteArr);
+
+                std::cout << "Writing data to OBJECT file\n";
+                file.write(byteArr.array, byteArr.size);
+
+                //delete the object array
+                delete[] o;
+
+                delete[] byteArr.array;
+
+                retVal = 1;
+            }
             break;
     }
     file.close();
@@ -128,10 +156,8 @@ void* DataFile::read()
                     r->setVideoURL(*array[i].VideoURL);
 
                     robots->push_back(r);
-
-                    delete array[i].VideoURL;
                 }
-                delete[] array;;
+                delete[] array;
 
                 delete readRet;
 
@@ -144,6 +170,43 @@ void* DataFile::read()
             if (file.good()){
                 // read the data here.
                 std::cout << "OBJECT Datafile good.\n";
+
+                // get the length of the file:
+                file.seekg (0, std::fstream::end);
+                int length = file.tellg();
+                file.seekg (0, std::fstream::beg);
+
+                if (length > 1024*1024*1024) {
+                    std::cerr << "OBJECT datafile too large\n";
+                    break;
+                }
+                char* buffer = new char[length];
+
+                file.read(buffer, length);
+
+                readReturn* readRet = new readReturn;
+                read_data(buffer, readRet);
+
+                delete[] buffer;
+
+                // take array and construct Vector_ts from it
+                Vector_ts<Object*>* objects = new Vector_ts<Object*>;
+
+                object* array = (object*)readRet->array;
+
+                for (int i = 0; i < readRet->size; ++i) {
+                    Object* o = new Object(array[i].OID, *array[i].name, array[i].color, array[i].color_size);
+                    delete[] array[i].color;
+
+                    objects->push_back(o);
+
+                }
+
+                delete[] array;
+
+                delete readRet;
+
+                retVal = objects;
             }
             break;
     }

@@ -36,6 +36,10 @@ struct robotInit{
     int x;
     int y;
     std::string* VideoURL;
+
+    ~robotInit() {
+        delete VideoURL;
+    }
 };
 struct robotUpdate{
     int RID;
@@ -45,8 +49,12 @@ struct robotUpdate{
 struct object{
     int OID;
     std::string* name;
-    long color_size;
+    int color_size;
     char* color;
+
+    ~object() {
+        delete name;
+    }
 };
 
 struct byteArray{

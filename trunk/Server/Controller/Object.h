@@ -11,7 +11,7 @@
 
 class Object {
     public:
-        Object(int id, std::string name, char* color, size_t colorsize)
+        Object(int id, std::string name, char* color, int colorsize)
             : objID_(id), name_(name), colorsize_(colorsize)
         {
             color_ = new char[colorsize];
@@ -23,23 +23,27 @@ class Object {
 
         ~Object()
         {
-            delete color_;
+            delete[] color_;
         }
 
-        std::string name()
+        int getOID() {
+            return objID_;
+        }
+
+        std::string getName()
         {
             return name_;
         }
-        void set_name(std::string name)
+        void setName(std::string name)
         {
             name_ = name;
         }
 
-        size_t colorsize()
+        long getColorsize()
         {
             return colorsize_;
         }
-        char* color()
+        char* getColor()
         {
             return color_;
         }
@@ -47,11 +51,23 @@ class Object {
             return objID_;
         }
 
+        void setColor(char* c, long size) {
+            if (size < 1) {
+                delete color_;
+                color_ = NULL;
+                return;
+            }
+            if (color_)
+                delete[] color_;
+            color_ = new char[size];
+            memcpy(color_,  c, size);
+        }
+
     private:
         int objID_;
         std::string name_;
         char* color_;
-        size_t colorsize_;
+        int colorsize_;
 
 };
 
