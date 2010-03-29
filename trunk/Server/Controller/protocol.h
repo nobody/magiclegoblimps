@@ -17,6 +17,7 @@
 #define P_ROBOT_INIT 1
 #define P_ROBOT_UPDATE 2
 #define P_OBJECT 3
+#define P_ASSIGNMENT 4
 
 //some error codes
 #define P_OK 0
@@ -60,11 +61,19 @@ struct object{
 struct byteArray{
     char* array;
     int size;
+    ~byteArray(){
+	delete array;
+    }
 };
 struct readReturn{
     void* array;
     int size;
     int type;
+
+};
+struct assignment{
+    int RID;
+    int OID;
 };
 
 int write_data(int type, void* data_, short number, byteArray* byte_ptr);
@@ -82,4 +91,4 @@ int readRobotUpdate(void* array, robotUpdate* &robots);
 
 #endif /* PROTOCOL_H_ */
 
-
+/*vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
