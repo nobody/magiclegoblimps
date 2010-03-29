@@ -16,10 +16,6 @@
 #include "Object.h"
 #include "protocol.h"
 
-//some constants
-#define ROBOT_INIT 0
-#define ROBOT_UPDATE 1
-
 typedef std::map<boost::asio::ip::tcp::endpoint,TcpServer::TcpConnection::pointer> conn_map;
 class RobotHandler: public TcpServer::ConnHandler{
     public:
@@ -31,7 +27,6 @@ class RobotHandler: public TcpServer::ConnHandler{
     
     private:
     void threaded_listen(boost::asio::ip::tcp::endpoint connEP);
-    void parseRobots(std::string* msg, boost::asio::ip::tcp::endpoint connEP, int use);
     void cleanupConn(boost::asio::ip::tcp::endpoint connEP);
 
 
