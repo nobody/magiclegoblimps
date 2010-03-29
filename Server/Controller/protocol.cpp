@@ -160,6 +160,37 @@
                 }
                 break;
             }
+            case P_ASSIGNMENT:
+            {
+                assignment* data = (assignment*)data_;  
+                short size = 2*sizeof(int) + sizeof(short);
+                for(int i = 0; i < number; ++i){
+                    structs[i] = new char[size];
+
+                    //push size 
+                    char* ref = (char*)(&size);
+                    for(int j = 0; j < 2; ++j){
+                        structs[i][j] = ref[j];
+                    }
+
+                    //push rid 
+                    ref = (char*)&(data[i].RID);
+                    for(int j = 2; j < 6; ++j){
+                        structs[i][j] = ref[j-2];
+                    }
+
+                    //push 0ID
+                    ref = (char*)&(data[i].OID);
+                    for(int j = 6; j <10; ++j){
+                        structs[i][j] = ref[j-6];
+                    }
+                    
+                    sizes[i] = size;
+                    overall_size += size;
+                }
+
+            }
+            break;
             default:
                 return P_INVD_TYPE;
 
@@ -393,6 +424,49 @@ int readObject(void* array, object* &objs) {
     return overall_size;
 }
 
+int readAssignment(void* array, assignment* &ass){
+    
+    char* arr = (char*)array;
+    char* current = arr+5;
+    char* ref;
+
+    // overall size
+    short overall_size;
+    ref = (char*)&overall_size;
+    ref[0] = current[0]; current++;
+    ref[1] = current[0]; current++;
+
+    ass = new assignment[overall_size];
+
+    for (int i = 0; i < overall_size; ++i) {
+        short size;
+        int rid;
+        int oid;
+        
+        // retreive size
+        ref = (char*)&size;
+        ref[0] = current[0]; current++;
+        ref[1] = current[0]; current++;
+
+        // retrieve RID
+        ref = (char*)&rid;
+        for (int j = 0; j < (int)sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        // retrieve x
+        ref = (char*)&oid;
+        for (int j = 0; j < (int)sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        //initallize struct
+        ass[i].RID = rid;
+        ass[i].OID = oid;
+    }
+    return overall_size;
+}
+
 // takes a void pointer to the data as output from write_data and a readReturn struct to put the array and its type in.
 int read_data(void* array, readReturn* ret){
     
@@ -440,6 +514,18 @@ int read_data(void* array, readReturn* ret){
                 return count;
             }
             break;
+        
+        case P_ASSIGNMENT:
+            {
+                assignment* arr;
+                int count =  readAssignment(array, arr);
+
+                ret->array = (void*)arr;
+                ret->size = count;
+                ret->type = P_ASSIGNMENT;
+                
+                return count;
+            }
 
         default:
 
