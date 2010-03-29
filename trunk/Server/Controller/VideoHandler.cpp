@@ -68,23 +68,38 @@ void VideoHandler::session::start(){
     tcp::socket &sock = conn_->socket();
     // send robot information to the video server
     std::stringstream msg_ss;
+    
+    // print the current date/time
+    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+    msg_ss << now << "\n";
+
+    // send object information
     {
-        robots_->lock();
+        objs_->readLock();
 
-        Vector_ts<Robot*>::iterator it;
-        Vector_ts<Robot*>::iterator it_end = robots_->end();
+        Vector_ts<Object*>::iterator it;
+        Vector_ts<Object*>::iterator it_end = objs_->end();
 
-        for (it=robots_->begin(); it < it_end; ++it) {
-            msg_ss << (*it)->getRID();
+        for (it=objs_->begin(); it < it_end; ++it) {
+            msg_ss << (*it)->getOID();
             msg_ss << ":";
-            msg_ss << (*it)->getXCord();
+            msg_ss << (*it)->getName();
             msg_ss << ":";
-            msg_ss << (*it)->getYCord();
+            // replace colorsize with qos
+            msg_ss << (*it)->getColorsize();
             msg_ss << ":";
         }
-        robots_->unlock();
+        objs_->readUnlock();
     }
     msg_ss << '\n';
+
+    // send robot information
+    {
+        robots_->readLock();
+        robots_->readUnlock();
+    }
+    msg_ss << '\n';
+
     std::string msg = msg_ss.str();
 
     boost::asio::async_write(sock, boost::asio::buffer(msg), 

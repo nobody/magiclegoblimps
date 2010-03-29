@@ -36,6 +36,8 @@ int DataFile::write(void* data)
                 std::cout << "Writing ROBOT data\n";
                 Vector_ts<Robot*>* robots = (Vector_ts<Robot*>*)data;
                 
+                robots->readLock();
+
                 Vector_ts<Robot*>::iterator it;
                 Vector_ts<Robot*>::iterator it_end = robots->end();
                 
@@ -50,6 +52,8 @@ int DataFile::write(void* data)
 
                     ++i; 
                 }
+
+                robots->readUnlock();
 
                 byteArray byteArr;
                 write_data(P_ROBOT_INIT, r, i, &byteArr);
@@ -72,6 +76,8 @@ int DataFile::write(void* data)
 
                 Vector_ts<Object*>* objects = (Vector_ts<Object*>*)data;
 
+                objects->readLock();
+
                 Vector_ts<Object*>::iterator it;
                 Vector_ts<Object*>::iterator it_end = objects->end();
 
@@ -86,6 +92,8 @@ int DataFile::write(void* data)
 
                     ++i;
                 }
+
+                objects->readUnlock();
 
                 byteArray byteArr;
                 write_data(P_OBJECT, o, i, &byteArr);
