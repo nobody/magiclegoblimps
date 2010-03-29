@@ -59,6 +59,9 @@ class Object {
             color_ = new char[size];
             memcpy(color_,  c, size);
         }
+        inline bool operator<(Object& obj)const{
+            return objID_ < obj.getOID();
+        }
 
     private:
         int objID_;

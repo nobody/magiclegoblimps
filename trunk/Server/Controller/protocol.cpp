@@ -71,7 +71,7 @@
             {
                 robotUpdate* data = (robotUpdate*)data_;
                 for (int i = 0; i < number; ++i){
-                    short size = sizeof(int) * 3 + sizeof(short);
+                    short size = sizeof(int) * 4 + sizeof(short) + data[i].listSize * 4;
                     structs[i] = new char[size];
 
                     //push size ontop of the array
@@ -97,6 +97,17 @@
                     for(int j = 10; j < 14; ++j){
                         structs[i][j] = ref[j-10];
                     }
+
+                    ref = (char*)&(data[i].listSize);
+                    for(int j = 14; j < 18; ++j){
+                        structs[i][j] = ref[j - 14];
+                    }
+
+                    ref = (char*)(data[i].list);
+                    for(int j = 18; j <18 + data[i].listSize * 4; ++i){
+                        structs[i][j] = ref[j-18];
+                    }
+
                     sizes[i] = size;
                     overall_size += size;
                 }
@@ -321,6 +332,8 @@ int readRobotUpdate(void* array, robotUpdate* &robots){
         int rid;
         int x;
         int y;
+        int listSize;
+        int* list;
         
         // retreive size
         ref = (char*)&size;
@@ -345,10 +358,24 @@ int readRobotUpdate(void* array, robotUpdate* &robots){
             ref[j] = current[0]; current++;
         }
 
+        //retrieve listSize;
+        ref = (char*)&listSize;
+        for(int j = 0; j < (int)sizeof(int); ++j){
+            ref[j] = current[0]; current++;
+        }
+
+        list = new int[listSize];
+        ref = (char*)list;
+        for(int j = 0; j < listSize*4; ++j){
+            ref[j] = current[0]; current++;
+        }
+
         // build the robotInit struct
         robots[i].RID = rid;
         robots[i].x = x;
         robots[i].y = y;
+        robots[i].listSize = listSize;
+        robots[i].list = list;
     }
 
     return overall_size;

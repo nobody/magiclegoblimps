@@ -46,6 +46,11 @@ struct robotUpdate{
     int RID;
     int x;
     int y;
+    int listSize;
+    int* list;
+    ~robotUpdate(){
+        delete list;
+    }
 };
 struct object{
     int OID;
