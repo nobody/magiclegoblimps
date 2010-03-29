@@ -153,10 +153,10 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 	Vector_ts<Object*>::iterator ObjIt = objects->begin();
 
 	for(int i = 0; i < objects->size(); ++i){
-		objArr[i].OID = (*ObjIt)->objID();
-		objArr[i].name = &(*ObjIt)->name();
-		objArr[i].color_size = (*ObjIt)->colorsize();
-		objArr[i].color = (*ObjIt)->color();
+		objArr[i].OID = (*ObjIt)->getOID();
+		objArr[i].name = &(*ObjIt)->getName();
+		objArr[i].color_size = (*ObjIt)->getColorsize();
+		objArr[i].color = (*ObjIt)->getColor();
 
 		++it;
 	}

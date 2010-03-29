@@ -48,5 +48,48 @@ int main() {
     delete robots;
 
 
+    DataFile dfo("object.dat", DataFile::OBJECT);
+
+    Vector_ts<Object*>* objs = new Vector_ts<Object*>;
+
+    char tmp[] = "qwertyuiopasdf";
+    Object* obj1 = new Object(15, "Object 1", tmp, 13);
+
+    objs->push_back(obj1);
+
+    dfo.write(objs);
+
+    delete obj1;
+
+    delete objs;
+
+    objs = (Vector_ts<Object*>*)dfo.read();
+
+    Vector_ts<Object*>::iterator ito; 
+    Vector_ts<Object*>::iterator ito_end = objs->end(); 
+
+    for (ito = objs->begin(); ito < ito_end; ++ito) {
+        std::cout << "Got Object:\n"
+                  << "  OID:   " << (*ito)->getOID() << "\n"
+                  << "  name:  " << (*ito)->getName() << "\n";
+
+        long size = (*ito)->getColorsize();
+        std::cout << "  color_s: " << size << "\n";
+
+        char* color = (*ito)->getColor();
+
+        std::cout << "  color: " << std::hex;
+
+        for (long i = 0; i < size; ++i)
+            std::cout << (short)color[i];
+
+        std::cout << std::dec << "\n";
+
+        delete (*ito);
+
+    }
+
+    delete objs;
+
     return 0;
 }

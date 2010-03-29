@@ -100,6 +100,7 @@
                     sizes[i] = size;
                     overall_size += size;
                 }
+                break;
             }
             
         case P_OBJECT:
@@ -108,56 +109,56 @@
                 for (int i = 0; i < number; ++i) {
                     int str_len = data[i].name->size() + 1;
                     const char* name = data[i].name->c_str();
-                    long size = sizeof(int) * 2 + str_len + data[i].color_size + sizeof(long);
+                    int size = sizeof(int) * 4 + str_len + data[i].color_size + 1;
 
                     structs[i] = new char[size];
 
-                    long idx = 0;
+                    int idx = 0;
                     // push size on
                     char* ref = (char*)&size;
-                    for (long j = idx; j < (long)(idx + sizeof(long)); ++j) {
+                    for (int j = idx; j < (int)(idx + sizeof(int)); ++j) {
                         structs[i][j] = ref[j];
                     }
-                    idx += sizeof(long);
+                    idx += sizeof(int);
 
                     // push OID
                     ref = (char*)&(data[i].OID);
-                    for (long j = idx; j < (long)(idx + sizeof(int)); ++j) {
-                        structs[i][j] = ref[j];
+                    for (int j = idx; j < (int)(idx + sizeof(int)); ++j) {
+                        structs[i][j] = ref[j - idx];
                     }
                     idx += sizeof(int);
 
                     // push strlen
                     ref = (char*)&str_len;
-                    for (long j = idx; j < (long)(idx + sizeof(int)); ++j) {
-                        structs[i][j] = ref[j];
+                    for (int j = idx; j < (int)(idx + sizeof(int)); ++j) {
+                        structs[i][j] = ref[j - idx];
                     }
                     idx += sizeof(int);
 
                     // push string
-                    for (long j = idx; j < (idx + str_len); ++j) {
+                    for (int j = idx; j < (idx + str_len); ++j) {
                         structs[i][j] = name[j - idx];
                     }
                     idx += str_len;
 
                     // push color_size
                     ref = (char*)&(data[i].color_size);
-                    for (long j = idx; j < (long)(idx + sizeof(long)); ++j) {
-                        structs[i][j] = ref[j];
+                    for (int j = idx; j < (int)(idx + sizeof(int)); ++j) {
+                        structs[i][j] = ref[j - idx];
                     }
-                    idx += sizeof(long);
+                    idx += sizeof(int);
 
                     // push color
-                    for (long j = idx; j < (idx + data[i].color_size); ++j) {
+                    for (int j = idx; j < (idx + data[i].color_size + 1); ++j) {
                         structs[i][j] = data[i].color[j - idx];
                     }
-                    idx += data[i].color_size;
+                    idx += data[i].color_size + 1;
 
                     // add the length of this array to the total length and store it
                     sizes[i] = size;
                     overall_size += size;
                 }
-
+                break;
             }
             default:
                 return P_INVD_TYPE;
@@ -165,13 +166,13 @@
     }
 
     //intiallize the array to return
-    array = new char[overall_size + 3 + 4];
+    int length = overall_size + 1 + 2 + 4;
+    array = new char[length];
 
     //set type
     array[0] = type;
 
     //push length in bytes
-    int length = overall_size+ 3 + 4;
     char* ref = (char*)&length;
     for(int i = 1; i < 5; ++i){
         array[i] = ref[i-1];
@@ -196,7 +197,7 @@
     }
     delete[] structs;
     byte_ptr->array = array;
-    byte_ptr->size = overall_size + 3;
+    byte_ptr->size = length;
     
     return P_OK;
 
@@ -336,12 +337,12 @@ int readObject(void* array, object* &objs) {
     objs = new object[overall_size];
 
     for (int i = 0; i < overall_size; ++i) {
-        long size;
+        int size;
         int oid;
-        short str_len;
+        int str_len;
         char* name;
         char* color;
-        long color_size;
+        int color_size;
 
         
         // retreive size
@@ -353,13 +354,13 @@ int readObject(void* array, object* &objs) {
 
         // retrieve OID
         ref = (char*)&oid;
-        for (int j = 0; j < (int)sizeof(long); ++j) {
+        for (int j = 0; j < (int)sizeof(int); ++j) {
             ref[j] = current[0]; current++;
         }
 
         // retrieve str_len
         ref = (char*)&str_len;
-        for (int j = 0; j < (int)sizeof(short); ++j) {
+        for (int j = 0; j < (int)sizeof(int); ++j) {
             ref[j] = current[0]; current++;
         }
 
@@ -371,7 +372,7 @@ int readObject(void* array, object* &objs) {
 
         // retrieve color_size 
         ref = (char*)&color_size;
-        for (int j = 0; j < (int)sizeof(long); ++j) {
+        for (int j = 0; j < (int)sizeof(int); ++j) {
             ref[j] = current[0]; current++;
         }
 
@@ -393,13 +394,6 @@ int readObject(void* array, object* &objs) {
 }
 
 // takes a void pointer to the data as output from write_data and a readReturn struct to put the array and its type in.
-//
-// !!IMPORTANT!!
-//   
-//   If you get a robotInit array, you MUST delete the std::string url when you are done with it
-//
-//   If you get an object array, you MUST delete the color array and name std::string when you no longet need them
-//
 int read_data(void* array, readReturn* ret){
     
     if(!ret || !array)
