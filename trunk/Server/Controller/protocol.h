@@ -93,7 +93,7 @@ int write_data(int type, void* data_, short number, byteArray* byte_ptr);
 
 // If you get a robotInit array from this function,
 // 
-// You MUST delete robotInit.VideoURL when you are done with it!!!!
+// You MUST delete object.color when you are done with it!!!!
 //
 int read_data(void* array, readReturn* ret);
 

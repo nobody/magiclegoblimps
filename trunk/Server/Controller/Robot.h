@@ -34,6 +34,7 @@ public:
     void setXCord(int x);
     void setYCord(int y);
     void setVideoURL(std::string);
+    void setList(int* array, int size);
 
     //some useful operators
     inline bool operator<(Robot& aRobot) const{

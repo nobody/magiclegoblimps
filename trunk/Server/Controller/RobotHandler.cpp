@@ -136,10 +136,11 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 		Robot* temp = new Robot(connEP, robotData[i].RID);
        		 temp->setXCord(robotData[i].x);
         	 temp->setYCord(robotData[i].y);
+		 //temp->setList(robotData[i].list, robotData[i].listSize);
         	 temp->setVideoURL(std::string(*robotData[i].VideoURL));
         
-        robots->push_back(temp);
-        //might want to clean up some stuff here if patrick doesn't fix destructor
+        	robots->push_back(temp);
+        	//might want to clean up some stuff here if patrick doesn't fix destructor
 	}
 	robots->unlock();
 	delete[] robotData;	
@@ -315,6 +316,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 							(*it)->lock();
 							(*it)->setXCord(robotData[i].x);
 							(*it)->setYCord(robotData[i].y);
+							(*it)->setList(robotData[i].list, robotData[i].listSize);
 							(*it)->unlock();
 						}
 					}
@@ -399,9 +401,9 @@ void RobotHandler::sendAssignments(std::map<Robot*, int>* assignments){
 		}
 
 		//now that we have an array we will transmit the assignments for this connection
-		byteArray* data;
+		byteArray data;
 			
-		if(write_data(P_ASSIGNMENT, (void*)current, numForConn, data) < 0){
+		if(write_data(P_ASSIGNMENT, (void*)current, numForConn, &data) < 0){
 			//then somthing broke and it should be dealt with
 		}
 		boost::system::error_code error;
