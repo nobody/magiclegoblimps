@@ -23,7 +23,6 @@
 
 class VideoHandler : public TcpServer::ConnHandler {
     public:
-        //VideoHandler(); 
         VideoHandler(Vector_ts<Robot*>* robots, Vector_ts<Object*>* objs);
         virtual ~VideoHandler();
 
@@ -32,26 +31,12 @@ class VideoHandler : public TcpServer::ConnHandler {
     private:
         void threaded_on_connect(TcpServer::TcpConnection::pointer);
 
-        class session {
-            public:
-                session(TcpServer::TcpConnection::pointer, Vector_ts<Robot*>*, Vector_ts<Object*>*);
-                ~session();
-
-                void start();
-
-            private:
-                VideoHandler* parent_;
-                TcpServer::TcpConnection::pointer conn_;
-                message read_message_;
-                Vector_ts<Robot*>* robots_;
-                Vector_ts<Object*>* objs_;
-
-                void write_handler(const boost::system::error_code& error,  std::size_t bytes_transferred);
-                void read_handler(const boost::system::error_code& error,  std::size_t bytes_transferred);
-                void close();
-                void do_close();
-
-        };
+        TcpServer::TcpConnection::pointer conn_;
+        message read_message_;
+        void write_handler(const boost::system::error_code& error,  std::size_t bytes_transferred);
+        void read_handler(const boost::system::error_code& error,  std::size_t bytes_transferred);
+        void close();
+        void do_close();
 
         
         Vector_ts<Robot*>* robots_;
