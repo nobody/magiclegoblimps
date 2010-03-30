@@ -30,9 +30,3 @@ FFMPEG_ARGS = ('ffmpeg', '-r', '15', '-i', 'input-stream', '-f', 'flv',
     'output-stream')
 
 FFSERVER_ARGS = ('ffserver', '-f', 'config-file')
-
-# Database settings
-DATABASE_SERVER = 'url'
-DATABASE_NAME = 'dbname'
-DATABASE_USER = 'dbuser'
-DATABASE_PASSWORD = 'secret'

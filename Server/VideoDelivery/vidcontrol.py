@@ -119,7 +119,7 @@ class VidControl():
         - generate config files
         - launch procs
         - update data structures
-        - update database
+        - update csv files
         """
         # initialize vfeed object
         vfeed.port = self.next_port
@@ -140,19 +140,19 @@ class VidControl():
                                vfeed.config_file)
 
         ffserver.launch(vfeed)
-        # TODO: update database
+        # TODO: update csv files
 
     def kill_feed(self, vfeed):
         """
         - kill procs
         - delete config files
         - update data structures
-        - update database
+        - update csv files
         """
         ffserver.kill(vfeed)
         os.remove(vfeed.config_file)
         self.feeds.remove(vfeed)
-        # TODO: update database
+        # TODO: update csv files
 
     def runserver(self):
         """
