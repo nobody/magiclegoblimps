@@ -19,7 +19,8 @@ OBJS = controller.o \
 	   DataFile.o \
 	   protocol.o \
 	   Qos.o \
-	   Point.o
+	   Point.o \
+	   Assignment.o
 
 
 all: ServerController
