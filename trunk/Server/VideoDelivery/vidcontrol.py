@@ -11,6 +11,8 @@ import time
 import socket
 import config
 import ffserver
+import settings
+from logger import log
 
 class VidFeed():
     """
@@ -34,6 +36,8 @@ class VidFeed():
         if not obj == None:
             self.feed_url = obj['cam']
             self.objects.append((obj['object'], obj['QoS']))
+        
+        log('Video Delivery server running at ' + settings.CURRENT_IP)
 
     def __eq__(self, obj):
         if type(obj) is VidFeed:
@@ -123,7 +127,7 @@ class VidControl():
         vfeed.config_file = settings.CONFIG_FILE_DIR + \
                             settings.CONFIG_FNAME.format(strport)
         vfeed.stream_name = settings.STREAM_NAME.format(strport)
-        vfeed.feed_name = settings.FEEDNAME
+        vfeed.feed_name = settings.FEED_NAME
         self.next_port += 1
 
         # generate a new config file
@@ -132,7 +136,7 @@ class VidControl():
             'feed': vfeed.feed_name,
             'stream': vfeed.stream_name
         }
-        self.config_gen.render(config_data, self.CONFIG_FILE_TEMPLATR,
+        self.config_gen.render(config_data, settings.CONFIG_TEMPLATE,
                                vfeed.config_file)
 
         ffserver.launch(vfeed)
