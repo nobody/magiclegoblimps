@@ -11,6 +11,7 @@
 
 #include <boost/thread/mutex.hpp>
 #include <boost/asio.hpp>
+#include "Point.h"
 
 class Robot {
 public:
@@ -24,6 +25,8 @@ public:
     int getRID();
     boost::asio::ip::tcp::endpoint getEndpoint();
 
+    Point pos;
+    int camType; //0 = Cisco, 1 = d-link
     int getXCord();
     int getYCord();
     std::string getVideoURL();

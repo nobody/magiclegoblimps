@@ -11,6 +11,7 @@
 
 class Point {
     public:
+		Point();
 		Point(double a, double b);
 		virtual ~Point();
         double x;

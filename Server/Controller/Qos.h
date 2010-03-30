@@ -9,20 +9,27 @@
 #ifndef QOS_H_
 #define QOS_H_
 
+#include "Robot.h"
+#include "Object.h"
+
 class Qos {
-    public:
-        Qos(Robot* r, POI* o, double* d);
-        virtual ~Qos();
-		calcQos();
-		calcQos(Robot r, POI o);
-		const double OPTIMAL_DIST = 10;
-		
+public:
+	Qos();
+	Qos(Robot* r,int nr, Object* o, int no,  double* d, int nd);
+	virtual ~Qos();
+	double calcQos();
+	double calcQos(Object& o, Robot& r);
+	double dist(Point p1, Point p2);
+	static const double OPTIMAL_DIST = 10;
+	static const double CAM_VALUES [];
 
     private:
 		Robot* robots;
-		POI* objects;
+		int numRobots;
+		Object* objects;
+		int numObjects;
 		double* demand;
-		
+		int numDemand;
 };
 
 

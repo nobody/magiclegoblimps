@@ -1,5 +1,5 @@
 /*
- * Object.cpp
+ * Object.h
  *
  * Modified on:    $Date$
  * Last Edited By: $Author$
@@ -9,8 +9,13 @@
 #ifndef OBJECT_H_
 #define OBJECT_H_
 
+#include "Point.h"
+#include "Robot.h"
+
 class Object {
     public:
+	//Robot that is viewing this object
+	 Robot* viewedFrom;
         Object(int id, std::string name, char* color, int colorsize)
             : objID_(id), name_(name), colorsize_(colorsize)
         {
@@ -20,7 +25,7 @@ class Object {
                 color_[colorsize] = color[colorsize];
             }
         }
-
+	Point pos;
         ~Object()
         {
             delete[] color_;
