@@ -38,24 +38,46 @@ void LocalInput()
 	if (tokens[0].compare("quit") == 0)
 		running = false;
 
-	//connectserver ip
-	if (tokens[0].compare("connectserver") == 0)
+	//connect ip
+	if (tokens[0].compare("connect") == 0)
 	{
 		string ip = tokens[1];
 		controller->ConnectToServer(ip);
 	}
 
-	//testserver
-	if (tokens[0].compare("testserver") == 0)
+	//serve
+	if (tokens[0].compare("serve") == 0)
 	{
 		controller->TestServer();
 	}
 
-	//testconnect
-	if (tokens[0].compare("testconnect") == 0)
+	//testserver command
+	if (tokens[0].compare("testserver") == 0)
+	{
+		string command = "";
+
+		for (int i = 1; i < tokens.size(); i++)
+			command += " " + tokens[i];
+
+		controller->TestServer(command);
+	}
+
+	//testcontroller commmand
+	if (tokens[0].compare("testcontroller") == 0)
+	{
+		string command = "";
+
+		for (int i = 1; i < tokens.size(); i++)
+			command += " " + tokens[i];
+
+		controller->Command(command);
+	}
+
+	//testrobot
+	if (tokens[0].compare("testrobot") == 0)
 	{
 		//lazy connection for repeat testing
-		Robot* robot = new Robot(1, "192.168.1.113", false);
+		Robot* robot = new Robot(6, "192.168.1.100", false);
 
 		robot->Connect();
 
@@ -124,17 +146,6 @@ void LocalInput()
 
 		controller->GetRobot(
 			atoi(tokens[1].c_str()))->ExecuteCommand(command);
-	}
-
-	//testserver command
-	if (tokens[0].compare("testserver") == 0)
-	{
-		string command = "";
-
-		for (int i = 1; i < tokens.size(); i++)
-			command += " " + tokens[i];
-
-		controller->TestCommand(command);
 	}
 }
 
