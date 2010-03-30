@@ -8,8 +8,7 @@
 
 #include "Point.h"
 
-
-
+Point::Point(){}
 Point::Point(double a, double b) {
     
 	x = a;

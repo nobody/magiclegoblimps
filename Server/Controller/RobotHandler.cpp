@@ -311,6 +311,8 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 			break;
 			case P_OBJECT:
 			//i don't think this should happen, but i don't know
+			//actually it should whenever a new object is added
+			//i'll have to deal with that
 
 			break;
 			
@@ -347,6 +349,59 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
 	}
 	robots->unlock();
 	//remove endpoint connection from map
-	//not sure its really nesscary
+	conn_map::iterator iter;
+	for(iter = connections.begin(); iter != connections.end(); ++iter){
+		if((*iter).first == connEP){
+			connections.erase(iter);
+			break;
+		}
+		std::cerr<<"Robot Handler: couldn't find connection to delete\n";
+	}
+}
+
+void RobotHandler::sendAssignments(std::map<Robot*, int>* assignments){
+	conn_map::iterator connIter;
+	std::map<Robot*, int>::iterator mapIter = assignments->begin();
+	
+	assignment* assigns = new assignment[assignments->size()];
+	assignment* current = assigns;
+	int numForConn;
+
+	//we want to loop through all the connections we know we have
+	for(connIter = connections.begin(); connIter != connections.end(); connIter++){
+		
+		numForConn = 0; 
+		//we don't know how many robots will be on each connection
+		//so we will loop as long as the connection endpoint matches 
+		//the one in the outer loop
+		while(((*mapIter).first->getEndpoint()) == ((*connIter).first)){
+			current[numForConn].RID = (*mapIter).first->getRID();
+			current[numForConn].OID = (*mapIter).second;
+			++numForConn;
+
+			mapIter++;
+		}
+
+		//now that we have an array we will transmit the assignments for this connection
+		byteArray* data;
+			
+		if(write_data(P_ASSIGNMENT, (void*)current, numForConn, data) < 0){
+			//then somthing broke and it should be dealt with
+		}
+		boost::system::error_code error;
+		boost::asio::write(connections[(*connIter).first]->socket(), boost::asio::buffer(data->array, data->size),
+			boost::asio::transfer_at_least(data->size), error);
+
+		connections[(*connIter).first]->releaseSocket();
+
+		//still don't know what errors i should look for on a read
+
+		current += numForConn;
+
+
+	}
+
+	delete[] assigns;
+	delete assignments;
 }
 /*vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4:*/
