@@ -110,6 +110,11 @@ void Robot::ExecuteCommand(string command)
 		}
 	}
 
+	if (tokens[0].compare("pan") == 0)
+	{
+		nxt_->SendMessage("pan " + tokens[1]);
+	}
+
 	if (tokens[0].compare("target") == 0)
 	{
 		camera_->SetTarget(atoi(tokens[1].c_str()));
