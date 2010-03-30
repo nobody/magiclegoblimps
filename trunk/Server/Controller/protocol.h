@@ -18,6 +18,7 @@
 #define P_ROBOT_UPDATE 2
 #define P_OBJECT 3
 #define P_ASSIGNMENT 4
+#define P_COMMAND 5
 
 //some error codes
 #define P_OK 0
@@ -80,6 +81,12 @@ struct assignment{
     int RID;
     int OID;
 };
+
+struct command{
+    int RID;
+    int command;
+    int arg;
+}
 
 int write_data(int type, void* data_, short number, byteArray* byte_ptr);
 
