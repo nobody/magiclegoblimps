@@ -194,7 +194,7 @@ void Camera::DisplayFrame()
 
 			newObject->SetTrackingWindow(cvRect(0, 0, 
 				image->width, image->height));
-			
+
 			//test
 			newObject->SetID(nextObject);
 			nextObject++;
@@ -213,12 +213,12 @@ void Camera::DisplayFrame()
 			{
 				float dist = 
 					visibleObjects_[i]->GetHorizDistFromCenterScreen(
-						image->width);
+					image->width);
 
 				if (dist < CENTERED_EPSILON && dist > -CENTERED_EPSILON)
 				{
 					cout << visibleObjects_[i]->GetID() << " is centered." << 
-					endl;
+						endl;
 				}
 				else
 				{
@@ -338,7 +338,7 @@ void Camera::Update()
 		cvCamShift(backProject, trackWindow,
 			cvTermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 10, 1),
 			&trackComp, &trackBox);
-		 trackWindow = trackComp.rect;
+		trackWindow = trackComp.rect;
 
 		if (!image->origin)
 			trackBox.angle = -trackBox.angle;

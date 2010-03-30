@@ -1,6 +1,8 @@
 #include <string>
 #include <conio.h>
 
+#define _WINSOCKAPI_ 
+
 #include "Tokenizer.h"
 
 #include "Camera.h"
@@ -40,6 +42,13 @@ void LocalInput()
 	if (tokens[0].compare("connectserver") == 0)
 	{
 		string ip = tokens[1];
+		controller->ConnectToServer(ip);
+	}
+
+	//testserver
+	if (tokens[0].compare("testserver") == 0)
+	{
+		controller->TestServer();
 	}
 
 	//testconnect
@@ -168,5 +177,3 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
-
-//http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml

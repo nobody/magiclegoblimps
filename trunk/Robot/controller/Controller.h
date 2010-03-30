@@ -3,6 +3,9 @@
 
 #include <time.h>
 #include <vector>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
 #include <Windows.h>
 
 #include "Robot.h"
@@ -17,6 +20,8 @@ public:
 	Controller();
 
 	bool ConnectToServer(string ip);
+
+	bool TestServer();
 
 	//local test as if received from server
 	void TestCommand(string command);
@@ -38,6 +43,8 @@ public:
 
 private:
 	static const int POLL_INTERVAL = 10;
+
+	static const int BUFFER_LENGTH = 512;
 
 	vector<Robot*> robots_;
 
