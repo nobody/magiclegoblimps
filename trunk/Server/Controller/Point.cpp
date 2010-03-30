@@ -11,12 +11,12 @@
 
 
 Point::Point(double a, double b) {
-    std::cout << "In Point constructor\n";
+    
 	x = a;
 	y = b;
 }
 
-Point::~Point{
+Point::~Point(){
 }
 
 

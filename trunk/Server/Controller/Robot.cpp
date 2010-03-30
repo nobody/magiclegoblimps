@@ -7,17 +7,17 @@
  */
 
 #include "Robot.h"
-//#include <boost/asio.hpp>
+
 
 Robot::Robot() : xCord(0), yCord(0) {
     // TODO Auto-generated constructor stub
-
+    pos = *(new Point(xCord,yCord));
 }
 
 
 Robot::Robot(boost::asio::ip::tcp::endpoint EP, int RID) : RID(RID), xCord(0), yCord(0) {
     // TODO Auto-generated constructor stub
-
+    pos = *(new Point(xCord,yCord));
 }
 
 Robot::~Robot() {
