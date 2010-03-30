@@ -34,10 +34,10 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
     tcp_connection->releaseSocket();
 
     //need to get the robots from the controller that just connected
-	size_t count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(3), error);
+	size_t count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(5), error);
 	connections[connEP]->releaseSocket();
 
-	std::cout<<"data read, socket released\n";
+	std::cout<<"data read(" << count << "), socket released\n";
 
 	//catch errors to tell when the connection closes;
 	if(error == boost::asio::error::eof){
@@ -58,20 +58,21 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 	std::cout<<"made it past the error traps...\n";
 	
 	//get the total number of bytes to read
-	char* arr = new char[4];
+	char* arr = new char[5];
 	boost::asio::streambuf::const_buffers_type data = inputBuffer.data();
 	boost::asio::buffers_iterator<boost::asio::streambuf::const_buffers_type> iter = boost::asio::buffers_begin(data);
 
 	//int type = *iter;
-	iter++;
-	for(int i = 0; i < 4; ++i){
+	//iter++;
+	for(int i = 0; i < 5; ++i){
 		arr[i] = *iter;
-		std::cout<<std::hex<<arr[i]<<"\n";
+        printf("hex: %02X\n", *iter);
+		//std::cout<<std::hex<<arr[i]<<"\n";
 		iter++;
 	}
 	
 	//compute the total and the bytes remaing to be pulled from the socket
-	int total = *((int*)arr);
+	int total = *((int*)(arr+1));
 	int remaining = total - count;
 
 	//if there are bytes remainging to be read read them
@@ -107,7 +108,7 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 
 	//consume the stuff in the buffer, we're done with it now;
 	//wasn't quite sure how to deal with the size_t issue...
-	inputBuffer.consume((size_t)total);
+	inputBuffer.consume(total);
 
 	//convert the char array to a 
 	readReturn* message = new readReturn;
@@ -156,11 +157,11 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 
 	for(int i = 0; i < objects->size(); ++i){
 		objArr[i].OID = (*ObjIt)->getOID();
-		objArr[i].name = &(*ObjIt)->getName();
+		objArr[i].name = new std::string((*ObjIt)->getName());
 		objArr[i].color_size = (*ObjIt)->getColorsize();
 		objArr[i].color = (*ObjIt)->getColor();
 
-		++it;
+		++ObjIt;
 	}
 
 	//now that we have the object array we need to gett the binary stream to transmitt
@@ -168,6 +169,19 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 	write_data(P_OBJECT, objArr, objects->size(), byte_ptr);
 	objects->readUnlock();
 	delete[] objArr;	
+
+    printf("Color: \n");
+    ObjIt--;
+    for (int i = 0; i < (*ObjIt)->getColorsize(); ++i){
+        printf("%02X ", (*ObjIt)->getColor()[i]);
+        fflush(stdout);
+    }
+    printf("\nData being sent:\n");
+    for (int i = 0; i < byte_ptr->size; ++i){
+        printf("%02X ", (unsigned)byte_ptr->array[i]);
+        fflush(stdout);
+    }
+    printf("\n");
 	
 	//hopefully the number of bytes is always a positive number
 	boost::asio::write(connections[connEP]->socket(),  boost::asio::buffer(byte_ptr->array, byte_ptr->size),
@@ -202,7 +216,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		//should check the buffer size so that i know how much
 		//is in there before it gets to a ridiculous size
 
-		count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(3), error);
+		count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(5), error);
 		connections[connEP]->releaseSocket();
 
 		std::cout<<"data read, socket released\n";
@@ -222,20 +236,22 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		std::cout<<"made it past the error traps...\n";
 		
 		//get the total number of bytes to read
-		char* arr = new char[4];
+		char* arr = new char[5];
 		boost::asio::streambuf::const_buffers_type data = inputBuffer.data();
 		boost::asio::buffers_iterator<boost::asio::streambuf::const_buffers_type> iter = boost::asio::buffers_begin(data);
 
+        std::cout << "iterating over data\n";
+
 		//int type = *iter;
 		iter++;
-		for(int i = 0; i < 4; ++i){
+		for(int i = 0; i < 5; ++i){
 			arr[i] = *iter;
 			std::cout<<std::hex<<arr[i]<<"\n";
 			iter++;
 		}
 		
 		//compute the total and the bytes remaing to be pulled from the socket
-		int total = *((int*)arr);
+		int total = *((int*)(arr+1));
 		int remaining = total - count;
 
 		//if there are bytes remainging to be read read them
