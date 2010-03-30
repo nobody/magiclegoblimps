@@ -18,7 +18,7 @@ OBJS = controller.o \
 	   VideoHandler.o \
 	   DataFile.o \
 	   protocol.o \
-	   #Qos.o \
+	   Qos.o \
 	   Point.o
 
 
