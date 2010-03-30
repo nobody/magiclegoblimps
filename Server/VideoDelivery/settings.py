@@ -2,15 +2,19 @@
 Application settings for the video delivery server controller.
 """
 
+from getip import getip
+
 # General settings
 LOGFILE = 'vidserver.log'
-ROOT_DIR = '/Users/jordanbach/Desktop/Spring2010/csproject/magiclegoblimps/Server/VideoDelivery'
+ROOT_DIR = '/home/jordan/mlb/magiclegoblimps/Server/VideoDelivery'
+LIVE_CSV_FILE = '/var/www/mlb/live-feeds.csv'
+ARCHIVE_CSV_FILE = '/var/www/mlb/archive-feeds.csv'
 
 # QoS server settings
 QOS_SERVER_URL = ''
 
 # Video server settings
-CURRENT_IP = '0.0.0.0'
+CURRENT_IP = getip()
 LIVE_FEED_URLS = 'rtmp://{0}:{1}/{2}.flv' # domain, port, filename
 ARCHIVE_FEED_URLS = 'http://{0}/{2}.flv' # domain, filename
 
