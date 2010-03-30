@@ -1,29 +1,35 @@
 /*
  * Assignments.h
  *
- * Modified on:    $Date: $
- * Last Edited By: $Author: $
- * Revision:       $Revision: $
+ * Modified on:    $Date$
+ * Last Edited By: $Author$
+ * Revision:       $Revision$
  */
 
 #ifndef ASSIGNMENT_H_
 #define ASSIGNMENT_H_
 
+#include <map>
+
+#include "Robot.h"
+#include "Object.h"
+#include "Qos.h"
+
 class Assignment {
     public:
         Assignment(Robot* r, int nr, Object* o,int no,  double* d, Qos* q);
         virtual ~Assignment();
-		map<Robot*, int> calcAssignments();
+        std::map<Robot*, int> calcAssignments();
 
     private:
-		QOS* quality;
+		Qos* quality;
 		Robot* robots;
 		int numRobots;
 		Object* objects;
 		int numObjects;
 		double* demand;
 		double gamma;         //Multplier for cost term
-		int robotAssignments[];
+		int* robotAssignments;
 		void initAssignments();
 		int isDone();         //Returns -1 if done, else returns index of next robot to assign
 		
