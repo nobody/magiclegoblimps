@@ -86,7 +86,7 @@ struct command{
     int RID;
     int command;
     int arg;
-}
+};
 
 int write_data(int type, void* data_, short number, byteArray* byte_ptr);
 

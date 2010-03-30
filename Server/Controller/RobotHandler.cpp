@@ -421,15 +421,15 @@ void RobotHandler::sendAssignments(std::map<Robot*, int>* assignments){
 	delete assignments;
 }
 
-void RobotHandler::sendCommand(command* com, boost::asio::ip::tcp::endpoint conn){	
+void RobotHandler::sendCommand(command* comm, boost::asio::ip::tcp::endpoint conn){	
 	byteArray* data = new byteArray;
-
-	write_data(P_ROBOT_COMMAND, comm, 1, data);
+	boost::system::error_code error;
+	write_data(P_COMMAND, comm, 1, data);
 	
 	boost::asio::write(connections[conn]->socket(), boost::asio::buffer(data->array, data->size),
 		boost::asio::transfer_at_least(data->size), error);
 
-	connections[com->robot->getEndpoint()]->releaseSocket();
+	connections[conn]->releaseSocket();
 
 }
 /*vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4:*/
