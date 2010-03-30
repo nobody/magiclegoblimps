@@ -12,6 +12,7 @@
 Robot::Robot() : xCord(0), yCord(0) {
     // TODO Auto-generated constructor stub
     pos = *(new Point(xCord,yCord));
+    list = new std::vector<int>;
 }
 
 
@@ -65,6 +66,15 @@ std::string Robot::getVideoURL() {
 }
 void Robot::setVideoURL(std::string url) {
     videoURL = url;
+}
+
+void Robot::setList(int* array, int size){
+    delete list;
+    list = new std::vector<int>;
+
+    for(int i = 0; i < size; ++i){
+        list->push_back(array[i]);
+    }
 }
 
 
