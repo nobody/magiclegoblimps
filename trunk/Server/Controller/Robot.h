@@ -51,7 +51,7 @@ public:
     }
     
     //the vector that holds the object ids of objects in view
-    std::vector<int> list;
+    std::vector<int>* list;
 
 private:
     //mutex for thread safety

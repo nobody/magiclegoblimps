@@ -71,7 +71,7 @@
             {
                 robotUpdate* data = (robotUpdate*)data_;
                 for (int i = 0; i < number; ++i){
-                    short size = sizeof(int) * 4 + sizeof(short) + data[i].listSize * 4;
+                    short size = sizeof(int) * 4 + sizeof(short) + data[i].listSize * sizeof(int);
                     structs[i] = new char[size];
 
                     //push size ontop of the array
@@ -104,7 +104,7 @@
                     }
 
                     ref = (char*)(data[i].list);
-                    for(int j = 18; j <18 + data[i].listSize * 4; ++i){
+                    for(int j = 18; j <18 + data[i].listSize * sizeof(int); ++j){
                         structs[i][j] = ref[j-18];
                     }
 

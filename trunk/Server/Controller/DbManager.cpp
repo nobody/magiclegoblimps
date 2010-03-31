@@ -1,5 +1,5 @@
 /*
- * test.cpp
+ * DbManager.cpp
  *
  * Modified on:    $Date$
  * Last Edited By: $Author$
@@ -28,6 +28,20 @@ DbManager::DbManager() {
 }
 
 DbManager::~DbManager() {
+}
+
+bool DbManager::normalize(demand_t* d) {
+    // for now, let's just put the percentage of votes
+    int total_demand = 0;
+    demand_t::iterator it;
+    for (it = d->begin(); it != d->end(); ++it) {
+        total_demand += it->second.numerator() / it->second.denominator();
+    }
+    for (it = d->begin(); it != d->end(); ++it) {
+        it->second = it->second / total_demand;
+    }
+    
+    return true;
 }
 
 bool DbManager::getRequests( demand_t* m ) {

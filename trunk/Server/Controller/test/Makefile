@@ -8,10 +8,15 @@ INCLUDES = -I ../include
 DEBUG = -g3
 
 
-all: AdminClient VideoClient connection.class testdata RobotController
+all: AdminClient VideoClient connection.class testdata RobotController DbSpam
 
 
-TESTDATA_DEPS = ../build/DataFile.o ../build/Robot.o ../build/protocol.o
+TESTDATA_DEPS = ../build/DataFile.o ../build/Robot.o ../build/protocol.o ../build/Point.o
+
+DbSpam: DbSpam.cpp
+	@echo "Building: $@"
+	${CC} -o"$@" ${DEBUG} ${LIBDIRS} ${LIBS} ${INCLUDES} $@.cpp ./random_device.o
+	@echo "Done building: $@"
 
 RobotController: RobotController.cpp ../build/protocol.o
 	@echo "Building: $@"

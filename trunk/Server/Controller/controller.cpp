@@ -95,6 +95,7 @@ int controller::testdb() {
 
     std::map<int, boost::rational<int> > *demand = new demand_t();
     db->getRequests(demand);
+    db->normalize(demand);
 
     demand_t::iterator iter;
     for (iter = demand->begin(); iter != demand->end(); ++iter) {

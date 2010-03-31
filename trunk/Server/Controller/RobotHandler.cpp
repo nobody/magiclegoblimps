@@ -244,10 +244,11 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         std::cout << "iterating over data\n";
 
 		//int type = *iter;
-		iter++;
+		//iter++;
 		for(int i = 0; i < 5; ++i){
 			arr[i] = *iter;
-			std::cout<<std::hex<<arr[i]<<"\n";
+            printf("hex: %02X\n", *iter);
+			//std::cout<<std::hex<<arr[i]<<"\n";
 			iter++;
 		}
 		
@@ -309,7 +310,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 				//get a readlock on the vector
 				robots->readLock();
 				for(int i = 0; i < message->size; ++i){
-					for(it = robots->begin(); it < robots->begin(); ++it){
+					for(it = robots->begin(); it < robots->end(); ++it){
 
 						//if it is the robot we are looking for, lock and update it
 						if ((*it)->getEndpoint() == connEP  && (*it)->getRID() == robotData[i].RID){
@@ -318,7 +319,12 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 							(*it)->setYCord(robotData[i].y);
 							(*it)->setList(robotData[i].list, robotData[i].listSize);
 							(*it)->unlock();
-						}
+						} else {
+                            std::cout << "These are not the droids you're looking for\n";
+                            if ((*it)->getEndpoint() != connEP){
+                                std::cout << "WTF? Its from a different connection?(" << (*it)->getEndpoint() << " vs. " << connEP << ")\n";
+                            }
+                        }
 					}
 					
 				}
@@ -407,8 +413,8 @@ void RobotHandler::sendAssignments(std::map<Robot*, int>* assignments){
 			//then somthing broke and it should be dealt with
 		}
 		boost::system::error_code error;
-		boost::asio::write(connections[(*connIter).first]->socket(), boost::asio::buffer(data->array, data->size),
-			boost::asio::transfer_at_least(data->size), error);
+		boost::asio::write(connections[(*connIter).first]->socket(), boost::asio::buffer(data.array, data.size),
+			boost::asio::transfer_at_least(data.size), error);
 
 		connections[(*connIter).first]->releaseSocket();
 

@@ -14,8 +14,9 @@
 
 class Object {
     public:
-	//Robot that is viewing this object
-	 Robot* viewedFrom;
+        //Robot that is viewing this object
+        Robot* viewedFrom __attribute__ ((deprecated));
+
         Object(int id, std::string name, char* color, int colorsize)
             : objID_(id), name_(name), colorsize_(colorsize)
         {
