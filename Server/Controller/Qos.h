@@ -15,7 +15,7 @@
 class Qos {
 public:
 	Qos();
-	Qos(Robot* r,int nr, Object* o, int no,  double* d, int nd);
+	Qos(Robot* r,int nr, Object* o, int no,  double* d);
 	virtual ~Qos();
 	double calcQos();
 	double calcQos(Object* o, Robot* r);
