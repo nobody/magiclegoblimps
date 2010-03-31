@@ -18,12 +18,15 @@ Robot::Robot() : xCord(0), yCord(0) {
 
 Robot::Robot(boost::asio::ip::tcp::endpoint EP, int RID) : RID(RID), xCord(0), yCord(0) {
     // TODO Auto-generated constructor stub
+    robotEP = EP;
     pos = *(new Point(xCord,yCord));
+    list = new std::vector<int>;
 }
 
 Robot::~Robot() {
     robotMutex.lock();
     robotMutex.unlock();
+    delete list;
 }
 
 //locks and unlocks the robot's private mutex

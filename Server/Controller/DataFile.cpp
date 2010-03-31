@@ -45,11 +45,14 @@ int DataFile::write(void* data)
                 robotInit* r = new robotInit[robots->size()];
                 int i = 0;
                 for (it = robots->begin(); it < it_end; ++it) {
+                    (*it)->lock();
+
                     r[i].RID = (*it)->getRID();
                     r[i].x =(*it)->getXCord();
                     r[i].y =(*it)->getYCord();
                     r[i].VideoURL = new std::string((*it)->getVideoURL());
 
+                    (*it)->unlock();
                     ++i; 
                 }
 

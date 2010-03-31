@@ -71,8 +71,18 @@ void VideoHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_con
         Vector_ts<Robot*>::iterator it_end = robots_->end();
 
         for (it = robots_->begin(); it < it_end; ++it) {
+            (*it)->lock();
+
             msg_ss << (*it)->getVideoURL();
             msg_ss << ";";
+            std::vector<int>* list = (*it)->list;
+
+            std::vector<int>::iterator i = list->begin();
+            for (; i < list->end(); ++i) {
+                msg_ss << (*i) << ";";
+            }
+
+            (*it)->unlock();
 
             msg_ss << "\n";
         }

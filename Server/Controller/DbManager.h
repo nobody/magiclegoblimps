@@ -1,5 +1,5 @@
 /*
- * config.h
+ * DbManager.h
  *
  * Modified on:    $Date$
  * Last Edited By: $Author$
@@ -41,6 +41,7 @@ class DbManager {
         void printRequests();
 
         bool getRequests( demand_t* );
+        bool normalize( demand_t* );
         bool updateCameras( std::map<int, Robot>* );
 
 
