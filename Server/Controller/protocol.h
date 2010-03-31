@@ -48,9 +48,11 @@ struct robotUpdate{
     int x;
     int y;
     int listSize;
-    int* list;
+    int* objects;
+    int* qualities;
     ~robotUpdate(){
-        delete list;
+        delete[] objects;
+	delete[] qualities;
     }
 };
 struct object{
