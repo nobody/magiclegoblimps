@@ -36,8 +36,6 @@ class VidFeed():
         if not obj == None:
             self.feed_url = obj['cam']
             self.objects.append((obj['object'], obj['QoS']))
-        
-        log('Video Delivery server running at ' + settings.CURRENT_IP)
 
     def __eq__(self, obj):
         if type(obj) is VidFeed:
@@ -53,9 +51,6 @@ class VidControl():
     Responsible for the overall control of the video delivery server.
     """
 
-    DEFAULT_PORT = 5678
-    DEFAULT_ADDR = 'localhost'
-    
     def __init__(self):
         # "constants"
         self.BUFFER_SIZE = 4096
@@ -66,6 +61,8 @@ class VidControl():
         self.config_gen = config.Generator()
 
         self.connect_QoS()
+        log('Connected to QoS server at ' + settings.QOS_SERVER_URL + ':' +
+                str(settings.QOS_SERVER_PORT))
 
         # complete info about all active feeds/streams
         self.feeds = []
@@ -75,7 +72,8 @@ class VidControl():
         self.config_files = []
         self.next_port = 8090
 
-    def connect_QoS(self, addr=DEFAULT_ADDR, port=DEFAULT_PORT):
+    def connect_QoS(self, addr=settings.QOS_SERVER_URL,
+                    port=settings.QOS_SERVER_PORT):
         """
         Setup a socket for communicating with the QoS server
         """
@@ -129,6 +127,8 @@ class VidControl():
         vfeed.stream_name = settings.STREAM_NAME.format(strport)
         vfeed.feed_name = settings.FEED_NAME
         self.next_port += 1
+        log('Launching feed in_url:{0}, out_url:{1}, config:{2}'.format(
+                vfeed.feed_url, vfeed.stream_name, vfeed.config_file))
 
         # generate a new config file
         config_data = {
@@ -149,6 +149,8 @@ class VidControl():
         - update data structures
         - update csv files
         """
+        log('Killing feed in_url:{0}, out_url:{1}, config:{2}'.format(
+                vfeed.feed_url, vfeed.stream_name, vfeed.config_file))
         ffserver.kill(vfeed)
         os.remove(vfeed.config_file)
         self.feeds.remove(vfeed)
@@ -163,6 +165,7 @@ class VidControl():
         5. archive video if necessary
         6. repeat
         """
+        log('Video Delivery server running at ' + settings.CURRENT_IP)
         while True:
             try:
                 latest_feeds = self.poll_QoS()
@@ -184,9 +187,17 @@ class VidControl():
         self.QoS_server.close()
 
 if __name__ == '__main__':
-    os.chdir(settings.ROOT_DIR)
+    # root directory is different based on which computer I'm developing on
+    for d in settings.ROOT_DIR:
+        try:
+            os.chdir(d)
+        except:
+            continue
+        else:
+            break
     try:
         vc = VidControl()
         vc.runserver()
     except KeyboardInterrupt:
         vc.killserver()
+        log('Video Delivery server shutdown normally')

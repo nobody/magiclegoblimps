@@ -5,13 +5,17 @@ Application settings for the video delivery server controller.
 from getip import getip
 
 # General settings
+DEBUG = True
 LOGFILE = 'vidserver.log'
-ROOT_DIR = '/home/jordan/mlb/magiclegoblimps/Server/VideoDelivery'
+ROOT_DIR = [
+        '/home/jordan/mlb/magiclegoblimps/Server/VideoDelivery',
+        '/Users/jordanbach/Desktop/Spring2010/csproject/magiclegoblimps/Server/VideoDelivery']
 LIVE_CSV_FILE = '/var/www/mlb/live-feeds.csv'
 ARCHIVE_CSV_FILE = '/var/www/mlb/archive-feeds.csv'
 
 # QoS server settings
-QOS_SERVER_URL = ''
+QOS_SERVER_URL = 'localhost'
+QOS_SERVER_PORT = 5678
 
 # Video server settings
 CURRENT_IP = getip()
