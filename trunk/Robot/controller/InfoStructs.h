@@ -6,6 +6,7 @@
 struct RobotInfo
 {
 	int id = -1;
+	string ip = NULL;
 	int target = -1;
 	float xLoc = 0;
 	float yLoc = 0;

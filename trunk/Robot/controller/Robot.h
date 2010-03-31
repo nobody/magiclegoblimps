@@ -54,8 +54,6 @@ private:
 
 	RobotFacing robotFacing_;
 	float cameraFacing_;
-
-
 };
 
 #endif

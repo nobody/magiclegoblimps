@@ -21,9 +21,12 @@ public:
 
 	bool ConnectToServer(string ip);
 
-	bool TestServer();
+	bool Serve();
 
 	static void ClientThread(void* params);
+
+	static bool SendRobots();
+	static bool SendObjects();
 
 	static bool Command(string command);
 	bool TestServer(string command);
@@ -47,8 +50,9 @@ private:
 	static const int POLL_INTERVAL = 10;
 
 	static const int BUFFER_LENGTH = 512;
+	char* port_;
 
-	vector<Robot*> robots_;
+	static vector<Robot*> robots_;
 
 	float timer_;
 	time_t lastTime_;

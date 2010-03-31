@@ -1,13 +1,16 @@
 #include "Controller.h"
 
-#define PORT "7626"
-
+//static member variables must be redeclared in source
+vector<Robot*> Controller::robots_;
 SOCKET Controller::connectSocket_;
+vector<TrackingObject*> Controller::trackableObjects_;
 
 Controller::Controller()
 {
 	timer_ = 0;
 	connectSocket_ = NULL;
+	serverSocket_ = NULL;
+	port_ = "7626";
 }
 
 bool Controller::ConnectToServer(string ip)
@@ -31,7 +34,7 @@ bool Controller::ConnectToServer(string ip)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
-	iResult = getaddrinfo(ip.c_str(), PORT, &hints, &result);
+	iResult = getaddrinfo(ip.c_str(), port_, &hints, &result);
     if (iResult != 0) 
 	{
         printf("getaddrinfo failed: %d\n", iResult);
@@ -71,12 +74,15 @@ bool Controller::ConnectToServer(string ip)
 
 	cout << "Connected to server." << endl;
 
+	//need to retrieve the list of known objects from server on connect
+
 	_beginthread(ClientThread, 0, NULL);
 
 	return true;
 }
 
-bool Controller::TestServer()
+//creates a listening server socket for testing with self
+bool Controller::Serve()
 {
 	WSADATA wsaData;
     SOCKET listenSocket = INVALID_SOCKET;
@@ -96,7 +102,7 @@ bool Controller::TestServer()
     hints.ai_protocol = IPPROTO_TCP;
     hints.ai_flags = AI_PASSIVE;
 
-    iResult = getaddrinfo(NULL, PORT, &hints, &result);
+    iResult = getaddrinfo(NULL, port_, &hints, &result);
     if (iResult != 0) 
 	{
         printf("getaddrinfo failed: %d\n", iResult);
@@ -161,6 +167,12 @@ void Controller::ClientThread(void* params)
         iResult = recv(connectSocket_, recvBuf, recvBufLen, 0);
         if (iResult > 0)
 		{
+			//potentially needs to decide if recieved data is a command,
+			//robot, or object - but may not be required if we're only
+			//grabbing the list of objects from the server once on connection
+
+			//also need to do something about null/terminating characters
+
 			cout << "COMMAND FROM SERVER: " << recvBuf << endl;
 			string command = recvBuf;
 			Command(command);
@@ -175,16 +187,25 @@ void Controller::ClientThread(void* params)
     } 
 }
 
+bool Controller::SendRobots()
+{
+	//send information about all our robots to the server
+	return false;
+}
+
+bool Controller::SendObjects()
+{
+	//send information about all our objects to the server
+	return false;
+}
+
 bool Controller::Command(string command)
 {
 	//should translate command from server format into our command format
 	//then send it on to the requested robot
 
 	//temporary format (needs discussing with server group)
-	//very likely to change
 	//[command]$[robotnumber]$[subcommand]$[value]
-
-	//see main.cpp for (badly implemented) usage
 
 	vector<string> tokens;
 	tokenize(command, tokens, "$");
@@ -192,9 +213,17 @@ bool Controller::Command(string command)
 	if (tokens.size() == 0)
 		return false;
 
+	//example of command translation (not final)
+	if (tokens[0].compare("target") == 0)
+	{
+		robots_[atoi(tokens[1].c_str())]->ExecuteCommand("target" + tokens[2]);
+	}
+
 	return true;
 }
 
+//after creating a server and connecting a client, can be used to send
+//test commands as if they were from the server
 bool Controller::TestServer(string command)
 {
 	int bufLength = command.length();
@@ -253,25 +282,22 @@ void Controller::Disconnect()
 		robots_.erase(robots_.begin() + i);
 	}
 
-	//need to delete trackable objects after disconnect
-	/*
 	for (int i = 0; i < trackableObjects_.size(); i++)
 	{
 		delete trackableObjects_[i];
 		trackableObjects_.erase(trackableObjects_.begin() + i);
 	}
-	*/
 
 	if (connectSocket_ != NULL)
 	{
-		//shutdown
+		//socket might need shutdown
 		closesocket(connectSocket_);
 	    WSACleanup();
 	}
 
 	if (serverSocket_ != NULL)
 	{
-		//shutdown
+		//socket might need shutdown
 		closesocket(serverSocket_);
 	    WSACleanup();
 	}
