@@ -33,6 +33,9 @@ void LocalInput()
 
 	if (tokens.size() == 0)
 		return;
+	
+	//if statements are ugly, but can't switch strings
+	//look into using a STL map instead
 
 	//quit
 	if (tokens[0].compare("quit") == 0)
@@ -48,7 +51,7 @@ void LocalInput()
 	//serve
 	if (tokens[0].compare("serve") == 0)
 	{
-		controller->TestServer();
+		controller->Serve();
 	}
 
 	//testserver command

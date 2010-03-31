@@ -24,7 +24,6 @@
 #pragma comment(lib, "libcxts200.dll.a")
 #pragma comment(lib, "libhighgui200.dll.a")
 #pragma comment(lib, "libml200.dll.a")
-#pragma comment(lib, "libopencv_ffmpeg200.dll.a")
 #else
 #ifdef _DEBUG
 #pragma comment(lib, "cv200d.lib")
@@ -55,6 +54,7 @@ public:
 	bool Connect();
 	void Disconnect();
 
+	string GetIP() { return ip_; }
 	void SetIP(string ip);
 	void SetDLinkCam(bool dLinkCam);
 

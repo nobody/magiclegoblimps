@@ -19,6 +19,8 @@ Camera::Camera(string ip, bool dLinkCam)
 	target_ = -1;
 
 	displayWindowName_ = "";
+
+	//need to load the trackableObjects from the controller here
 }
 
 bool Camera::Connect()
@@ -53,7 +55,7 @@ void Camera::Disconnect()
 	cvReleaseCapture(&capture_);
 	capture_ = 0;
 
-	//testocracy
+	//testocracy - needs to be left to the controller
 	for (int i = 0; i < trackableObjects_.size(); i++)
 	{
 		delete trackableObjects_[i];
@@ -89,7 +91,7 @@ float histRangesArray[] = {0, 180};
 float* histRanges = histRangesArray;
 int vMin = 10, vMax = 256, sMin = 30;
 
-//test
+//test - need a better way of getting next object id (static counter?)
 int nextObject = 0;
 
 void onMouse(int event, int x, int y, int flags, void* param)
@@ -207,6 +209,7 @@ void Camera::DisplayFrame()
 			histCreated = false;
 		}
 
+		//displays the centered/distance information
 		if (inKey_ == 'c')
 		{
 			for (int i = 0; i < visibleObjects_.size(); i++)

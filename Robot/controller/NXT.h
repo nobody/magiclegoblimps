@@ -14,6 +14,7 @@ public:
 	bool Connect();
 	void Disconnect();
 	
+	int GetPort() { return bluetoothPort_; }
 	void SetPort(int port);
 
 	void SendMessage(string message);
