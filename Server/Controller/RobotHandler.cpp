@@ -337,6 +337,38 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 			//i don't think this should happen, but i don't know
 			//actually it should whenever a new object is added
 			//i'll have to deal with that
+			{
+				object* objs = new object[message->size];
+				objs = (object*)(message->array);
+
+				Vector_ts<Object*>::iterator it;
+
+				for(int i = 0; i < message->size; ++i){
+					bool exists = false;
+					for(it = objects->begin(); it != objects->end(); ++it){
+						if(objs[i].OID == (*it)->getOID() || !objs[i].name->compare((*it)->getName()))
+							exists = true;
+					}
+
+					if(!exists){
+						Object* temp = new Object(objs[i].OID, *(objs[i].name), objs[i].color, objs[i].color_size);
+						objects->lock();
+						objects->push_back(temp);
+						objects->unlock();
+
+						conn_map::iterator conn_iter;
+						for(conn_iter = connections.begin(); conn_iter != connections.end(); conn_iter++){
+							if((*conn_iter).first == connEP)
+								continue;
+							byteArray bytes;
+							write_data(P_OBJECT, &objs[i], 1, &bytes);
+							boost::asio::write((*conn_iter).second->socket(), 
+								boost::asio::buffer(bytes.array, bytes.size), boost::asio::transfer_at_least(bytes.size));
+							(*conn_iter).second->releaseSocket();
+						}
+					}
+				}
+			}
 
 			break;
 			
