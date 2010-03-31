@@ -11,14 +11,13 @@
 
 const double Qos::CAM_VALUES[] = {1.0,0.7};
 
-Qos::Qos(Robot* r,int nr, Object* o, int no,  double* d, int nd){
+Qos::Qos(Robot* r, int nr, Object* o, int no,  double* d){
 
 	robots =  r;
 	numRobots = nr;
 	objects =  o;
 	numObjects = no;
 	demand = d;
-	numDemand = nd;
 }
 
 Qos::~Qos() {
