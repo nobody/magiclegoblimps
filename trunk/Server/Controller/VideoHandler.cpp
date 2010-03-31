@@ -75,11 +75,11 @@ void VideoHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_con
 
             msg_ss << (*it)->getVideoURL();
             msg_ss << ";";
-            std::vector<int>* list = (*it)->list;
+            std::map<int, int>* list = (*it)->list;
 
-            std::vector<int>::iterator i = list->begin();
-            for (; i < list->end(); ++i) {
-                msg_ss << (*i) << ";";
+            std::map<int, int>::iterator i = list->begin();
+            for (; i != list->end(); ++i) {
+                msg_ss << (*i).first << ";" << (*i).second << ";";
             }
 
             (*it)->unlock();

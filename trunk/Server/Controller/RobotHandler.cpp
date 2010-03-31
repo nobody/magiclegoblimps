@@ -317,7 +317,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 							(*it)->lock();
 							(*it)->setXCord(robotData[i].x);
 							(*it)->setYCord(robotData[i].y);
-							(*it)->setList(robotData[i].list, robotData[i].listSize);
+							(*it)->setList(robotData[i].objects, robotData[i].qualities, robotData[i].listSize);
 							(*it)->unlock();
 						} else {
                             std::cout << "These are not the droids you're looking for\n";
