@@ -153,6 +153,7 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 	//object structs;
 	
 	objects->readLock();
+	std::cout<<objects->size();
 	object* objArr = new object[objects->size()];
 	Vector_ts<Object*>::iterator ObjIt = objects->begin();
 
@@ -319,8 +320,13 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 							(*it)->setYCord(robotData[i].y);
 							(*it)->setList(robotData[i].objects, robotData[i].qualities, robotData[i].listSize);
 							(*it)->unlock();
+							break;
+							///std::cout <<(*it)->getEndpoint() << " looking for: "<<connEP << std::endl;
+			    				//std::cout <<(*it)->getRID() << " looking for: " << robotData[i].RID << std::endl;
 						} else {
                             std::cout << "These are not the droids you're looking for\n";
+			    std::cout <<(*it)->getEndpoint() << " looking for: "<<connEP << std::endl;
+			    std::cout <<(*it)->getRID() << " looking for: " << robotData[i].RID << std::endl;
                             if ((*it)->getEndpoint() != connEP){
                                 std::cout << "WTF? Its from a different connection?(" << (*it)->getEndpoint() << " vs. " << connEP << ")\n";
                             }
