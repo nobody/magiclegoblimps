@@ -37,25 +37,34 @@ int main() {
     update[0].x = 1;
     update[0].y = 9;
     update[0].listSize = 1;
-    update[0].list = new int[1];
-    update[0].list[0] = 15;
+    update[0].objects = new int[1];
+    update[0].objects[0] = 15;
+    update[0].qualities = new int[1];
+    update[0].qualities[0] = 1;
 
     update[1].RID = 1;
     update[1].x = 2;
     update[1].y = 8;
     update[1].listSize = 2;
-    update[1].list = new int[2];
-    update[1].list[0] = 15;
-    update[1].list[1] = 9;
+    update[1].objects = new int[2];
+    update[1].objects[0] = 15;
+    update[1].objects[1] = 9;
+    update[1].qualities = new int[2];
+    update[1].qualities[0] = 2;
+    update[1].qualities[1] = 3;
 
     update[2].RID = 2;
     update[2].x = 3;
     update[2].y = 7;
     update[2].listSize = 3;
-    update[2].list = new int[3];
-    update[2].list[0] = 15;
-    update[2].list[1] = 9;
-    update[2].list[2] = 5;
+    update[2].objects = new int[3];
+    update[2].objects[0] = 15;
+    update[2].objects[1] = 9;
+    update[2].objects[2] = 5;
+    update[2].qualities = new int[3];
+    update[2].qualities[0] = 1;
+    update[2].qualities[1] = 2;
+    update[2].qualities[2] = 5;
 
     byteArray updArr;
     if (write_data(P_ROBOT_UPDATE, update, 3, &updArr)) {
