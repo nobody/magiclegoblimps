@@ -94,8 +94,9 @@ int controller::testdb() {
     std::cout << "\n-----------------------------\n";
 
     std::map<int, boost::rational<int> > *demand = new demand_t();
+    std::map<int, boost::rational<int> > *demand_old = new demand_t();
     db->getRequests(demand);
-    db->normalize(demand);
+    db->normalize(demand, demand_old);
 
     demand_t::iterator iter;
     for (iter = demand->begin(); iter != demand->end(); ++iter) {
@@ -103,6 +104,7 @@ int controller::testdb() {
     }
 
     delete demand;
+    delete demand_old;
 
     return 0;
 }
