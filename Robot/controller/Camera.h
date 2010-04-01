@@ -14,7 +14,6 @@
 #include <cv.h>
 #include <highgui.h>
 
-//#include "Controller.h"
 #include "TrackingObject.h"
 
 #ifdef PRECOMPILED_CV
@@ -68,16 +67,22 @@ public:
 
 	void SendKey(int key);
 
+	static vector<TrackingObject*> GetTrackableObjects()
+	{
+		return trackableObjects_;
+	}
+
 	void Update();
 
 private:
-	static const int SCAN_INTERVAL = 3;
-	static const int LOCK_TIME = 1;
-
-	static const int MIN_AREA = 850;
-	static const int MAX_AREA = 115000;
-
+	static const int MIN_SIZE = 5;
+	static const int MAX_SIZE = 400;
 	static const int CENTERED_EPSILON = 15;
+	
+	static int nextObject_;
+
+	float scanInterval_;
+	float lockTime_;
 
 	string dLinkUrl_;
 	string ciscoUrl_;
@@ -102,8 +107,9 @@ private:
 	int inKey_;
 	bool waitingKey_;
 
+	static vector<TrackingObject*> trackableObjects_;
+
 	bool showTracking_;
-	vector<TrackingObject*> trackableObjects_;
 	vector<TrackingObject*> possibleObjects_;
 	vector<TrackingObject*> visibleObjects_;
 

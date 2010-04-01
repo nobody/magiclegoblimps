@@ -12,3 +12,18 @@ TrackingObject::TrackingObject(CvHistogram* hist, CvBox2D originalBox)
 	originalBox_ = originalBox;
 	trackBox_ = originalBox;
 }
+
+float TrackingObject::GetCenteredPercentage(int width)
+{
+	float dist = (width / 2) - trackBox_.center.x;
+
+	return dist / width * 200;
+}
+
+float TrackingObject::GetSizePercentage()
+{
+	float origArea = originalBox_.size.width * originalBox_.size.height;
+	float currentArea = trackBox_.size.width * trackBox_.size.height;
+
+	return currentArea / origArea * 100;
+}

@@ -33,10 +33,8 @@ public:
 		trackWindow_ = trackWindow;
 	}
 
-	float GetHorizDistFromCenterScreen(int width)
-	{
-		return (width / 2) - trackBox_.center.x;
-	}
+	float GetCenteredPercentage(int width);
+	float GetSizePercentage();
 
 private:
 	int id_;

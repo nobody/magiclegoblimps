@@ -1,7 +1,14 @@
 #include "Camera.h"
 
+//static member variables must be redeclared in source
+int Camera::nextObject_;
+vector<TrackingObject*> Camera::trackableObjects_;
+
 Camera::Camera(string ip, bool dLinkCam)
 {
+	scanInterval_ = 3;
+	lockTime_ = 1;
+
 	ip_ = ip;
 	dLinkCam_ = dLinkCam;
 
@@ -19,8 +26,6 @@ Camera::Camera(string ip, bool dLinkCam)
 	target_ = -1;
 
 	displayWindowName_ = "";
-
-	//need to load the trackableObjects from the controller here
 }
 
 bool Camera::Connect()
@@ -55,7 +60,7 @@ void Camera::Disconnect()
 	cvReleaseCapture(&capture_);
 	capture_ = 0;
 
-	//testocracy - needs to be left to the controller
+	//needs to be left to the controller
 	for (int i = 0; i < trackableObjects_.size(); i++)
 	{
 		delete trackableObjects_[i];
@@ -90,9 +95,6 @@ int histDivs = 32;
 float histRangesArray[] = {0, 180};
 float* histRanges = histRangesArray;
 int vMin = 10, vMax = 256, sMin = 30;
-
-//test - need a better way of getting next object id (static counter?)
-int nextObject = 0;
 
 void onMouse(int event, int x, int y, int flags, void* param)
 {
@@ -197,9 +199,8 @@ void Camera::DisplayFrame()
 			newObject->SetTrackingWindow(cvRect(0, 0, 
 				image->width, image->height));
 
-			//test
-			newObject->SetID(nextObject);
-			nextObject++;
+			newObject->SetID(nextObject_);
+			nextObject_++;
 
 			trackableObjects_.push_back(newObject);
 
@@ -215,8 +216,7 @@ void Camera::DisplayFrame()
 			for (int i = 0; i < visibleObjects_.size(); i++)
 			{
 				float dist = 
-					visibleObjects_[i]->GetHorizDistFromCenterScreen(
-					image->width);
+					visibleObjects_[i]->GetCenteredPercentage(image->width);
 
 				if (dist < CENTERED_EPSILON && dist > -CENTERED_EPSILON)
 				{
@@ -226,8 +226,11 @@ void Camera::DisplayFrame()
 				else
 				{
 					cout << visibleObjects_[i]->GetID() << " is " << dist <<
-						" from the center." << endl;
+						"% from the center." << endl;
 				}
+
+				cout << visibleObjects_[i]->GetID() << " is size " <<
+					visibleObjects_[i]->GetSizePercentage() << "%" << endl;
 			}
 		}
 
@@ -260,7 +263,7 @@ void Camera::Update()
 
 	scanTimer_ += interval;
 
-	if (scanTimer_ > SCAN_INTERVAL)
+	if (scanTimer_ > scanInterval_)
 	{
 		Scan();
 		scanTimer_ = 0;
@@ -268,7 +271,7 @@ void Camera::Update()
 
 	lockTimer_ += interval;
 
-	if (lockTimer_ > LOCK_TIME)
+	if (lockTimer_ > lockTime_)
 	{
 		if (!locked_)
 			Lock();
@@ -402,8 +405,8 @@ void Camera::Update()
 				}
 			}
 
-			if (visibleObjects_[i]->GetArea() > MAX_AREA ||
-				visibleObjects_[i]->GetArea() < MIN_AREA)
+			if (visibleObjects_[i]->GetSizePercentage() > MAX_SIZE ||
+				visibleObjects_[i]->GetSizePercentage() < MIN_SIZE)
 				visibleObjects_.erase(visibleObjects_.begin() + i);
 		}
 	}
@@ -420,6 +423,8 @@ void Camera::Scan()
 {
 	possibleObjects_ = trackableObjects_;
 
+	//should check if object is already visible before rescanning
+
 	for (int i = 0; i < possibleObjects_.size(); i++)
 	{
 		possibleObjects_[i]->SetTrackingWindow(cvRect(0, 0, image->width, 
@@ -434,8 +439,8 @@ void Camera::Lock()
 {
 	for (int i = 0; i < possibleObjects_.size(); i++)
 	{
-		if (possibleObjects_[i]->GetArea() > MAX_AREA ||
-			possibleObjects_[i]->GetArea() < MIN_AREA)
+		if (possibleObjects_[i]->GetSizePercentage() > MAX_SIZE ||
+			possibleObjects_[i]->GetSizePercentage() < MIN_SIZE)
 			possibleObjects_.erase(possibleObjects_.begin() + i);
 	}
 

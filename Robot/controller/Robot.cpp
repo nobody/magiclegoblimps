@@ -84,39 +84,12 @@ void Robot::ExecuteCommand(string command)
 	if (tokens.size() == 0)
 		return;
 
-	if (tokens[0].compare("move") == 0)
-	{
-		if (tokens[1].compare("forward") == 0)
-		{
-			nxt_->SendMessage("move forward " + tokens[2]);
-		}
-	}
-
-	if (tokens[0].compare("turn") == 0)
-	{
-		if (tokens[1].compare("camera") == 0)
-		{
-			nxt_->SendMessage("turn camera " + tokens[2]);
-		}
-
-		if (tokens[1].compare("left") == 0)
-		{
-			nxt_->SendMessage("turn left " + tokens[2]);
-		}
-
-		if (tokens[1].compare("right") == 0)
-		{
-			nxt_->SendMessage("turn right " + tokens[2]);
-		}
-	}
-
-	if (tokens[0].compare("pan") == 0)
-	{
-		nxt_->SendMessage("pan " + tokens[1]);
-	}
-
 	if (tokens[0].compare("target") == 0)
 	{
 		camera_->SetTarget(atoi(tokens[1].c_str()));
+	}
+	else
+	{
+		nxt_->SendMessage(command);
 	}
 }
