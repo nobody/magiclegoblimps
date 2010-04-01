@@ -16,8 +16,8 @@
 class Assignment {
     public:
         Assignment(Robot* r, int nr, Object* o,int no,  double* d, Qos* q);
-        virtual ~Assignment();
-		map<Robot*, int> calcAssignments();
+        ~Assignment();
+        std::map<Robot*, int>* calcAssignments();
 
     private:
 		Qos* quality;
@@ -27,7 +27,7 @@ class Assignment {
 		int numObjects;
 		double* demand;
 		double gamma;         //Multplier for cost term
-		int robotAssignments[];
+		int* robotAssignments;
 		void initAssignments();
 		int isDone();         //Returns -1 if done, else returns index of next robot to assign
 		
