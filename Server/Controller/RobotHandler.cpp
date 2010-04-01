@@ -294,6 +294,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 
 		//convert the char array to a 
 		std::cout<<"converting message to structs"<<std::endl;
+		p
 		readReturn* message = new readReturn;
 		if(read_data((void*)arr, message) < 0){
 			// read failed clean up the mess
@@ -397,7 +398,8 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		
 
 	}
-//clean up stuff from connection
+	//clean up stuff from connection
+	cleanupConn(connEP);
 }
 
 
