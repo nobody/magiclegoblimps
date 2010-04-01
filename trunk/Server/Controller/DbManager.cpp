@@ -30,7 +30,7 @@ DbManager::DbManager() {
 DbManager::~DbManager() {
 }
 
-bool DbManager::normalize(demand_t* d) {
+bool DbManager::normalize(demand_t*& d, demand_t*& old ) {
     // for now, let's just put the percentage of votes
     int total_demand = 0;
     demand_t::iterator it;
@@ -57,6 +57,8 @@ bool DbManager::getRequests( demand_t* m ) {
         return false;
     }
 
+    con->setAutoCommit(0);
+
     stmt = con->createStatement();
     cmd = "USE ";
     cmd += DbManager::db_database;
@@ -71,6 +73,7 @@ bool DbManager::getRequests( demand_t* m ) {
         std::cout << "Failed query: " << cmd << "\n";
         
         delete stmt;
+        con->rollback();
         delete con;
 
         return false;
@@ -94,6 +97,7 @@ bool DbManager::getRequests( demand_t* m ) {
             
             delete rs;
             delete stmt;
+            con->rollback();
             delete con;
 
             return false;
@@ -106,6 +110,7 @@ bool DbManager::getRequests( demand_t* m ) {
 
     delete rs;
     delete stmt;
+    con->commit();
     delete con;
 
     return true;
