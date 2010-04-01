@@ -283,9 +283,9 @@
     byte_ptr->array = array;
     byte_ptr->size = length;
 
-    char* ptr = array;
-    ptr += 7 + 16;
-    std::cout << ptr << "\n";
+    //char* ptr = array;
+    //ptr += 7 + 16;
+    //std::cout << ptr << "\n";
 
     
     return P_OK;
