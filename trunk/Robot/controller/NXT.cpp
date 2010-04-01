@@ -9,22 +9,12 @@ NXT::~NXT()
 {
 	delete connection_;
 	delete brick_;
-	delete motorA_;
-	delete motorB_;
-	delete motorC_;
-	delete lSensorL_;
-	delete lSensorR_;
 }
 
 bool NXT::Connect()
 {
 	connection_ = new Bluetooth();
 	brick_ = new Brick(connection_);
-	motorA_ = new Motor(OUT_A, connection_);
-	motorB_ = new Motor(OUT_B, connection_);
-	motorC_ = new Motor(OUT_C, connection_);
-	lSensorL_ = new Light(IN_3, connection_, LED_OFF);
-	lSensorR_ = new Light(IN_2, connection_, LED_OFF);
 
 	try
 	{
@@ -41,13 +31,6 @@ bool NXT::Connect()
 
 void NXT::Disconnect()
 {
-	lSensorL_->set(LED_OFF);
-	lSensorR_->set(LED_OFF);
-
-	motorA_->stop();
-	motorB_->stop();
-	motorC_->stop();
-
 	StopPrograms();
 
 	connection_->disconnect();

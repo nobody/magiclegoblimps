@@ -12,6 +12,8 @@
 #include "Tokenizer.h" 
 #include "TrackingObject.h"
 
+#include "Server\protocol.h"
+
 using namespace std;
 
 class Controller
@@ -25,8 +27,10 @@ public:
 
 	static void ClientThread(void* params);
 
+	static bool InitRobot();
 	static bool SendRobots();
-	static bool SendObjects();
+	static bool SendObject();
+	static bool RecieveObjects();
 
 	static bool Command(string command);
 	bool TestServer(string command);
@@ -41,15 +45,10 @@ public:
 
 	void Update();
 
-	static vector<TrackingObject*> GetTrackableObjects() 
-	{ 
-		return trackableObjects_;
-	}
-
 private:
 	static const int POLL_INTERVAL = 10;
-
 	static const int BUFFER_LENGTH = 512;
+
 	char* port_;
 
 	static vector<Robot*> robots_;
@@ -59,8 +58,6 @@ private:
 
 	static SOCKET connectSocket_;
 	SOCKET serverSocket_;
-
-	static vector<TrackingObject*> trackableObjects_;
 };
 
 #endif

@@ -9,6 +9,8 @@
 
 using namespace std;
 
+//class Camera;
+
 enum RobotFacing
 {
 	POSITIVE_X = 0,

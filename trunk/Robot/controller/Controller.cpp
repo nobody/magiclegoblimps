@@ -3,7 +3,7 @@
 //static member variables must be redeclared in source
 vector<Robot*> Controller::robots_;
 SOCKET Controller::connectSocket_;
-vector<TrackingObject*> Controller::trackableObjects_;
+//vector<TrackingObject*> Camera::GetTrackableObjects();
 
 Controller::Controller()
 {
@@ -187,16 +187,28 @@ void Controller::ClientThread(void* params)
     } 
 }
 
+bool Controller::InitRobot()
+{
+	//send inital robot information on add
+	return true;
+}
+
 bool Controller::SendRobots()
 {
 	//send information about all our robots to the server
-	return false;
+	return true;
 }
 
-bool Controller::SendObjects()
+bool Controller::SendObject()
 {
 	//send information about all our objects to the server
-	return false;
+	return true;
+}
+
+bool Controller::RecieveObjects()
+{
+	//recieve all saved objects from server
+	return true;
 }
 
 bool Controller::Command(string command)
@@ -282,11 +294,14 @@ void Controller::Disconnect()
 		robots_.erase(robots_.begin() + i);
 	}
 
-	for (int i = 0; i < trackableObjects_.size(); i++)
+	/*
+	for (int i = 0; i < Camera.GetTrackableObjects().size(); i++)
 	{
-		delete trackableObjects_[i];
-		trackableObjects_.erase(trackableObjects_.begin() + i);
+		delete Camera.GetTrackableObjects()[i];
+		Camera.GetTrackableObjects().erase(
+			Camera.GetTrackableObjects().begin() + i);
 	}
+	*/
 
 	if (connectSocket_ != NULL)
 	{
