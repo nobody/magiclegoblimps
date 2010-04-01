@@ -1,31 +1,40 @@
 /*
+  @ commands
+  - start   (one time only)
+  - forward
+  - forward ms
+  - left
+  - right
+  - turnaround
+  - pan deg
+  - stop
+  
   @ start up receive
   - line type (black/white)
-  - homeX
-  - homeY
-  - maxX
-  - maxY
-  - destX
-  - destY
+  - starting X
+  - starting Y
+  - starting heading
   
   @ start up send
   - battery level
   
   @ feedback
-  - curX
-  - curY
-  - tachometer count
-  - heading
-  - battery level
-  - pan deg
+  - curX (int)
+  - curY (int)
+  - tachometer count (int)
+  - heading (int)
+  - battery level (int)
+  - pan deg (int)
+  - at intersection (boolean)
 */
 
 // controller
-#define USE_CONTROLLER 0   // 0-no 1-yes
+#define USE_CONTROLLER 1   // 0-no 1-yes
 
 // mailboxes
 #define OUTBOX 0  // to controller
 #define INBOX 1   // from controller
+#define CAMERABOX 2 // if needed
 
 // wheels
 #define MOTOR_LEFT OUT_A
@@ -37,7 +46,7 @@
 #define SPEED_TURN 20
 #define SPEED_PAN 10
 #define TIME_TURN 300     // milliseconds
-#define TURN90 180
+#define TURN90 360
 #define TURN180 360
 
 // camera
@@ -64,9 +73,15 @@
 // errors
 
 // MODE
-#define DESTINATION 0
-#define LINE_FOLLOW 1
-#define INTERSECTION 2
+#define STOPPED 0
+#define IDLE 1
+#define DESTINATION 2
+#define LINE_FOLLOW 3
+#define INTERSECTION 4
+#define TURNLEFT 5
+#define TURNRIGHT 6
+#define TURNAROUND 7
+#define SONARBLOCK 8
 
 // heading
 #define NORTH 0
@@ -81,7 +96,6 @@
 #define ARRIVED 3
 
 // action
-#define CLEARED -1
 #define STOP 0
 #define LEFT 1
 #define RIGHT 2
@@ -122,7 +136,7 @@ int RIGHT_MIN = 100;
 int MODE = 0; // 0-dest 1-moving 2-intersection
 int last_sensor = 0;
 int status = 0; // flags
-int action = 0;
+int action = STOP;
 int actionValue = 0;
 
 /*
@@ -155,7 +169,7 @@ string read( int box, int clear )
 /*
  *    INDEPENDINT FUNCTIONS
  */
-void stopMotors()
+void stopWheels()
 {
  motorPower(0,0);
 }
@@ -169,7 +183,7 @@ void forwardWait(int ms)
 {
  forward();
  Wait(ms);
- stopMotors();
+ stopWheels();
 }
 
 void reverse()
@@ -181,8 +195,9 @@ void turnRight()
 {
  motorPower(SPEED_TURN, -SPEED_TURN / 2);
  //Wait(TIME_TURN);
+  ResetRotationCount(MOTOR_LEFT);
  while(MotorRotationCount(MOTOR_LEFT)<TURN90);
- stopMotors();
+ stopWheels();
  heading = (heading + 1) % 4;
 }
 
@@ -197,9 +212,10 @@ void turnLeft()
 {
  motorPower(-SPEED_TURN / 2, SPEED_TURN);
  //Wait(TIME_TURN);
- while(MotorRotationCount(MOTOR_LEFT)<TURN90);
- stopMotors();
- heading = (heading) ? WEST : (heading - 1);
+ ResetRotationCount(MOTOR_RIGHT);
+ while(MotorRotationCount(MOTOR_RIGHT)<TURN90);
+ stopWheels();
+ heading = (heading) ? (heading - 1) : WEST;
 }
 
 void turnLeftWait(int before, int after)
@@ -213,8 +229,9 @@ void turnAround()
 {
  motorPower(SPEED_TURN, -SPEED_TURN);
  //Wait(TIME_TURN);
+  ResetRotationCount(MOTOR_LEFT);
  while(MotorRotationCount(MOTOR_LEFT)<TURN180);
- stopMotors();
+ stopWheels();
  heading = (heading + 2) % 4;
 }
 
@@ -245,7 +262,7 @@ void calibrate()
   if(right<RIGHT_MIN) RIGHT_MIN = right;
   else if(right>RIGHT_MAX) RIGHT_MAX = right;
  }
- stopMotors();
+ stopWheels();
  motorPower(-25,25);
  repeat(10);
  {
@@ -259,7 +276,7 @@ void calibrate()
   if(right<RIGHT_MIN) RIGHT_MIN = right;
   else if(right>RIGHT_MAX) RIGHT_MAX = right;
  }
- stopMotors();
+ stopWheels();
  motorPower(25,-25);
  repeat(5);
  {
@@ -282,7 +299,7 @@ void pan(int deg)
 }
 
 /*
- *      TASKS
+ *      TASKS SEMI-AUTONOMOUS
  */
  
 task lineFollower()
@@ -295,8 +312,10 @@ task lineFollower()
   {
    if(SONAR<=NEAR)
    {
-    stopMotors();
+    MODE = SONAR;
+    stopWheels();
     while(SONAR<=NEAR);
+    MODE = LINE_FOLLOW;
    }
 
    pos = SENSOR_RIGHT - SENSOR_LEFT;
@@ -305,10 +324,231 @@ task lineFollower()
    right = SPEED - adj;
    motorPower(left,right);
 
-   if (!pos) last_sensor = (pos>0)? 0 : 1;
+   //if (!pos) last_sensor = (pos>0)? 0 : 1;
+   
+   if( LEFT_DARK && RIGHT_DARK )
+   {
+    MODE = INTERSECTION;
+    stopWheels();
+   }
+  }
+  stopWheels();
+ }
+}
+
+/* turn the camera by a degree
+   +deg : clockwise
+   -deg : counter-clockwise
+*/
+
+
+task display()
+{
+ string out;
+ string in;
+ FOREVER
+ {
+    ClearScreen();
+    ReceiveMessage(OUTBOX,false,out);
+    //ReceiveMessage(INBOX,false,in)
+    TextOut(0,LCD_LINE3,out,false);
+    //TextOut(0,LCD_LINE5,in,false);
+    switch(MODE)
+    {
+     case IDLE : TextOut(0,0,"IDLE",false); break;
+     case DESTINATION : TextOut(0,0,"DESTINATION",false); break;
+     case LINE_FOLLOW : TextOut(0,0,"LINE_FOLLOW",false); break;
+     case INTERSECTION : TextOut(0,0,"INTERSECTION",false); break;
+     case TURNLEFT : TextOut(0,0,"TURNLEFT",false); break;
+     case TURNRIGHT : TextOut(0,0,"TURNRIGHT",false); break;
+     case TURNAROUND : TextOut(0,0,"TURNAROUND",false); break;
+     case SONARBLOCK : TextOut(0,0,"SONARBLOCK",false); break;
+     default : TextOut(0,0,"Invalid",false);
+    }
+    
+    Wait(100);
+ }
+}
+
+task camera()
+{
+ int deg;
+ string msg;
+ int len;
+
+ FOREVER
+ {
+  ReceiveMessage(INBOX,false,msg);
+
+  len = StrLen(msg);
+
+  if( len >= 3 && SubStr(msg,0,3) == "pan" )
+  {
+   ReceiveMessage(INBOX,true,msg);
+
+   msg = SubStr( msg, 4, len );
+   deg = StrToNum( msg );
+   curPan += deg;
+
+   pan( deg );
   }
  }
 }
+
+task receiveCommand()
+{
+ string msg = "";
+ string cmd = "";
+ int space;
+ int value;
+ int i;
+ int len;
+
+ FOREVER
+ {
+  ReceiveMessage(INBOX,false,msg);
+
+  len = StrLen(msg);
+
+  if(len>0)
+  {
+   if( len >= 3 && SubStr(msg,0,3) == "pan" )
+   {
+    continue;
+   }
+   
+   ReceiveMessage(INBOX,true,msg);
+   
+   len = StrLen(msg);
+   
+   if( len >= 4 && SubStr(msg,0,4) == "stop" )
+   {
+    MODE = STOPPED;
+    stopWheels();
+    continue;
+   }
+   
+   //if( action != IDLE || action != STOP ) { continue; }
+
+   if( len >= 4 && SubStr(msg,0,4) == "left" )
+   {
+    action = LEFT;
+    MODE = TURNLEFT;
+    turnLeftWait( 400, 200 );
+    stopWheels();
+    MODE = IDLE;
+   }
+   else if( len >= 5 && SubStr(msg,0,5) == "right" )
+   {
+    action = RIGHT;
+    MODE = TURNRIGHT;
+    turnRightWait( 400, 200 );
+    stopWheels();
+    MODE = IDLE;
+   }
+   else if( len >= 10 && SubStr(msg,0,10) == "turnaround" )
+   {
+    action = TURNAROUND;
+    MODE = TURNAROUND;
+    turnAround();
+    MODE = IDLE;
+   }
+   else if( len >= 7 && SubStr(msg,0,7) == "forward" )
+   {
+    if( len == 7 )
+    {
+     action = FORWARD;
+     MODE = LINE_FOLLOW;
+    }
+    else
+    {
+     msg = SubStr(msg,8,len-8);
+     value = NumToStr( msg );
+     
+     action = FORWARD_X;
+     actionValue = value;
+     MODE = LINE_FOLLOW;
+     Wait(value); // split up into intervals?
+     if( MODE != INTERSECTION )
+     {
+      MODE = DESTINATION;
+     }
+     stopWheels();
+    }
+   }
+   else
+   {
+    PlayTone(1000, 50);
+   }
+   
+   /*
+   space = -1;
+   value = -1;
+
+   for( i=0; i<len; i++ )
+   {
+    if( SubStr(msg,i,i+1) == " " )
+    {
+     space = i;
+     break;
+    }
+   }
+
+   cmd = SubStr(msg,0,space);
+   msg = SubStr(msg,i+1,len);
+   value = StrToNum(msg);
+   value = (space>0)?value:0;
+   
+   switch( cmd )
+   {
+    case "left" :
+         action = LEFT;
+         MODE = TURNING;
+         turnLeftWait( 400, 200 );
+         MODE = IDLE;
+         break;
+    case "right" :
+         action = RIGHT;
+         MODE = TURNING;
+         turnRightWait( 400, 200 );
+         MODE = IDLE;
+         break;
+    case "turnaround" :
+         action = TURNAROUND;
+         MODE = TURNING;
+         turnAround();
+         MODE = IDLE;
+         break;
+    case "forward" :
+         if( value )
+         {
+          action = FORWARD_X;
+          actionValue = value;
+          MODE = LINE_FOLLOW;
+          Wait(value);
+          if( MODE != INTERSECTION )
+          {
+           MODE = DESTINATION;
+          }
+          stopWheels();
+         }
+         else
+         {
+          action = FORWARD;
+          MODE = LINE_FOLLOW;
+         }
+         break;
+    default :
+         break;
+   }
+   */
+  }
+ }
+}
+
+/*
+ *    TASK AUTONOMOUS
+ */
 
 task lineFollower_auto()
 {
@@ -333,7 +573,7 @@ task lineFollower_auto()
     {
      if(SONAR<=NEAR)
      {
-      stopMotors();
+      stopWheels();
       while(SONAR<=NEAR);
      }
      
@@ -346,55 +586,6 @@ task lineFollower_auto()
      if (!pos) last_sensor = (pos>0)? 0 : 1;
     }
   }
-}
-
-/* turn the camera by a degree
-   +deg : clockwise
-   -deg : counter-clockwise
-*/
-task camera()
-{
- int deg;
- 
- FOREVER
- {
-  while( action != PAN );
-  
-  deg = actionValue;
-  action = CLEARED;
-
-  pan( deg );
- }
-}
-
-task intersection()
-{
- int value, curAction;
- 
- FOREVER
- {
-  while( (!LEFT_DARK || !RIGHT_DARK) || MODE!=INTERSECTION);
-  
-  MODE = INTERSECTION;
-  
-  Wait(10);
-  
-  value = actionValue;
-  curAction = action;
-  action = CLEARED;
-  
-  switch( curAction )
-  {
-   case STOP : break;
-   case LEFT : turnLeftWait( 400, 200 ); break;
-   case RIGHT : turnRightWait( 400, 200 ); break;
-   case TURNAROUND : turnAround(); break;
-   case FORWARD : MODE = LINE_FOLLOW; break;
-   case FORWARD_X : forwardWait( value ); break;
-   default: break;
-  }
-
- }
 }
 
 task intersection_auto()
@@ -463,7 +654,7 @@ task intersection_auto()
    {
     MODE = INTERSECTION;
     
-    stopMotors();
+    stopWheels();
     
     switch (direction)
     {
@@ -476,6 +667,10 @@ task intersection_auto()
   }
  }
 }
+
+/*
+ *    TASKS SHARED
+ */
 
 // dark line, light ground
 task sensor()
@@ -511,78 +706,6 @@ task sensors_white()
  }
 }
 
-task receiveCommand()
-{
- string msg = "";
- string cmd = "";
- int space;
- int value;
- int i;
- int len;
- 
- FOREVER
- {
-  ReceiveMessage(INBOX,true,msg);
-
-  len = StrLen(msg);
-
-  if(len>0)
-  {
-   space = -1;
-   value = -1;
-   
-   for( i=0; i<len; i++ )
-   {
-    if( SubStr(msg,i,i+1) == " " )
-    {
-     space = i;
-     break;
-    }
-   }
-   
-   cmd = SubStr(msg,0,space);
-   msg = SubStr(msg,i+1,len);
-   value = StrToNum(msg);
-   value = (space>0)?value:0;
-   
-   while( action != CLEARED );
-   
-   switch( cmd )
-   {
-    case "left" :
-         action = LEFT;
-         break;
-    case "right" :
-         action = RIGHT;
-         break;
-    case "turnaround" :
-         action = TURNAROUND;
-         break;
-    case "stop" :
-         action = STOP;
-         break;
-    case "forward" :
-         if( value )
-         {
-          action = FORWARD_X;
-          actionValue = value;
-         }
-         else
-         {
-          action = FORWARD;
-         }
-         break;
-    case "pan" :
-         action = PAN;
-         actionValue = value;
-         break;
-    default :
-         break;
-   }
-  }
- }
-}
-
 /*
  * 1. current location (x,y)
  * 2. current heading
@@ -600,10 +723,6 @@ task sendFeedBack()
 
    FOREVER
    {
-      ReceiveMessage(OUTBOX,false,msg);
-      
-      if( StrLen(msg) > 0 )
-      {
        x = NumToStr(curX);
        y = NumToStr(curY);
        t = NumToStr(tacho);
@@ -612,10 +731,16 @@ task sendFeedBack()
        b = NumToStr(battery());
        stat = NumToStr(status);
        s = StrCat(x,d,y,d,t,d,h,d,c,d,b,d,stat);
+       
+      ReceiveMessage(OUTBOX,false,msg);
       
+      if( StrLen(msg) > 0 )
+      {
        ReceiveMessage(OUTBOX,true,msg);
-       SendMessage(OUTBOX,s);
       }
+      
+      //SendResponseString(OUTBOX,s);
+      SendMessage(OUTBOX,s);
       
       Wait(25);
 
@@ -625,20 +750,22 @@ task sendFeedBack()
 
 task main()
 {
- string msg;
+
  
  if(USE_CONTROLLER)
  {
-  ReceiveMessage(INBOX,true,msg);
-  
+  TextOut(0,0,"Controller",true);
+  string msg;
+  SendMessage(OUTBOX,"hello");
   do {
     ReceiveMessage(INBOX,true,msg);
   } while( msg != "start" );
   
-  Precedes(lineFollower,intersection,receiveCommand,sendFeedBack);
+  Precedes(lineFollower,camera,receiveCommand,sendFeedBack,display);
  }
  else // without controller
  {
+  TextOut(0,0,"Autonomous",true);
   Precedes(lineFollower_auto,intersection_auto,sensor);
 
   // initials
@@ -653,8 +780,10 @@ task main()
  }
  
  // set light sensors
+ /*
  SetSensorType(_SENSOR_LEFT, SENSOR_TYPE_LIGHT_ACTIVE);
  SetSensorType(_SENSOR_RIGHT, IN_TYPE_LIGHT_ACTIVE);
+ //*/
  SetSensorMode(_SENSOR_LEFT, SENSOR_MODE_RAW);
  SetSensorMode(_SENSOR_RIGHT, SENSOR_MODE_RAW);
  
