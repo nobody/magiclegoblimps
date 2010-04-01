@@ -276,6 +276,8 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 			}
 		}
 
+
+		std::cout<<"Recieved a message"<<std::endl;
 		//reset all the varibles with the new data
 		delete[] arr;
 		arr = new char[total];
@@ -291,6 +293,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		inputBuffer.consume((size_t)total);
 
 		//convert the char array to a 
+		std::cout<<"converting message to structs"<<std::endl;
 		readReturn* message = new readReturn;
 		if(read_data((void*)arr, message) < 0){
 			// read failed clean up the mess
@@ -303,6 +306,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		switch(message->type){
 			case P_ROBOT_UPDATE:
 			{	
+				std::cout<<"the message is an update"<<std::endl;
 				//initilize stuff
 				Vector_ts<Robot*>::iterator it;
 				robotUpdate* robotData = new robotUpdate[message->size];
@@ -380,6 +384,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 			
 			default:
 			//its broken if it gets here, need to figure out what to do.
+			std::cerr<<"message was not of correct type\n";
             break;
 		}
 
