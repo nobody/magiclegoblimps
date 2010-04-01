@@ -109,8 +109,8 @@
                     }
 
                     ref = (char*)(data[i].qualities);
-                    for(int j = 18 + data[i].listSize; j < 18 +(2* data[i].listSize); ++j){
-                        structs[i][j] = ref[j - 18 + data[i].listSize];
+                    for(int j = 18 + data[i].listSize * sizeof(int); j < 18 +(2 * sizeof(int) * data[i].listSize); ++j){
+                        structs[i][j] = ref[j - 18 - data[i].listSize * sizeof(int)];
                     }
 
                     sizes[i] = size;
