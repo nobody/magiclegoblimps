@@ -42,11 +42,11 @@ controller::controller(boost::asio::io_service& io_service)
     admin = new AdminHandler;
     adminSrv = new TcpServer(io_service, 10000, admin);
 
-    robo = new RobotHandler(robots, objs);
-    roboSrv = new TcpServer(io_service, 9999, robo);
-
     vids = new VideoHandler(robots, objs);
     vidsSrv = new TcpServer(io_service, 20000, vids);
+
+    robo = new RobotHandler(robots, objs, vids);
+    roboSrv = new TcpServer(io_service, 9999, robo);
 
 }
 
