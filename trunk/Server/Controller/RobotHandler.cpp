@@ -402,17 +402,17 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 
             case P_ROBOT_INIT:
             {
-                robotInit* robo = new robotInit[message->size];
-                robot = (roboInit*)(message->array);
+                robotInit* robot = new robotInit[message->size];
+                robot = (robotInit*)(message->array);
                 
                 robots->lock();
                for(int i = 0; i < message->size; ++i){
                         
-                     Robot* temp = new Robot(connEP, robotData[i].RID);
-                    temp->setXCord(robotData[i].x);
-                    temp->setYCord(robotData[i].y);
+                     Robot* temp = new Robot(connEP, robot[i].RID);
+                    temp->setXCord(robot[i].x);
+                    temp->setYCord(robot[i].y);
                     //temp->setList(robotData[i].list, robotData[i].listSize);
-                    temp->setVideoURL(std::string(*robotData[i].VideoURL));
+                    temp->setVideoURL(std::string(*robot[i].VideoURL));
             
                     robots->push_back(temp);
                     //might want to clean up some stuff here if patrick doesn't fix destructor
