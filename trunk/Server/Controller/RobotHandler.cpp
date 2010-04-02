@@ -156,43 +156,48 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 	
 	objects->readLock();
 	std::cout<<objects->size();
-	object* objArr = new object[objects->size()];
-	Vector_ts<Object*>::iterator ObjIt = objects->begin();
+    if(objects->size() > 0){
+        object* objArr = new object[objects->size()];
+        Vector_ts<Object*>::iterator ObjIt = objects->begin();
 
-	for(int i = 0; i < objects->size(); ++i){
-		objArr[i].OID = (*ObjIt)->getOID();
-		objArr[i].name = new std::string((*ObjIt)->getName());
-		objArr[i].color_size = (*ObjIt)->getColorsize();
-		objArr[i].color = (*ObjIt)->getColor();
+        for(int i = 0; i < objects->size(); ++i){
+            objArr[i].OID = (*ObjIt)->getOID();
+            objArr[i].name = new std::string((*ObjIt)->getName());
+            objArr[i].color_size = (*ObjIt)->getColorsize();
+            objArr[i].color = (*ObjIt)->getColor();
 
-		++ObjIt;
-	}
+            ++ObjIt;
+        }
 
-	//now that we have the object array we need to gett the binary stream to transmitt
-	byteArray* byte_ptr = new byteArray;
-	write_data(P_OBJECT, objArr, objects->size(), byte_ptr);
-	objects->readUnlock();
-	delete[] objArr;	
+        //now that we have the object array we need to gett the binary stream to transmitt
+        byteArray* byte_ptr = new byteArray;
+        write_data(P_OBJECT, objArr, objects->size(), byte_ptr);
+        objects->readUnlock();
+        delete[] objArr;	
 
-    printf("Color: \n");
-    ObjIt--;
-    for (int i = 0; i < (*ObjIt)->getColorsize(); ++i){
-        printf("%02X ", (*ObjIt)->getColor()[i]);
-        fflush(stdout);
+        printf("Color: \n");
+        ObjIt--;
+        for (int i = 0; i < (*ObjIt)->getColorsize(); ++i){
+            printf("%02X ", (*ObjIt)->getColor()[i]);
+            fflush(stdout);
+        }
+        printf("\nData being sent:\n");
+        for (int i = 0; i < byte_ptr->size; ++i){
+            printf("%02X ", (unsigned)byte_ptr->array[i]);
+            fflush(stdout);
+        }
+        printf("\n");
+        
+        //hopefully the number of bytes is always a positive number
+        boost::asio::write(connections[connEP]->socket(),  boost::asio::buffer(byte_ptr->array, byte_ptr->size),
+            boost::asio::transfer_at_least(byte_ptr->size), error);
+
+        connections[connEP]->releaseSocket();
+        delete byte_ptr;
+    }else{
+        objects->readLock();
     }
-    printf("\nData being sent:\n");
-    for (int i = 0; i < byte_ptr->size; ++i){
-        printf("%02X ", (unsigned)byte_ptr->array[i]);
-        fflush(stdout);
-    }
-    printf("\n");
 	
-	//hopefully the number of bytes is always a positive number
-	boost::asio::write(connections[connEP]->socket(),  boost::asio::buffer(byte_ptr->array, byte_ptr->size),
-		boost::asio::transfer_at_least(byte_ptr->size), error);
-
-   	connections[connEP]->releaseSocket();
-	delete byte_ptr;
     //spawn a thread to listen on the socket and return the function
     std::cout<<"launching threadd...\n";
     boost::thread connThread(&RobotHandler::threaded_listen, this, connEP);
@@ -394,10 +399,30 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 			}
 
 			break;
-			
+
+            case P_ROBOT_INIT:
+            {
+                robotInit* robo = new robotInit[message->size];
+                robot = (roboInit*)(message->array);
+                
+                robots->lock();
+               for(int i = 0; i < message->size; ++i){
+                        
+                     Robot* temp = new Robot(connEP, robotData[i].RID);
+                    temp->setXCord(robotData[i].x);
+                    temp->setYCord(robotData[i].y);
+                    //temp->setList(robotData[i].list, robotData[i].listSize);
+                    temp->setVideoURL(std::string(*robotData[i].VideoURL));
+            
+                    robots->push_back(temp);
+                    //might want to clean up some stuff here if patrick doesn't fix destructor
+                }
+                robots->unlock();
+            }
+			break;
 			default:
 			//its broken if it gets here, need to figure out what to do.
-			std::cerr<<"message was not of correct type\n";
+			std::cerr<<"message was not of correct type\ntype was: "<<message->type<<std::endl;
             break;
 		}
 
@@ -508,4 +533,5 @@ void RobotHandler::sendCommand(command* comm, boost::asio::ip::tcp::endpoint con
 	connections[conn]->releaseSocket();
 
 }
-/*vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4:*/
+
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
