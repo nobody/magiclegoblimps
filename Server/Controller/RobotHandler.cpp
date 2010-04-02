@@ -410,10 +410,18 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
 
 	//loop over the robot vector and remove the elements with the 
 	//corresponding connection's endpoint
-	for(it = robots->begin(); it < robots->end(); ++it){
-		if ((*it)->getEndpoint() == connEP){
-			delete (*it);
-			robots->erase(it);
+	std::cout<<"want endpoint: "<<connEP<<std::endl;
+	bool loop = true;
+	while(loop){
+		loop = false;
+		for(it = robots->begin(); it < robots->end(); ++it){
+			std::cout<<"have endpoint: " << (*it)->getEndpoint() << std::endl;
+			if ((*it)->getEndpoint() == connEP){
+				delete (*it);
+				robots->erase(it);
+				loop = true;
+				break;
+			}
 		}
 	}
 	robots->unlock();
