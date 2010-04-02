@@ -34,6 +34,9 @@ class controller {
         static int writeObjects(Vector_ts<Object*>*);
 
     private:
+        
+        void controllerThread();
+        
         boost::asio::io_service& io_;
         DbManager *db;
         AdminHandler *admin;
