@@ -105,26 +105,6 @@ void VideoHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_con
     write(msg);
 }
 
-void VideoHandler::write_handler(const boost::system::error_code& error,  std::size_t bytes_transferred) {
-    std::cout << "VideoHandler wrote " << bytes_transferred << " bytes to a client\n";
-    std::cout.flush();
-    if (!error) {                                                                            
-        std::string msg(write_queue_.front());
-        std::cout << "Successfully wrote \"" << msg << "\" to the socket.\n";
-
-        write_queue_.pop_front();
-        while(!write_queue_.empty()){
-            boost::asio::async_write(conn_->socket(), boost::asio::buffer(write_queue_.front().data()), 
-                boost::bind(&VideoHandler::write_handler, this, 
-                    boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
-            conn_->releaseSocket();
-        }
-    } else {
-        close();
-    }
-
-}
-
 void VideoHandler::read_handler(const boost::system::error_code& error,  std::size_t bytes_transferred) {
     tcp::socket &sock = conn_->socket();;
 
@@ -156,11 +136,32 @@ void VideoHandler::read_handler(const boost::system::error_code& error,  std::si
 
 }
 
+void VideoHandler::write_handler(const boost::system::error_code& error,  std::size_t bytes_transferred) {
+    std::cout << "VideoHandler wrote " << bytes_transferred << " bytes to a client\n";
+    std::cout.flush();
+    if (!error) {                                                                            
+        std::string msg(write_queue_.front());
+        std::cout << "Successfully wrote \"" << msg << "\" to the socket.\n";
+
+        write_queue_.pop_front();
+        //while(!write_queue_.empty()){
+        if (!write_queue_.empty()){
+            boost::asio::async_write(conn_->socket(), boost::asio::buffer(write_queue_.front()), 
+                boost::bind(&VideoHandler::write_handler, this, 
+                    boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+            conn_->releaseSocket();
+            std::cout << "[VH] Write queue not empty" << std::endl;
+        }
+    } else {
+        close();
+    }
+
+}
+
 void VideoHandler::internal_write(std::string msg) {
 
     bool writing = !write_queue_.empty();
 
-    //std::cout << "Adding message \"" << msg.data() << "\" to queue\n";
     write_queue_.push_back(msg);
     if (!writing){
         boost::asio::async_write(conn_->socket(), boost::asio::buffer(msg), 
@@ -172,8 +173,12 @@ void VideoHandler::internal_write(std::string msg) {
 }
 
 void VideoHandler::write(std::string msg) {
-    conn_->socket().get_io_service().post(boost::bind(&VideoHandler::internal_write, this, msg));
-    conn_->releaseSocket();
+    if (conn_ != TcpServer::TcpConnection::pointer()){
+        conn_->socket().get_io_service().post(boost::bind(&VideoHandler::internal_write, this, msg));
+        conn_->releaseSocket();
+    } else {
+        std::cout << "No video client to write to\n";
+    }
 }
 
 void VideoHandler::close() {

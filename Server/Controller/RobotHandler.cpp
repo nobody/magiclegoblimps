@@ -11,7 +11,9 @@
 conn_map RobotHandler::connections;
 
 RobotHandler::RobotHandler(){}
-RobotHandler::RobotHandler(Vector_ts<Robot*>* robots_, Vector_ts<Object*>* objects_){
+RobotHandler::RobotHandler(Vector_ts<Robot*>* robots_, Vector_ts<Object*>* objects_, VideoHandler* vids_)
+    : vidHandler(vids_)
+{
 	robots = robots_;
 	objects = objects_;
 }
@@ -204,7 +206,6 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 	//declare loop  varibles
 	bool connected = true;
 	boost::asio::streambuf inputBuffer;
-	std::string* str_ptr;
 	boost::system::error_code error;
 	size_t count = 0;
 
@@ -324,14 +325,25 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 							(*it)->setXCord(robotData[i].x);
 							(*it)->setYCord(robotData[i].y);
 							(*it)->setList(robotData[i].objects, robotData[i].qualities, robotData[i].listSize);
+
+                            std::stringstream msg_ss;
+                            msg_ss << (*it)->getVideoURL() << ";";
+
 							(*it)->unlock();
+
+                            for (int j = 0; j < robotData[i].listSize; ++j) {
+                                msg_ss << robotData[i].objects[j] << ";" << robotData[i].qualities[j] << ";";
+                            }
+                            msg_ss << "\n";
+                            std::cout << "Calling write() on message \"" << msg_ss.str() << "\"\n";
+                            vidHandler->write(msg_ss.str());
 							break;
 							///std::cout <<(*it)->getEndpoint() << " looking for: "<<connEP << std::endl;
 			    				//std::cout <<(*it)->getRID() << " looking for: " << robotData[i].RID << std::endl;
 						} else {
                             std::cout << "These are not the droids you're looking for\n";
-			    std::cout <<(*it)->getEndpoint() << " looking for: "<<connEP << std::endl;
-			    std::cout <<(*it)->getRID() << " looking for: " << robotData[i].RID << std::endl;
+                            std::cout <<(*it)->getEndpoint() << " looking for: "<<connEP << std::endl;
+                            std::cout <<(*it)->getRID() << " looking for: " << robotData[i].RID << std::endl;
                             if ((*it)->getEndpoint() != connEP){
                                 std::cout << "WTF? Its from a different connection?(" << (*it)->getEndpoint() << " vs. " << connEP << ")\n";
                             }
@@ -417,6 +429,9 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
 		for(it = robots->begin(); it < robots->end(); ++it){
 			std::cout<<"have endpoint: " << (*it)->getEndpoint() << std::endl;
 			if ((*it)->getEndpoint() == connEP){
+                std::stringstream msg_ss;
+                msg_ss << "DELETE " << (*it)->getVideoURL() << "\n";
+                vidHandler->write(msg_ss.str());
 				delete (*it);
 				robots->erase(it);
 				loop = true;
