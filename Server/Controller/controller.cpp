@@ -122,13 +122,12 @@ int controller::testdb() {
     }
 
     Qos q(r, robots->size(), o, objs->size(), dem);
+    Assignment ass(r, robots->size(), o, objs->size(), dem, &q);
 
-
-    double qos = q.calcQos();
-
-    std::cout << "qos = " << qos << "\n";
-
-
+    //Display the Qos at start
+    q.calcQos();
+    ass.calcAssignments();
+    q.calcQos();
 
 
     for (int i = 0; i < robots->size(); ++i) {

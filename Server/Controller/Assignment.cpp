@@ -18,9 +18,10 @@ Assignment::Assignment(Robot** r, int nr, Object** o,int no,  double* d, Qos* q)
 	numObjects = no;
 	numRobots = nr;
 	quality = q;
-    
-    
-    
+}
+Assignment::~Assignment()
+{
+
 }
 
 std::map<Robot*, int>* Assignment::calcAssignments() {

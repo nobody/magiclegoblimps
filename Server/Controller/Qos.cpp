@@ -8,6 +8,7 @@
 
 #include "Qos.h"
 #include "Point.h"
+#include <iostream>
 
 const double Qos::CAM_VALUES[] = {1.0,0.7};
 
@@ -31,6 +32,7 @@ double Qos::calcQos(){
 	for(i = 0; i < numObjects; i++){
 		ret += demand[i]*calcQos(objects[i], objects[i]->viewedFrom );
 	}
+    std::cout <<"System Qos: " << ret <<"\n";
 	return ret;
 	
 }
