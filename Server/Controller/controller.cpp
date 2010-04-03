@@ -14,7 +14,7 @@ DataFile* controller::robofile;
 DataFile* controller::objfile;
 
 controller::controller(boost::asio::io_service& io_service) 
-    : io_(io_service), running(true)
+    : running(true), io_(io_service)
 {
     std::cout << "In controller constructor\n";
         

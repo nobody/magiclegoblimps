@@ -28,6 +28,7 @@ public:
     void unlock();
 
     int getRID();
+    int getGlobalID();
     boost::asio::ip::tcp::endpoint getEndpoint();
 
     Point pos;
@@ -67,6 +68,10 @@ private:
 
     //robot id that is unique to each robot controller client
     int RID;
+
+    // global ident
+    int globalID;
+    static int counter;
     
     //endpoint of the controller this robot is on
     boost::asio::ip::tcp::endpoint robotEP;

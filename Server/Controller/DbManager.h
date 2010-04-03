@@ -10,6 +10,7 @@
 #define DBMANAGER_H_
 
 #include <map>
+#include <stdlib.h>
 
 #include <boost/rational.hpp>
 
@@ -44,7 +45,7 @@ class DbManager {
 
         bool getRequests( demand_t*& );
         bool normalize( demand_t*& );
-        bool updateCameras( std::map<int, Robot>* );
+        bool updateCameras( Vector_ts<Robot*>* );
 
 
     private:

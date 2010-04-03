@@ -8,11 +8,13 @@
 
 #include "Robot.h"
 
+int Robot::counter = 0;
 
 Robot::Robot() : xCord(0), yCord(0) {
     // TODO Auto-generated constructor stub
     pos = *(new Point(xCord,yCord));
     list = new std::map<int, int>;
+    globalID = counter++;
 }
 
 
@@ -21,6 +23,7 @@ Robot::Robot(boost::asio::ip::tcp::endpoint EP, int RID) : RID(RID), xCord(0), y
     robotEP = EP;
     pos = *(new Point(xCord,yCord));
     list = new std::map<int, int>;
+    globalID = counter++;
 }
 
 Robot::~Robot() {
@@ -42,6 +45,11 @@ void Robot::unlock(){
 //identifer for this robot
 int Robot::getRID(){
     return RID;
+}
+
+// returns the GLOBAL id for this robot
+int Robot::getGlobalID() {
+    return globalID;
 }
 
 //returns the boost library tcp endpoint for the controller
