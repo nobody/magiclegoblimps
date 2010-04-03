@@ -9,10 +9,13 @@
 #ifndef CONTROLLER_H_
 #define CONTROLLER_H_
 
+#define C_QOS_INTV 30
+
 #include <map>
 
 #include <boost/asio.hpp>
 #include <boost/rational.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "DbManager.h"
 #include "AdminHandler.h"
@@ -29,6 +32,7 @@ class controller {
         controller(boost::asio::io_service&);
         virtual ~controller();
         int testdb();
+        void shutdown();
 
         static int writeRobots(Vector_ts<Robot*>*);
         static int writeObjects(Vector_ts<Object*>*);
@@ -37,6 +41,7 @@ class controller {
         
         void controllerThread();
         
+        bool running;
         boost::asio::io_service& io_;
         DbManager *db;
         AdminHandler *admin;

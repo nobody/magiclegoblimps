@@ -32,6 +32,7 @@ class TcpServer {
                 tcp::socket& socket();
 
                 void start();
+                void stop();
 
                 void releaseSocket();
 
@@ -48,20 +49,23 @@ class TcpServer {
         class ConnHandler {
             public:
                 virtual void onConnect(TcpServer::TcpConnection::pointer tcp_connection) = 0;
+                virtual void shutdown() = 0;
         };
 
         TcpServer(boost::asio::io_service& io_service, int ListenPort, ConnHandler *connHandler);
         virtual ~TcpServer();
+        void shutdown();
 
     private:
 
         void listen();
         void handle_accept(TcpConnection::pointer, const boost::system::error_code&);
-
+        
 
         tcp::acceptor acceptor_;
         int ListenPort_;
         ConnHandler *connHandler_;
+        bool running;
 
 };
 

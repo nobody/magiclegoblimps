@@ -534,4 +534,5 @@ void RobotHandler::sendCommand(command* comm, boost::asio::ip::tcp::endpoint con
 
 }
 
+void RobotHandler::shutdown(){}
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

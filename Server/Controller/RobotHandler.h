@@ -24,6 +24,7 @@ class RobotHandler: public TcpServer::ConnHandler{
     RobotHandler(Vector_ts<Robot*>* robots_, Vector_ts<Object*>* objects_, VideoHandler* vids_);
     ~RobotHandler();
     virtual void onConnect(TcpServer::TcpConnection::pointer tcp_connection);
+    virtual void shutdown();
     void setRobots(Vector_ts<Robot*>* robots_);
     void sendAssignments(std::map<Robot*, int>* assignments);
     void sendCommand(command* comm, boost::asio::ip::tcp::endpoint conn);

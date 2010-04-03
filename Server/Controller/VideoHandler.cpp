@@ -201,4 +201,6 @@ void VideoHandler::do_close() {
     //delete this;
 }
 
+void VideoHandler::shutdown(){}
+
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
