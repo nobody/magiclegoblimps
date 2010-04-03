@@ -32,7 +32,9 @@ class RobotHandler: public TcpServer::ConnHandler{
     void threaded_listen(boost::asio::ip::tcp::endpoint connEP);
     void cleanupConn(boost::asio::ip::tcp::endpoint connEP);
 
-
+    bool running;
+    int handlers;
+    boost::mutex handlerMutex;
 
     static conn_map connections;
     Vector_ts<Robot*>* robots;
@@ -43,5 +45,5 @@ class RobotHandler: public TcpServer::ConnHandler{
 
 #endif
 
-/*vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4 */
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
 
