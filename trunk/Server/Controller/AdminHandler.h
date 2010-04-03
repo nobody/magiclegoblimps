@@ -16,21 +16,29 @@
 
 #include "TcpServer.h"
 #include "message.h"
+#include "Robot.h"
+#include "protocol.h"
+#include "RobotHandler.h"
 
 class AdminHandler : public TcpServer::ConnHandler {
     public:
-        AdminHandler(); 
+        AdminHandler();
+        AdminHandler(RobotHandler* robotControl_, Vector_ts<Robot*>* robots_);
         virtual ~AdminHandler();
 
         typedef std::map<boost::asio::ip::tcp::endpoint, TcpServer::TcpConnection::pointer> conn_map;
 
         virtual void onConnect(TcpServer::TcpConnection::pointer tcp_connection);
+        virtual void shutdown();
 
     private:
         //void threaded_on_connect(int connIndex);
         void threaded_on_connect(boost::asio::ip::tcp::endpoint);
 
         static conn_map connections;
+
+        RobotHandler* robotControl;
+        Vector_ts<Robot*>* robots;
 
         class session {
             public:

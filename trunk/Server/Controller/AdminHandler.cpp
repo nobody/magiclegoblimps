@@ -14,6 +14,12 @@ AdminHandler::conn_map AdminHandler::connections;
 AdminHandler::AdminHandler(){
 }
 
+AdminHandler::AdminHandler(RobotHandler* robotControl_, Vector_ts<Robot*>* robots_): 
+robots(robots_), robotControl(robotControl_)
+{
+
+}
+
 AdminHandler::~AdminHandler(){
 }
 
@@ -97,6 +103,20 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
     std::cout << "Got string \"" << s << "\"\n";
     std::cout.flush();
 
+    if(!s.compare(std::string("shutdown"))){
+        
+        return;
+
+    }
+    /*
+    command cmd;
+    Robot* subject;
+    
+    //you should initialize these things here
+    //parse the command
+
+    robotControl->sendCommand(&cmd, subject);
+*/
 
     boost::asio::async_read_until(sock, read_message_.buffer(), '\n', 
         boost::bind(&AdminHandler::session::read_handler, this, 
@@ -122,5 +142,7 @@ void AdminHandler::session::do_close() {
 
     conn_->releaseSocket();
 }
+
+void AdminHandler::shutdown(){}
 
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

@@ -14,9 +14,10 @@ DataFile* controller::robofile;
 DataFile* controller::objfile;
 
 controller::controller(boost::asio::io_service& io_service) 
-    : io_(io_service)
+    : io_(io_service), running(true)
 {
     std::cout << "In controller constructor\n";
+        
 
     // check if static variables are NULL and initialize them if necessary
     if (!robofile)
@@ -48,6 +49,7 @@ controller::controller(boost::asio::io_service& io_service)
     robo = new RobotHandler(robots, objs, vids);
     roboSrv = new TcpServer(io_service, 9999, robo);
 
+    boost::thread qosThread(&controller::controllerThread, this);
 }
 
 controller::~controller() {
@@ -108,6 +110,18 @@ int controller::testdb() {
 
     return 0;
 }
+void controller::controllerThread(){
+    while(running){
 
+
+        boost::asio::deadline_timer timer(io_, boost::posix_time::seconds(C_QOS_INTV));
+        timer.wait();
+    }
+}
+void controller::shutdown(){
+    adminSrv->shutdown();
+    roboSrv->shutdown();
+    vidsSrv->shutdown();
+}
 
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

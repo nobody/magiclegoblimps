@@ -28,6 +28,7 @@ class VideoHandler : public TcpServer::ConnHandler {
         virtual ~VideoHandler();
 
         virtual void onConnect(TcpServer::TcpConnection::pointer tcp_connection);
+        virtual void shutdown();
         void write(std::string msg);
 
     private:
