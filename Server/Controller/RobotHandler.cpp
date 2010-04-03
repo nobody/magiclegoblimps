@@ -16,6 +16,8 @@ RobotHandler::RobotHandler(Vector_ts<Robot*>* robots_, Vector_ts<Object*>* objec
 {
 	robots = robots_;
 	objects = objects_;
+    handlers = 0;
+    running = true;
 }
 RobotHandler::~RobotHandler(){}
 
@@ -24,6 +26,12 @@ void RobotHandler::setRobots(Vector_ts<Robot*>* robots_){
 }
 
 void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
+    if(!running) return;
+
+    handlerMutex.lock();
+    ++handlers;
+    handlerMutex.unlock();
+    
     std::cout<<"in handler fucntion\n";
     //enter the tcp connection pointer into the map
     connections[tcp_connection->socket().remote_endpoint()] = tcp_connection;
@@ -433,6 +441,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		//sleep abit so other threads can grab a lock on the socket
 		boost::this_thread::sleep(boost::posix_time::seconds(2));
 		
+        connected = running;
 
 	}
 	//clean up stuff from connection
@@ -466,6 +475,9 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
 	}
 	robots->unlock();
 	//remove endpoint connection from map
+
+    connections[connEP]->stop();
+    
 	conn_map::iterator iter;
 	for(iter = connections.begin(); iter != connections.end(); ++iter){
 		if((*iter).first == connEP){
@@ -474,6 +486,10 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
 		}
 		std::cerr<<"Robot Handler: couldn't find connection to delete\n";
 	}
+
+    handlerMutex.lock();
+    --handlers;
+    handlerMutex.unlock();
 }
 
 void RobotHandler::sendAssignments(std::map<Robot*, int>* assignments){
@@ -534,5 +550,18 @@ void RobotHandler::sendCommand(command* comm, boost::asio::ip::tcp::endpoint con
 
 }
 
-void RobotHandler::shutdown(){}
+void RobotHandler::shutdown(){
+        running = false;
+            
+        handlerMutex.lock();
+        while(handlers){
+            handlerMutex.unlock();
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
+            handlerMutex.lock();
+        }
+        handlerMutex.unlock();
+
+        //do any thing else;
+}
+
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

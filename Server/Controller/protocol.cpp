@@ -22,7 +22,7 @@
                 for(int i = 0; i < number; ++i){
                     short str_len = data[i].VideoURL->size() + 1;
                     const char* url = data[i].VideoURL->c_str();
-                    short size = sizeof(int)*3 + str_len + sizeof(short)*2;
+                    short size = sizeof(int)*4 + str_len + sizeof(short)*2;
                     structs[i] = new char[size];
 
                     //put the size on the top of the array
@@ -49,14 +49,19 @@
                         structs[i][j] = ref[j-10];
                     }
 
+                    ref = (char*)&(data[i].cameraType);
+                    for(int j =14; j < 18; j++){
+                        structs[i][j] = ref[j-14];
+                    }   
+
                     //push the string size
                     ref = (char*)&str_len;
-                    for(int j = 14; j < 16; ++j){
+                    for(int j = 18; j < 20; ++j){
                         structs[i][j] = ref[j-14];
                     }
 
                     //push the string
-                    for(int j = 16; j < 16+str_len; ++j){
+                    for(int j = 20; j < 20+str_len; ++j){
                         structs[i][j] = url[j - 16];
                     }
 
@@ -104,12 +109,12 @@
                     }
 
                     ref = (char*)(data[i].objects);
-                    for(int j = 18; j <18 + data[i].listSize * sizeof(int); ++j){
+                    for(int j = 18; j <18 + data[i].listSize * (int)sizeof(int); ++j){
                         structs[i][j] = ref[j-18];
                     }
 
                     ref = (char*)(data[i].qualities);
-                    for(int j = 18 + data[i].listSize * sizeof(int); j < 18 +(2 * sizeof(int) * data[i].listSize); ++j){
+                    for(int j = 18 + data[i].listSize * (int)sizeof(int); j < 18 +(2 * (int)sizeof(int) * data[i].listSize); ++j){
                         structs[i][j] = ref[j - 18 - data[i].listSize * sizeof(int)];
                     }
 
@@ -310,6 +315,7 @@ int readRobotInit(void* array, robotInit* &robots) {
         int rid;
         int x;
         int y;
+        int camera;
         short str_len;
         char* url;
 
@@ -334,6 +340,11 @@ int readRobotInit(void* array, robotInit* &robots) {
         // retrieve y
         ref = (char*)&y;
         for (int j = 0; j < (int)sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        ref = (char*)&camera;
+        for(int j = 0; j < (int)sizeof(int); ++j){
             ref[j] = current[0]; current++;
         }
 
