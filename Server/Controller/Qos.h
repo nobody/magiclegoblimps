@@ -15,18 +15,18 @@
 class Qos {
 public:
 	Qos();
-	Qos(Robot* r,int nr, Object* o, int no,  double* d);
+	Qos(Robot** r,int nr, Object** o, int no,  double* d);
 	virtual ~Qos();
 	double calcQos();
-	double calcQos(Object& o, Robot& r);
+	double calcQos(Object* o, Robot* r);
 	double dist(Point p1, Point p2);
 	static const double OPTIMAL_DIST = 10;
 	static const double CAM_VALUES [];
 
     private:
-		Robot* robots;
+		Robot** robots;
 		int numRobots;
-		Object* objects;
+		Object** objects;
 		int numObjects;
 		double* demand;
 		int numDemand;

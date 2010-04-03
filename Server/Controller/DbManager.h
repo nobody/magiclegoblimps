@@ -27,6 +27,8 @@
 // End MySQL Connector
 
 #include "Robot.h"
+#include "Object.h"
+#include "Vector_ts.h"
 
 
 enum result_t { SUCCESS, FAILURE };
@@ -35,13 +37,13 @@ typedef std::map<int, boost::rational<int> > demand_t;
 
 class DbManager {
     public:
-        DbManager();
+        DbManager(Vector_ts<Object*>*);
         virtual ~DbManager();
 
         void printRequests();
 
-        bool getRequests( demand_t* );
-        bool normalize( demand_t*&, demand_t*& );
+        bool getRequests( demand_t*& );
+        bool normalize( demand_t*& );
         bool updateCameras( std::map<int, Robot>* );
 
 
@@ -53,6 +55,8 @@ class DbManager {
         static const char* tbl_requests;
 
         sql::mysql::MySQL_Driver *driver;
+        Vector_ts<Object*>* objs_;
+        demand_t* old;
 
 };
 

@@ -20,6 +20,7 @@ class Object {
         Object(int id, std::string name, char* color, int colorsize)
             : objID_(id), name_(name), colorsize_(colorsize)
         {
+            pos = Point(0,0);
             color_ = new char[colorsize];
             while(colorsize){
                 colorsize--;

@@ -12,7 +12,6 @@
 
 
 #include "DbManager.h"
-#include "Robot.h"
 
 const char* DbManager::db_uri = "tcp://localhost";
 const char* DbManager::db_user = "testing";
@@ -20,31 +19,46 @@ const char* DbManager::db_pass = "testing";
 const char* DbManager::db_database = "mydb";
 const char* DbManager::tbl_requests = "requests";
 
-DbManager::DbManager() {
+DbManager::DbManager(Vector_ts<Object*>* objs) 
+    : objs_(objs)
+{
 
     std::cout << "In database constructor\n";
     driver = sql::mysql::get_mysql_driver_instance();
+    old = NULL;
 
 }
 
 DbManager::~DbManager() {
 }
 
-bool DbManager::normalize(demand_t*& d, demand_t*& old ) {
-    // for now, let's just put the percentage of votes
+bool DbManager::normalize(demand_t*& d ) {
     int total_demand = 0;
     demand_t::iterator it;
     for (it = d->begin(); it != d->end(); ++it) {
         total_demand += it->second.numerator() / it->second.denominator();
     }
-    for (it = d->begin(); it != d->end(); ++it) {
-        it->second = it->second / total_demand;
-    }
-    
-    return true;
+
+//    if (!old){
+        // for now, let's just put the percentage of votes
+        for (it = d->begin(); it != d->end(); ++it) {
+            it->second = it->second / total_demand;
+        }
+        
+        return true;
+//    } else {
+        // phase out old demand
+        
+//    }
 }
 
-bool DbManager::getRequests( demand_t* m ) {
+bool DbManager::getRequests( demand_t*& m ) {
+    if (old)
+        delete old;
+    old = m;
+
+    m = new demand_t;
+    
     sql::Connection *con;
     sql::Statement *stmt;
     sql::ResultSet *rs;

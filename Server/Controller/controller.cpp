@@ -25,8 +25,6 @@ controller::controller(boost::asio::io_service& io_service)
     if(!objfile)
         objfile  = new DataFile("objects.dat", DataFile::OBJECT);
     
-    db = new DbManager();
-
     //robots = new Vector_ts<Robot*>();
     robots = (Vector_ts<Robot* >*) robofile->read();
     objs   = (Vector_ts<Object*>*)  objfile->read();
@@ -39,6 +37,8 @@ controller::controller(boost::asio::io_service& io_service)
         std::cerr << "!!WARNING!! Object data file unreadable. Creating new vector\n";
         objs = new Vector_ts<Object*>();
     }
+
+    db = new DbManager(objs);
 
     admin = new AdminHandler;
     adminSrv = new TcpServer(io_service, 10000, admin);
@@ -95,18 +95,56 @@ int controller::testdb() {
     db->printRequests();
     std::cout << "\n-----------------------------\n";
 
-    std::map<int, boost::rational<int> > *demand = new demand_t();
-    std::map<int, boost::rational<int> > *demand_old = new demand_t();
+    std::map<int, boost::rational<int> > *demand;
     db->getRequests(demand);
-    db->normalize(demand, demand_old);
+    db->normalize(demand);
 
     demand_t::iterator iter;
     for (iter = demand->begin(); iter != demand->end(); ++iter) {
         std::cout << "Demand for " << iter->first << ": " << iter->second << "\n";
     }
 
+    robots->lock();
+    objs->lock();
+    Robot** r = new Robot*[robots->size()];
+    Object** o = new Object*[objs->size()];
+    double* dem = new double[objs->size()];
+
+    for (int i = 0; i < robots->size(); ++i) {
+        r[i] = robots->at(i);
+        r[i]->lock();
+    }
+
+    for (int i = 0; i < objs->size(); ++i) {
+        o[i] = objs->at(i);;
+        //o[i]->lock();
+        dem[i] = boost::rational_cast<double>((*demand->find(i)).second);
+    }
+
+    Qos q(r, robots->size(), o, objs->size(), dem);
+
+
+    double qos = q.calcQos();
+
+    std::cout << "qos = " << qos << "\n";
+
+
+
+
+    for (int i = 0; i < robots->size(); ++i) {
+        r[i]->unlock();
+    }
+
+    for (int i = 0; i < objs->size(); ++i) {
+        //o[i]->unlock();
+    }
+
+    delete[] o;
+    delete[] r;
+    delete[] dem;
+
+
     delete demand;
-    delete demand_old;
 
     return 0;
 }
