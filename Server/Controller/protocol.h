@@ -20,6 +20,11 @@
 #define P_ASSIGNMENT 4
 #define P_COMMAND 5
 
+//cameras
+#define P_DLINK 1
+#define P_CISCO 2
+#define P_BROKEN 3
+
 //some error codes
 #define P_OK 0
 #define P_NULL_PTR -1
@@ -35,6 +40,7 @@
 
 struct robotInit{
     int RID;
+    int cameraType;
     int x;
     int y;
     std::string* VideoURL;

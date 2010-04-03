@@ -79,6 +79,12 @@ void Robot::setList(int* objects, int* qualities, int size){
        (*list)[objects[i]] = qualities[i];
     }
 }
+void Robot::setCamera(int type){
+    camera = type;
+}
+int Robot::getCamera(){
+    return camera;
+}
 
 
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

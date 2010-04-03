@@ -9,6 +9,11 @@
 #ifndef ROBOT_H_
 #define ROBOT_H_
 
+//camera types
+#define R_DLINK 1
+#define R_CISCO 2
+#define R_BROKEM 3
+
 #include <boost/thread/mutex.hpp>
 #include <boost/asio.hpp>
 #include "Point.h"
@@ -26,11 +31,14 @@ public:
     boost::asio::ip::tcp::endpoint getEndpoint();
 
     Point pos;
-    int camType; //0 = Cisco, 1 = d-link
+    int camType __attribute__ ((deprecated)); //0 = Cisco, 1 = d-link
     int getXCord();
     int getYCord();
+    int getCamera();
+
     std::string getVideoURL();
 
+    void setCamera(int type);
     void setXCord(int x);
     void setYCord(int y);
     void setVideoURL(std::string);
@@ -66,7 +74,7 @@ private:
     //coordinate position of the robot
     int xCord;
     int yCord;
-
+    int camera;
     std::string videoURL;
 
     
