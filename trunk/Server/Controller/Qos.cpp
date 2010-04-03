@@ -11,7 +11,7 @@
 
 const double Qos::CAM_VALUES[] = {1.0,0.7};
 
-Qos::Qos(Robot* r, int nr, Object* o, int no,  double* d){
+Qos::Qos(Robot** r, int nr, Object** o, int no,  double* d){
 
 	robots =  r;
 	numRobots = nr;
@@ -29,15 +29,15 @@ double Qos::calcQos(){
 	double ret = 0;
 	int i = 0;
 	for(i = 0; i < numObjects; i++){
-		ret += demand[i]*calcQos(objects[i], *(&objects[i])->viewedFrom );
+		ret += demand[i]*calcQos(objects[i], objects[i]->viewedFrom );
 	}
 	return ret;
 	
 }
 
 //Calculate the Qos metric between an object and a robot
-double Qos::calcQos(Object& o, Robot& r){
-	return dist(r.pos, o.pos) * Qos::CAM_VALUES[r.camType];
+double Qos::calcQos(Object* o, Robot* r){
+	return (r ? dist(r->pos, o->pos) * Qos::CAM_VALUES[r->camType] : 0);
 
 }
 

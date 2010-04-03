@@ -26,6 +26,8 @@
 #include "Robot.h"
 #include "Object.h"
 #include "DataFile.h"
+#include "Qos.h"
+#include "Assignment.h"
 
 class controller {
     public:

@@ -42,6 +42,10 @@ template <class T> class Vector_ts{
         return theVector[index];
     }
 
+    T& at(size_t i) {
+        return theVector->at(i);
+    }
+
     iterator begin(){
         typename std::vector<T>::iterator it;
         it = theVector->begin();

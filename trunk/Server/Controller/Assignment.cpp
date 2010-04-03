@@ -11,7 +11,7 @@
 #include "Robot.h"
 #include "Object.h"
 
-Assignment::Assignment(Robot* r, int nr, Object* o,int no,  double* d, Qos* q){
+Assignment::Assignment(Robot** r, int nr, Object** o,int no,  double* d, Qos* q){
 	demand = d;
 	robots = r;
 	objects = o;
@@ -76,7 +76,7 @@ std::map<Robot*, int>* Assignment::calcAssignments() {
  }
  std::map<Robot* , int>* ret = new std::map<Robot* , int>();
  for(int i = 0; i < numRobots; i++){
- 	ret->insert(std::pair<Robot*, int>(&robots[i],objects[robotAssignments[i]].getOID()));
+ 	ret->insert(std::pair<Robot*, int>(robots[i],objects[robotAssignments[i]]->getOID()));
  }
  delete[] qual;
  delete[] objAss;

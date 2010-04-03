@@ -15,15 +15,15 @@
 
 class Assignment {
     public:
-        Assignment(Robot* r, int nr, Object* o,int no,  double* d, Qos* q);
+        Assignment(Robot** r, int nr, Object** o,int no,  double* d, Qos* q);
         ~Assignment();
         std::map<Robot*, int>* calcAssignments();
 
     private:
 		Qos* quality;
-		Robot* robots;
+		Robot** robots;
 		int numRobots;
-		Object* objects;
+		Object** objects;
 		int numObjects;
 		double* demand;
 		double gamma;         //Multplier for cost term
