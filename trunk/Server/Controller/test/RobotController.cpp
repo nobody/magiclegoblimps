@@ -105,6 +105,8 @@ int main() {
     }
     std::cout << std::endl;
 
+    sleep(1);
+
     conn = write(sock, updArr.array, updArr.size);
     std::cout << "Wrote update data to socket:\n";
     for (int i = 0; i < updArr.size; ++i) {

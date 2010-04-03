@@ -15,7 +15,7 @@ AdminHandler::AdminHandler(){
 }
 
 AdminHandler::AdminHandler(RobotHandler* robotControl_, Vector_ts<Robot*>* robots_): 
-robots(robots_), robotControl(robotControl_)
+robotControl(robotControl_), robots(robots_)
 {
 
 }

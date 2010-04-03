@@ -156,6 +156,63 @@ void DbManager::printRequests() {
     delete con;
 }
 
+bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
+    
+    sql::Connection *con;
+    sql::Statement *stmt;
+    std::string cmd;
+    
+    try {
+        con = driver->connect(db_uri, db_user, db_pass);
+    } catch (...) {
+        std::cout << "Failed to connect to database\n";
+        return false;
+    }
+
+    con->setAutoCommit(0);
+    stmt = con->createStatement();
+
+    cmd = "USE ";
+    cmd += DbManager::db_database;
+    stmt->execute(cmd);
+
+    robots->lock();
+
+    Vector_ts<Robot*>::iterator it;
+    Vector_ts<Robot*>::iterator it_end = robots->end();
+
+    for (it = robots->begin(); it < it_end; ++it) {
+        (*it)->lock();
+        std::stringstream ss("CALL setCameraPosition('");
+        ss << (*it)->getGlobalID()
+           << "', '"
+           << (*it)->getXCord()
+           << "', '"
+           << (*it)->getYCord()
+           << "')";
+        cmd = ss.str();
+
+        try {
+            stmt->execute(cmd);
+        } catch(...){
+            std::cout << "Failed query: " << cmd << "\n";
+            
+            delete stmt;
+            con->rollback();
+            delete con;
+
+            (*it)->unlock();
+            robots->unlock();
+            return false;
+        }
+        (*it)->unlock();
+        
+    }
+
+    robots->unlock();
+
+    return true;
+}
 
 
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
