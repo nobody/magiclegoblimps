@@ -82,9 +82,9 @@ int main() {
     struct hostent *hostPtr = NULL;
     struct sockaddr_in serverName = { 0 };
 
-    in_addr_t ip = inet_addr("10.176.14.94");
-    hostPtr = gethostbyaddr(&ip, 4, AF_INET);
-    //hostPtr = gethostbyname("localhost");
+    //in_addr_t ip = inet_addr("10.176.14.94");
+    //hostPtr = gethostbyaddr(&ip, 4, AF_INET);
+    hostPtr = gethostbyname("localhost");
 
 
     serverName.sin_family = AF_INET;
