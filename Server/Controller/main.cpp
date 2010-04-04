@@ -25,7 +25,7 @@ int main(int argc, const char **argv) {
     controller c(io);
     boost::thread worker(work, boost::ref(io));
     boost::this_thread::sleep(boost::posix_time::seconds(5));
-    c.testdb();
+//    c.testdb();
 
     io.run();
     worker.join();

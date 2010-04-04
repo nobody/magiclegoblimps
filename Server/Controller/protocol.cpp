@@ -23,6 +23,7 @@
                     short str_len = data[i].VideoURL->size() + 1;
                     const char* url = data[i].VideoURL->c_str();
                     short size = sizeof(int)*4 + str_len + sizeof(short)*2;
+                    std::cout << std::hex << size << std::endl;
                     structs[i] = new char[size];
 
                     //put the size on the top of the array
@@ -30,6 +31,7 @@
                     for(int j = 0; j < 2; ++j){
                         structs[i][j] = ref[j];
                     }
+                    std::cout << std::hex << *(short*)structs[i] << std::endl;
 
                     //push rid on the array
                     ref = (char*)&(data[i].RID);
@@ -50,19 +52,19 @@
                     }
 
                     ref = (char*)&(data[i].cameraType);
-                    for(int j =14; j < 18; j++){
+                    for(int j = 14; j < 18; ++j){
                         structs[i][j] = ref[j-14];
-                    }   
+                    }
 
                     //push the string size
                     ref = (char*)&str_len;
                     for(int j = 18; j < 20; ++j){
-                        structs[i][j] = ref[j-14];
+                        structs[i][j] = ref[j-18];
                     }
 
                     //push the string
                     for(int j = 20; j < 20+str_len; ++j){
-                        structs[i][j] = url[j - 16];
+                        structs[i][j] = url[j - 20];
                     }
 
                     //add the length of this array to the total length and store it
@@ -344,7 +346,7 @@ int readRobotInit(void* array, robotInit* &robots) {
         }
 
         ref = (char*)&camera;
-        for(int j = 0; j < (int)sizeof(int); ++j){
+        for (int j = 0; j < (int)sizeof(int); ++j) {
             ref[j] = current[0]; current++;
         }
 
@@ -364,6 +366,7 @@ int readRobotInit(void* array, robotInit* &robots) {
         robots[i].RID = rid;
         robots[i].x = x;
         robots[i].y = y;
+        robots[i].cameraType = camera;
         robots[i].VideoURL = new std::string(url);
 
         delete[] url;

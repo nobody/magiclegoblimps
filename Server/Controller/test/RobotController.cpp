@@ -13,16 +13,19 @@ int main() {
     robots[0].RID = 0;
     robots[0].x = 0;
     robots[0].y = 9;
+    robots[0].cameraType = 0;
     robots[0].VideoURL = new std::string("http://10.10.1.100:7500");
 
     robots[1].RID = 1;
     robots[1].x = 1;
     robots[1].y = 8;
+    robots[1].cameraType = 0;
     robots[1].VideoURL = new std::string("http://10.10.1.101:7500");
 
     robots[2].RID = 2;
     robots[2].x = 2;
     robots[2].y = 7;
+    robots[2].cameraType = 1;
     robots[2].VideoURL = new std::string("http://10.10.1.102:7500");
 
     byteArray arr;
