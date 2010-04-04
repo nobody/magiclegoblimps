@@ -146,6 +146,7 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 		Robot* temp = new Robot(connEP, robotData[i].RID);
        		 temp->setXCord(robotData[i].x);
         	 temp->setYCord(robotData[i].y);
+        	 temp->setCamera(robotData[i].cameraType);
 		 //temp->setList(robotData[i].list, robotData[i].listSize);
         	 temp->setVideoURL(std::string(*robotData[i].VideoURL));
         

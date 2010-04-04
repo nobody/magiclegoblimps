@@ -157,7 +157,10 @@ void DbManager::printRequests() {
 }
 
 bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
-    
+    if (!robots)
+        return false;
+
+
     sql::Connection *con;
     sql::Statement *stmt;
     std::string cmd;
@@ -177,38 +180,41 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
     stmt->execute(cmd);
 
     robots->lock();
+    if (robots->size() > 0) {
 
-    Vector_ts<Robot*>::iterator it;
-    Vector_ts<Robot*>::iterator it_end = robots->end();
 
-    for (it = robots->begin(); it < it_end; ++it) {
-        (*it)->lock();
-        std::stringstream ss("CALL setCameraPosition('");
-        ss << (*it)->getGlobalID()
-           << "', '"
-           << (*it)->getXCord()
-           << "', '"
-           << (*it)->getYCord()
-           << "')";
-        cmd = ss.str();
+        Vector_ts<Robot*>::iterator it;
+        Vector_ts<Robot*>::iterator it_end = robots->end();
 
-        try {
-            stmt->execute(cmd);
-        } catch(...){
-            std::cout << "Failed query: " << cmd << "\n";
-            
-            delete stmt;
-            con->rollback();
-            delete con;
+        for (it = robots->begin(); it < it_end; ++it) {
+            (*it)->lock();
+            std::stringstream ss("CALL setCameraPosition('");
+            ss << (*it)->getGlobalID()
+               << "', '"
+               << (*it)->getXCord()
+               << "', '"
+               << (*it)->getYCord()
+               << "')";
+            cmd = ss.str();
 
+            try {
+                stmt->execute(cmd);
+            } catch(...){
+                std::cout << "Failed query: " << cmd << "\n";
+                
+                delete stmt;
+                con->rollback();
+                delete con;
+
+                (*it)->unlock();
+                robots->unlock();
+                return false;
+            }
             (*it)->unlock();
-            robots->unlock();
-            return false;
+            
         }
-        (*it)->unlock();
-        
-    }
 
+    }
     robots->unlock();
 
     return true;

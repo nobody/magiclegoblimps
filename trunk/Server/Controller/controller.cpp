@@ -150,6 +150,7 @@ int controller::testdb() {
 void controller::controllerThread(){
     while(running){
 
+        db->updateCameras(robots);
 
         boost::asio::deadline_timer timer(io_, boost::posix_time::seconds(C_QOS_INTV));
         timer.wait();
