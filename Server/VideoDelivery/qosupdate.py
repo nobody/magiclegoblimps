@@ -76,7 +76,7 @@ def prepare(vfeeds):
     """
     s = str(datetime.today()) + '\n'
     for vf in vfeeds:
-        s += vf.feed_url + ';' + vf.stream_name + ';\n'
+        s += vf.feed_url + ';' + vf.stream_url + ';\n'
     return s
 
 # Test for sample response

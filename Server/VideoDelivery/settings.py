@@ -19,7 +19,7 @@ QOS_SERVER_PORT = 5678
 
 # Video server settings
 CURRENT_IP = getip()
-LIVE_FEED_URLS = 'rtmp://{0}:{1}/{2}.flv' # domain, port, filename
+LIVE_FEED_URLS = 'http://{0}:{1}/{2}.flv' # domain, port, filename
 ARCHIVE_FEED_URLS = 'http://{0}/{2}.flv' # domain, filename
 
 CONFIG_TEMPLATE = 'config-template.txt'
@@ -27,7 +27,7 @@ CONFIG_FILE_DIR = './'
 ARCHIVE_DIR = './archives'
 
 CONFIG_FNAME = 'ffserver-{0}.conf'
-STREAM_NAME = 'stream-{0}'
+STREAM_NAME = 'live-{0}'
 FEED_NAME = 'feed-{0}'
 
 FFMPEG_ARGS = ('ffmpeg', '-r', '15', '-i', 'input-stream', '-f', 'flv',
