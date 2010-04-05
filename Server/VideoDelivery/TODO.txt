@@ -1,0 +1,46 @@
+A categorized list of things we still need to do for our project.
+
+>>> For server group:
+    * Adapt to QoS server protocol (it's still not final)
+
+>>> For client group:
+    * Generate CSV files automatically (we may no longer need this)
+    * Call stored procedures for client database
+    * Get auto play working for live feeds on flow player
+
+>>> For robot group:
+    * Get cameras on university network - do we need to put a request into
+      IR? ...IMPORTANT!!!
+
+>>> For us:
+    * Analyze QoS and archive videos
+    * Make vidcontrol.py able to handle connection interruptions (it
+      shouldn't quit when a connection is dropped or a cam feed is lost)
+    * Ability to sense dropped cam feeds (for example, if an ffmpeg
+      instance crashes)
+    * Poll child processes to make sure they're still running
+    * PERFORMANCE: explore ways to reduce latency and latency buildup for stale  
+      streams
+    * startup script -- if necessary
+
+>>> For testing:
+    * Update html pages on our server for the live and archive streams
+    * test launching/killing ffserver/ffmpeg processes with live cameras
+    * QoS server simulator (test for adding/removing streams)
+        -- server-sim use QoS response format
+        -- server-sim add/remove urls randomly
+
+>>> For documentation:
+    * Add/revise comments in the code
+    * Document server setup
+        - os/version
+        - required software packages
+        - configuration settings
+        - installation paths
+    * End-user guide (probably should be a manual geared towards portal admins)
+        - installlation
+        - starting
+        - stopping
+        - configuration
+        - troubleshooting
+        - testing the installation
