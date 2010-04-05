@@ -1,0 +1,24 @@
+2010-04-05 08:41:11.228189
+1;monkey;
+2;giraffe;
+3;banana;
+4;parrot;
+5;elephant;
+6;lion;
+7;antelope;
+8;zebra;
+9;lemur;
+10;donkey kong;
+11;bald eagle;
+12;baboon;
+13;gorilla;
+14;iguana;
+15;boa constrictor;
+
+http://10.176.14.66/video.cgi;3;0.43;
+http://10.176.14.67/video.cgi;7;0.56;4;0.62;
+http://10.176.14.68/video.cgi;5;0.21;
+http://10.176.14.69/video.cgi;12;0.76;13;0.15;1;0.64;
+http://10.176.14.70/video.cgi;9;0.14;
+http://10.176.14.71/video.cgi;8;0.04;
+http://10.176.14.72/video.cgi;1;0.32;
