@@ -39,11 +39,9 @@ def ffserver_args(vfeed):
 def ffmpeg_args(vfeed):
     return [
         'ffmpeg',
-        '-r', '15',
-        '-b', '1024k',
+        '-f', 'mjpeg',
         '-i', vfeed.feed_url,
-        settings.LIVE_FEED_URLS.format(settings.CURRENT_IP, vfeed.port,
-                                       vfeed.feed_name)
+        settings.FEEDER_URLS.format(vfeed.port, vfeed.feed_name)
     ]
 
 def dummy_launch(vfeed):
