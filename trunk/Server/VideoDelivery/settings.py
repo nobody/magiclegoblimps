@@ -19,6 +19,7 @@ QOS_SERVER_PORT = 5678
 
 # Video server settings
 CURRENT_IP = getip()
+FEEDER_URLS = 'http://localhost:{0}/{1}.ffm'
 LIVE_FEED_URLS = 'http://{0}:{1}/{2}.flv' # domain, port, filename
 ARCHIVE_FEED_URLS = 'http://{0}/{2}.flv' # domain, filename
 

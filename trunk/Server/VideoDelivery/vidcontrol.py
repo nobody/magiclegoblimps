@@ -32,6 +32,8 @@ class VidControl():
         
         self.config_gen = config.Generator()
 
+        # TODO: wait until we are ready to communicate with the server before
+        # establishing a connection.
         self.connect_QoS()
         log('Connected to QoS server at ' + settings.QOS_SERVER_URL + ':' +
                 str(settings.QOS_SERVER_PORT))
@@ -49,6 +51,7 @@ class VidControl():
         """
         Setup a socket for communicating with the QoS server
         """
+        #TODO: handle connection errors
         self.QoS_addr = (addr, port)
         self.QoS_server = socket.socket()
         self.QoS_server.connect(self.QoS_addr)
@@ -57,6 +60,7 @@ class VidControl():
         """
         Gets the latest camera/object metrics from the QoS server.
         """
+        #TODO: handle errors communicating to server
         self.QoS_server.send(b'update')
         response = self.QoS_server.recv(self.BUFFER_SIZE)
         pr = qosupdate.parse(response.decode('utf-8').splitlines(True))
@@ -142,11 +146,18 @@ class VidControl():
         5. archive video if necessary
         6. repeat
         """
+        # TODO: I would like this loop to be able to still run and monitor the
+        # processes while the server isn't running. Especially to check and
+        # see if the ffserver/ffmpeg processes are still running. It would be
+        # nice if we could either recover or cleanup after a camera feed goes
+        # offline or a child process crashes.
         log('Video Delivery server running at ' + settings.CURRENT_IP)
+        #TODO: connect here
         while True:
             try:
                 latest_feeds = self.poll_QoS()
             except socket.error as ex:
+                #TODO: handle error with polling QoS
                 print('lost connection to server')
                 # raise ex
                 break
@@ -161,6 +172,7 @@ class VidControl():
         """
         while len(self.feeds) > 0:
             self.kill_feed(self.feeds[0])
+            # TODO: handle spurious errors when killing feeds
         self.QoS_server.close()
 
 if __name__ == '__main__':
