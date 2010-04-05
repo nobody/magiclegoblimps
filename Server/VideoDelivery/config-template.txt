@@ -22,17 +22,3 @@ VideoSize $size
 PreRoll 0 
 Noaudio 
 </Stream> 
-
-<Stream $stream.swf>
-Feed $feed.ffm
-Format swf
-VideoCodec flv
-VideoFrameRate $frame_rate
-VideoBufferSize $buf_size
-VideoBitRate $bit_rate
-VideoQMin $q_min
-VideoQMax $q_max
-VideoSize $size
-PreRoll 0
-Noaudio
-</Stream>

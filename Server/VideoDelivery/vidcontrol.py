@@ -97,7 +97,7 @@ class VidControl():
         vfeed.config_file = settings.CONFIG_FILE_DIR + \
                             settings.CONFIG_FNAME.format(strport)
         vfeed.stream_name = settings.STREAM_NAME.format(strport)
-        vfeed.feed_name = settings.FEED_NAME
+        vfeed.feed_name = settings.FEED_NAME.format(strport)
         vfeed.stream_url = self.get_stream_url(vfeed)
         self.next_port += 1
         log('Launching feed in_url:{0}, out_url:{1}, config:{2}'.format(
