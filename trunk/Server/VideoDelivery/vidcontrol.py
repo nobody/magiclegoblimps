@@ -19,14 +19,13 @@ class VidFeed():
     A container for all information regarding a particular video feed.
     """
 
-    URL_TEMPLATE = 'rtmp://{0}:{1}/stream-{2}.flv'
-
     def __init__(self, obj=None):
         self.port = 0
         self.config_file = ''
         self.feed_url = '' # input from IP cams
         self.feed_name = '' # from ffmpeg
-        self.stream_name = '' # flv/swf output
+        self.stream_name = '' # filename w/o ext. for flv stream
+        self.stream_url = '' # url for the flv stream
         self.objects = [] # list of tuples (object_id, QoS_rating)
         self.last_update = None # timestamp
 
@@ -127,6 +126,7 @@ class VidControl():
                             settings.CONFIG_FNAME.format(strport)
         vfeed.stream_name = settings.STREAM_NAME.format(strport)
         vfeed.feed_name = settings.FEED_NAME
+        vfeed.stream_url = self.get_stream_url(vfeed)
         self.next_port += 1
         log('Launching feed in_url:{0}, out_url:{1}, config:{2}'.format(
                 vfeed.feed_url, vfeed.stream_name, vfeed.config_file))
@@ -156,6 +156,10 @@ class VidControl():
         os.remove(vfeed.config_file)
         self.feeds.remove(vfeed)
         # TODO: update csv files
+
+    def get_stream_url(self, vfeed):
+        return settings.LIVE_FEED_URLS.format(settings.CURRENT_IP, vfeed.port,
+                                              vfeed.stream_name)
 
     def runserver(self):
         """
