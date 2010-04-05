@@ -8,7 +8,8 @@ def getip():
     Gets the ipaddress of this computer from th e output of the ifconfig
     command. I don't know where else to get it from.
     """
-    proc = subprocess.Popen(['ifconfig', 'eth0'], stdout=subprocess.PIPE)
+    proc = subprocess.Popen(['ifconfig', 'eth0'], stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
     proc.wait()
     if proc.returncode != 0:
         return '127.0.0.1'

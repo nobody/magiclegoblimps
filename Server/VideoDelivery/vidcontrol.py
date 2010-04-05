@@ -28,6 +28,7 @@ class VidFeed():
         self.feed_name = '' # from ffmpeg
         self.stream_name = '' # flv/swf output
         self.objects = [] # list of tuples (object_id, QoS_rating)
+        self.last_update = None # timestamp
 
         self.encoding = {}
         self.ffserver_proc = None
