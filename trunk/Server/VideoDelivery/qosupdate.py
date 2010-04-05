@@ -3,7 +3,7 @@ This module handles the details of communicating with the QoS server.
 """
 
 from datetime import datetime
-from vidcontrol import VidFeed, VidControl
+from VidFeed import VidFeed
 
 def parse(in_lines):
     """
@@ -12,11 +12,11 @@ def parse(in_lines):
     (timestamp, VidFeed list).
     """
     object_mode = True
-    timestamp = lines[0] #TODO: parse into datetime object
+    timestamp = in_lines[0] #TODO: parse into datetime object
     objects = []
     robots = []
 
-    for ln in lines[1:]:
+    for ln in in_lines[1:]:
         if ln == '\n':
             object_mode = False
             continue
@@ -78,34 +78,3 @@ def prepare(vfeeds):
     for vf in vfeeds:
         s += vf.feed_url + ';' + vf.stream_url + ';\n'
     return s
-
-# Test for sample response
-# NOTE: The server-sim.py program must be running for this test to execute
-# successfully. This is a side effect of using the VidControl class.
-if __name__ == '__main__':
-    # test reading a QoS server response
-    with open('./sample-qos-response.txt', 'r') as f:
-        lines = f.readlines()
-    feed_data = parse(lines)
-    print(feed_data[0]) # timestamp
-    for vf in feed_data[1]:
-        print(vf.feed_url + ': ', end='')
-        for o in vf.objects:
-            print('({0}, {1}) '.format(o[0], o[1]), end='')
-        print()
-
-    # test writing to the QoS server
-    # we launch the feeds to generate the required stream urls
-    vc = VidControl()
-    for vf in feed_data[1]:
-        vc.launch_feed(vf)
-
-    s = prepare(feed_data[1])
-    print()
-    print(s)
-
-    for vf in feed_data[1]:
-        try:
-            vc.kill_feed(vf)
-        except:
-            pass # we can ignore this error
