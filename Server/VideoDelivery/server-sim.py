@@ -3,13 +3,9 @@
 import socket
 
 def get_status():
-    status = [
-        {'cam':'192.168.1.120', 'object':3, 'QoS': 0.34},
-        {'cam':'192.168.1.121', 'object':1, 'QoS': 0.45},
-        {'cam':'192.168.1.122', 'object':0, 'QoS': 0.0},
-        {'cam':'192.168.1.123', 'object':4, 'QoS': 0.19},
-    ]
-    return str(status).encode()
+    with open('./sample-qos-response.txt', 'r') as f:
+        response = f.read()
+    return response.encode()
 
 if __name__ == '__main__':
     s = socket.socket()

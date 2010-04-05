@@ -9,42 +9,14 @@ feed and QoS status.
 import os
 import time
 import socket
+import sys
+
 import config
 import ffserver
 import settings
 from logger import log
-
-class VidFeed():
-    """
-    A container for all information regarding a particular video feed.
-    """
-
-    def __init__(self, obj=None):
-        self.port = 0
-        self.config_file = ''
-        self.feed_url = '' # input from IP cams
-        self.feed_name = '' # from ffmpeg
-        self.stream_name = '' # filename w/o ext. for flv stream
-        self.stream_url = '' # url for the flv stream
-        self.objects = [] # list of tuples (object_id, QoS_rating)
-        self.last_update = None # timestamp
-
-        self.encoding = {}
-        self.ffserver_proc = None
-        self.ffmpeg_proc = None
-
-        if not obj == None:
-            self.feed_url = obj['cam']
-            self.objects.append((obj['object'], obj['QoS']))
-
-    def __eq__(self, obj):
-        if type(obj) is VidFeed:
-            return obj.feed_url == self.feed_url
-        else:
-            return obj['cam'] == self.feed_url
-
-    def update(self, obj):
-        self.objects[0] = (obj['object'], obj['QoS'])
+import qosupdate
+from VidFeed import VidFeed
 
 class VidControl():
     """
@@ -87,9 +59,9 @@ class VidControl():
         """
         self.QoS_server.send(b'update')
         response = self.QoS_server.recv(self.BUFFER_SIZE)
-
-        # TODO: parse response into a list of VidFeeds
-        return eval(response)
+        pr = qosupdate.parse(response.decode('utf-8').splitlines(True))
+        timestamp = pr[0]
+        return pr[1]
 
     def update_feeds(self, vfeeds):
         """
@@ -200,6 +172,8 @@ if __name__ == '__main__':
             continue
         else:
             break
+    # Fall back to current directory if no root given
+
     try:
         vc = VidControl()
         vc.runserver()
