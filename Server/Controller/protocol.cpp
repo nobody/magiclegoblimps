@@ -5,6 +5,7 @@
  * Revision:       $Revision$
  */
 #include"protocol.h"
+#include <stdio.h>
 
  int write_data(int type, void* data_, short number, byteArray* byte_ptr){
     if(!data_ | !byte_ptr)
@@ -22,7 +23,7 @@
                 for(int i = 0; i < number; ++i){
                     short str_len = data[i].VideoURL->size() + 1;
                     const char* url = data[i].VideoURL->c_str();
-                    short size = sizeof(int)*3 + str_len + sizeof(short)*2;
+                    short size = sizeof(int)*4 + str_len + sizeof(short)*2;
                     structs[i] = new char[size];
 
                     //put the size on the top of the array
@@ -49,15 +50,21 @@
                         structs[i][j] = ref[j-10];
                     }
 
-                    //push the string size
-                    ref = (char*)&str_len;
-                    for(int j = 14; j < 16; ++j){
+                    //push cameraType
+                    ref = (char*)&(data[i].cameraType);
+                    for(int j = 14; j < 18; ++j){
                         structs[i][j] = ref[j-14];
                     }
 
+                    //push the string size
+                    ref = (char*)&str_len;
+                    for(int j = 18; j < 20; ++j){
+                        structs[i][j] = ref[j-18];
+                    }
+
                     //push the string
-                    for(int j = 16; j < 16+str_len; ++j){
-                        structs[i][j] = url[j - 16];
+                    for(int j = 20; j < 20+str_len; ++j){
+                        structs[i][j] = url[j - 20];
                     }
 
                     //add the length of this array to the total length and store it
@@ -261,13 +268,15 @@
     for(int i = 1; i < 5; ++i){
         array[i] = ref[i-1];
     }
+    
+    printf("byte#2: %02X length:%d \n", array[1], length);
 
     //push number of elements;
     ref = (char*)&number;
     for(int i = 5; i < 7; ++i){
         array[i] = ref[i-5];
     }
-    
+
     //push each array onto the array
     int position = 7;
     for(int i = 0; i < number; ++i){
@@ -297,6 +306,7 @@ int readRobotInit(void* array, robotInit* &robots) {
     char* current = arr+5;
     char* ref;
 
+    std::cout << "overall_size: " << *(int*)(current-4) << "\n";
     // overall size
     short overall_size;
     ref = (char*)&overall_size;
@@ -310,6 +320,7 @@ int readRobotInit(void* array, robotInit* &robots) {
         int rid;
         int x;
         int y;
+        int cameraType;
         short str_len;
         char* url;
 
@@ -333,6 +344,12 @@ int readRobotInit(void* array, robotInit* &robots) {
 
         // retrieve y
         ref = (char*)&y;
+        for (int j = 0; j < (int)sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        // retrieve cameraType
+        ref = (char*)&cameraType;
         for (int j = 0; j < (int)sizeof(int); ++j) {
             ref[j] = current[0]; current++;
         }
