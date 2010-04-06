@@ -35,16 +35,14 @@ bool Camera::Connect()
 	user_ = "admin";
 	pass_ = "admin";
 
-	string camUrl;
-
-	camUrl = "http://" + user_ + ":" + pass_ + "@" + ip_;
+	camUrl_ = "http://" + user_ + ":" + pass_ + "@" + ip_;
 
 	if (dLinkCam_)
-		camUrl += dLinkUrl_;
+		camUrl_ += dLinkUrl_;
 	else
-		camUrl += ciscoUrl_;
+		camUrl_ += ciscoUrl_;
 
-	capture_ = cvCreateFileCapture(camUrl.c_str());
+	capture_ = cvCreateFileCapture(camUrl_.c_str());
 
 	if (capture_ == 0)
 		return false;
@@ -417,6 +415,11 @@ void Camera::Update()
 		cvXorS(image, cvScalarAll(255), image, 0);
 		cvResetImageROI(image);
 	}
+}
+
+int Camera::GetNextAvailableID()
+{
+	return 0;
 }
 
 void Camera::Scan()

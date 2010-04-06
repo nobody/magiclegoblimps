@@ -57,23 +57,7 @@ void LocalInput()
 	//testserver command
 	if (tokens[0].compare("testserver") == 0)
 	{
-		string command = "";
-
-		for (int i = 1; i < tokens.size(); i++)
-			command += " " + tokens[i];
-
-		controller->TestServer(command);
-	}
-
-	//testcontroller commmand
-	if (tokens[0].compare("testcontroller") == 0)
-	{
-		string command = "";
-
-		for (int i = 1; i < tokens.size(); i++)
-			command += " " + tokens[i];
-
-		controller->Command(command);
+		controller->TestServer(atoi(tokens[1].c_str()));
 	}
 
 	//testrobot

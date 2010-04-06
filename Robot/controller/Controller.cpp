@@ -74,7 +74,27 @@ bool Controller::ConnectToServer(string ip)
 
 	cout << "Connected to server." << endl;
 
-	//need to retrieve the list of known objects from server on connect
+	//send robot init stuff
+	byteArray sendArray;
+
+	robotInit* init = new robotInit[robots_.size()];
+
+	for (int i = 0; i < robots_.size(); i++)
+	{
+		init[i].RID = robots_[i]->GetID();
+		if (robots_[i]->GetCamera()->GetDLinkCam())
+			init[i].cameraType = P_DLINK;
+		else
+			init[i].cameraType = P_CISCO;
+		//init[i].VideoURL = robots_[i]->GetCamera()->GetVideoURL();
+		init[i].x = robots_[i]->GetLocationX();
+		init[i].y = robots_[i]->GetLocationY();
+	}
+
+	write_data(P_ROBOT_INIT, init, robots_.size(), &sendArray);
+
+	delete[] init;
+	delete[] sendArray.array;
 
 	_beginthread(ClientThread, 0, NULL);
 
@@ -167,15 +187,58 @@ void Controller::ClientThread(void* params)
         iResult = recv(connectSocket_, recvBuf, recvBufLen, 0);
         if (iResult > 0)
 		{
-			//potentially needs to decide if recieved data is a command,
-			//robot, or object - but may not be required if we're only
-			//grabbing the list of objects from the server once on connection
+			readReturn* data = new readReturn;
 
-			//also need to do something about null/terminating characters
+			read_data(recvBuf, data);
 
-			cout << "COMMAND FROM SERVER: " << recvBuf << endl;
-			string command = recvBuf;
-			Command(command);
+			int type = data->type;
+
+			if (type == P_OBJECT)
+			{
+				object* obj = new object[data->size];
+				obj = (object*)data->array;
+
+				for (int i = 0; i < data->size; i++)
+				{
+					cout << "Adding Object " << obj[i].OID << 
+						" : " << obj[i].name << endl;
+
+					//TrackingObject* newObj = TrackingObject(
+					//add to the tracking objects vector
+				}
+			}
+			else if (type == P_ASSIGNMENT)
+			{
+				assignment* assign = new assignment[data->size];
+				assign = (assignment*)data->array;
+
+				for (int i = 0; i < data->size; i++)
+				{
+					cout << "Assigning Robot " << assign[i].RID << 
+						" to Object " << assign[i].OID << endl;
+					robots_[assign[i].RID]->ExecuteCommand(
+						"target " + assign[i].OID);
+				}
+
+				delete[] assign;
+			}
+			else if (type == P_COMMAND)
+			{
+				command* comm = new command[data->size];
+				comm = (command*)data->array;
+
+				for (int i = 0; i < data->size; i++)
+				{
+					cout << "Command Robot " << comm[i].RID << 
+						" to " << comm[i].cmd << " with arg " << comm[i].arg <<
+						endl;
+					Command(comm[i].RID, comm[i].cmd, comm[i].arg);
+				}
+
+				delete[] comm;
+			}
+
+			delete data;
 		}
         else if (iResult == 0)
 		{
@@ -187,48 +250,15 @@ void Controller::ClientThread(void* params)
     } 
 }
 
-bool Controller::InitRobot()
-{
-	//send inital robot information on add
-	return true;
-}
-
-bool Controller::SendRobots()
-{
-	//send information about all our robots to the server
-	return true;
-}
-
-bool Controller::SendObject()
-{
-	//send information about all our objects to the server
-	return true;
-}
-
-bool Controller::RecieveObjects()
-{
-	//recieve all saved objects from server
-	return true;
-}
-
-bool Controller::Command(string command)
+bool Controller::Command(int id, int command, int arg)
 {
 	//should translate command from server format into our command format
 	//then send it on to the requested robot
 
-	//temporary format (needs discussing with server group)
-	//[command]$[robotnumber]$[subcommand]$[value]
-
-	vector<string> tokens;
-	tokenize(command, tokens, "$");
-
-	if (tokens.size() == 0)
-		return false;
-
-	//example of command translation (not final)
-	if (tokens[0].compare("target") == 0)
+	//example of command translation (not actual command)
+	if (command == 1)
 	{
-		robots_[atoi(tokens[1].c_str())]->ExecuteCommand("target" + tokens[2]);
+		robots_[id]->ExecuteCommand("move " + arg);
 	}
 
 	return true;
@@ -236,12 +266,32 @@ bool Controller::Command(string command)
 
 //after creating a server and connecting a client, can be used to send
 //test commands as if they were from the server
-bool Controller::TestServer(string command)
+bool Controller::TestServer(int type)
 {
-	int bufLength = command.length();
+	byteArray sendArray;
+
+	if (type == P_OBJECT)
+	{
+	}
+	else if (type == P_ASSIGNMENT)
+	{
+		assignment* assign = new assignment[2];
+		assign[0].OID = 1;
+		assign[0].RID = 2;
+		assign[1].OID = 3;
+		assign[1].RID = 4;
+
+		write_data(P_ASSIGNMENT, assign, 2, &sendArray);
+
+		delete[] assign;
+	}
+	else if (type == P_COMMAND)
+	{
+	}
+
 	int iResult = 0;
 
-	iResult = send(serverSocket_, command.c_str(), bufLength, 0);
+	iResult = send(serverSocket_, sendArray.array, sendArray.size, 0);
     if (iResult == SOCKET_ERROR) 
 	{
         printf("send failed: %d\n", WSAGetLastError());
@@ -249,6 +299,10 @@ bool Controller::TestServer(string command)
         WSACleanup();
         return false;
     }
+
+	delete[] sendArray.array;
+
+	return true;
 }
 
 void Controller::AddRobot(Robot* robot)
@@ -349,6 +403,37 @@ void Controller::Update()
 				}
 			}
 		}
+
+		byteArray sendArray;
+
+		robotUpdate* update = new robotUpdate[robots_.size()];
+
+		for (int i = 0; i < robots_.size(); i++)
+		{
+			update[i].RID = robots_[i]->GetID();
+			update[i].x = robots_[i]->GetLocationX();
+			update[i].y = robots_[i]->GetLocationY();
+			update[i].listSize = 
+				robots_[i]->GetCamera()->GetVisibleObjects().size();
+			//update[i].objects =
+			//update[i].qualities =
+		}
+
+		write_data(P_ROBOT_UPDATE, update, robots_.size(), &sendArray);
+
+		delete[] update;
+
+		int iResult = 0;
+
+		iResult = send(serverSocket_, sendArray.array, sendArray.size, 0);
+	    if (iResult == SOCKET_ERROR) 
+		{
+	        printf("send failed: %d\n", WSAGetLastError());
+	        closesocket(serverSocket_);
+	        WSACleanup();
+	    }
+
+		delete[] sendArray.array;
 
 		timer_ = 0;
 	}

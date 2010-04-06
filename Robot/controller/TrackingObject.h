@@ -36,6 +36,8 @@ public:
 	float GetCenteredPercentage(int width);
 	float GetSizePercentage();
 
+	int GetQuality();
+
 private:
 	int id_;
 

@@ -22,7 +22,8 @@
                 for(int i = 0; i < number; ++i){
                     short str_len = data[i].VideoURL->size() + 1;
                     const char* url = data[i].VideoURL->c_str();
-                    short size = sizeof(int)*3 + str_len + sizeof(short)*2;
+                    short size = sizeof(int)*4 + str_len + sizeof(short)*2;
+                    std::cout << std::hex << size << std::endl;
                     structs[i] = new char[size];
 
                     //put the size on the top of the array
@@ -30,6 +31,7 @@
                     for(int j = 0; j < 2; ++j){
                         structs[i][j] = ref[j];
                     }
+                    std::cout << std::hex << *(short*)structs[i] << std::endl;
 
                     //push rid on the array
                     ref = (char*)&(data[i].RID);
@@ -49,15 +51,20 @@
                         structs[i][j] = ref[j-10];
                     }
 
-                    //push the string size
-                    ref = (char*)&str_len;
-                    for(int j = 14; j < 16; ++j){
+                    ref = (char*)&(data[i].cameraType);
+                    for(int j = 14; j < 18; ++j){
                         structs[i][j] = ref[j-14];
                     }
 
+                    //push the string size
+                    ref = (char*)&str_len;
+                    for(int j = 18; j < 20; ++j){
+                        structs[i][j] = ref[j-18];
+                    }
+
                     //push the string
-                    for(int j = 16; j < 16+str_len; ++j){
-                        structs[i][j] = url[j - 16];
+                    for(int j = 20; j < 20+str_len; ++j){
+                        structs[i][j] = url[j - 20];
                     }
 
                     //add the length of this array to the total length and store it
@@ -104,13 +111,13 @@
                     }
 
                     ref = (char*)(data[i].objects);
-                    for(int j = 18; j <18 + data[i].listSize * sizeof(int); ++j){
+                    for(int j = 18; j <18 + data[i].listSize * (int)sizeof(int); ++j){
                         structs[i][j] = ref[j-18];
                     }
 
                     ref = (char*)(data[i].qualities);
-                    for(int j = 18 + data[i].listSize; j < 18 +(2* data[i].listSize); ++j){
-                        structs[i][j] = ref[j - 18 + data[i].listSize];
+                    for(int j = 18 + data[i].listSize * (int)sizeof(int); j < 18 +(2 * (int)sizeof(int) * data[i].listSize); ++j){
+                        structs[i][j] = ref[j - 18 - data[i].listSize * sizeof(int)];
                     }
 
                     sizes[i] = size;
@@ -282,6 +289,11 @@
     delete[] structs;
     byte_ptr->array = array;
     byte_ptr->size = length;
+
+    //char* ptr = array;
+    //ptr += 7 + 16;
+    //std::cout << ptr << "\n";
+
     
     return P_OK;
 
@@ -305,6 +317,7 @@ int readRobotInit(void* array, robotInit* &robots) {
         int rid;
         int x;
         int y;
+        int camera;
         short str_len;
         char* url;
 
@@ -332,6 +345,11 @@ int readRobotInit(void* array, robotInit* &robots) {
             ref[j] = current[0]; current++;
         }
 
+        ref = (char*)&camera;
+        for (int j = 0; j < (int)sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
         // retrieve str_len
         ref = (char*)&str_len;
         for (int j = 0; j < (int)sizeof(short); ++j) {
@@ -348,6 +366,7 @@ int readRobotInit(void* array, robotInit* &robots) {
         robots[i].RID = rid;
         robots[i].x = x;
         robots[i].y = y;
+        robots[i].cameraType = camera;
         robots[i].VideoURL = new std::string(url);
 
         delete[] url;

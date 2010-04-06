@@ -27,13 +27,8 @@ public:
 
 	static void ClientThread(void* params);
 
-	static bool InitRobot();
-	static bool SendRobots();
-	static bool SendObject();
-	static bool RecieveObjects();
-
-	static bool Command(string command);
-	bool TestServer(string command);
+	static bool Command(int id, int command, int arg);
+	bool TestServer(int type);
 
 	void AddRobot(Robot* robot);
 	Robot* GetRobot(int id);
