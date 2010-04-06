@@ -27,3 +27,11 @@ float TrackingObject::GetSizePercentage()
 
 	return currentArea / origArea * 100;
 }
+
+int TrackingObject::GetQuality()
+{
+	//return quality metric
+	//some combination of size and distance from center
+
+	return 0;
+}

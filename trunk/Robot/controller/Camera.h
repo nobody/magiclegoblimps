@@ -57,6 +57,9 @@ public:
 	void SetIP(string ip);
 	void SetDLinkCam(bool dLinkCam);
 
+	bool GetDLinkCam() { return dLinkCam_; }
+	string GetVideoURL() { return camUrl_; }
+
 	bool GetLocalDisplay() { return localDisplay_; }
 
 	void StartDisplay();
@@ -70,6 +73,11 @@ public:
 	static vector<TrackingObject*> GetTrackableObjects()
 	{
 		return trackableObjects_;
+	}
+
+	vector<TrackingObject*> GetVisibleObjects()
+	{
+		return visibleObjects_;
 	}
 
 	void Update();
@@ -95,6 +103,7 @@ private:
 	bool dLinkCam_;
 	string user_;
 	string pass_;
+	string camUrl_;
 
 	CvCapture* capture_;
 	IplImage* image_;
@@ -106,6 +115,8 @@ private:
 
 	int inKey_;
 	bool waitingKey_;
+
+	int GetNextAvailableID();
 
 	static vector<TrackingObject*> trackableObjects_;
 

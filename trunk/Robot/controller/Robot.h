@@ -9,8 +9,6 @@
 
 using namespace std;
 
-//class Camera;
-
 enum RobotFacing
 {
 	POSITIVE_X = 0,
@@ -39,6 +37,9 @@ public:
 
 	void ExecuteCommand(string command);
 
+	int GetLocationX() { return locationX_; }
+	int GetLocationY() { return locationY_; }
+
 private:
 	int id_;
 
@@ -51,8 +52,8 @@ private:
 	bool robotOnline_;
 	bool robotActive_;
 
-	float locationX_;
-	float locationY_;
+	int locationX_;
+	int locationY_;
 
 	RobotFacing robotFacing_;
 	float cameraFacing_;
