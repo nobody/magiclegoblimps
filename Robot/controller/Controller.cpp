@@ -11,6 +11,8 @@ Controller::Controller()
 	connectSocket_ = NULL;
 	serverSocket_ = NULL;
 	port_ = "7626";
+
+	connected_ = false;
 }
 
 bool Controller::ConnectToServer(string ip)
@@ -97,6 +99,8 @@ bool Controller::ConnectToServer(string ip)
 	delete[] sendArray.array;
 
 	_beginthread(ClientThread, 0, NULL);
+
+	connected_ = true;
 
 	return true;
 }
@@ -404,36 +408,39 @@ void Controller::Update()
 			}
 		}
 
-		byteArray sendArray;
-
-		robotUpdate* update = new robotUpdate[robots_.size()];
-
-		for (int i = 0; i < robots_.size(); i++)
+		if (connected_)
 		{
-			update[i].RID = robots_[i]->GetID();
-			update[i].x = robots_[i]->GetLocationX();
-			update[i].y = robots_[i]->GetLocationY();
-			update[i].listSize = 
-				robots_[i]->GetCamera()->GetVisibleObjects().size();
-			//update[i].objects =
-			//update[i].qualities =
+			byteArray sendArray;
+
+			robotUpdate* update = new robotUpdate[robots_.size()];
+
+			for (int i = 0; i < robots_.size(); i++)
+			{
+				update[i].RID = robots_[i]->GetID();
+				update[i].x = robots_[i]->GetLocationX();
+				update[i].y = robots_[i]->GetLocationY();
+				update[i].listSize = 
+					robots_[i]->GetCamera()->GetVisibleObjects().size();
+				//update[i].objects =
+				//update[i].qualities =
+			}
+
+			write_data(P_ROBOT_UPDATE, update, robots_.size(), &sendArray);
+
+			delete[] update;
+
+			int iResult = 0;
+
+			iResult = send(serverSocket_, sendArray.array, sendArray.size, 0);
+		    if (iResult == SOCKET_ERROR) 
+			{
+		        printf("send failed: %d\n", WSAGetLastError());
+		        closesocket(serverSocket_);
+		        WSACleanup();
+		    }
+
+			delete[] sendArray.array;
 		}
-
-		write_data(P_ROBOT_UPDATE, update, robots_.size(), &sendArray);
-
-		delete[] update;
-
-		int iResult = 0;
-
-		iResult = send(serverSocket_, sendArray.array, sendArray.size, 0);
-	    if (iResult == SOCKET_ERROR) 
-		{
-	        printf("send failed: %d\n", WSAGetLastError());
-	        closesocket(serverSocket_);
-	        WSACleanup();
-	    }
-
-		delete[] sendArray.array;
 
 		timer_ = 0;
 	}
