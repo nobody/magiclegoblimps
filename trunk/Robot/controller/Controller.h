@@ -46,6 +46,8 @@ private:
 
 	char* port_;
 
+	bool connected_;
+
 	static vector<Robot*> robots_;
 
 	float timer_;
