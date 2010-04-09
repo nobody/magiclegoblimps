@@ -1,0 +1,369 @@
+/*
+  @ commands
+  - start   (one time only)
+  - forward
+  - forward ms
+  - left
+  - right
+  - turnaround
+  - pan deg
+  - stop
+
+  @ start up receive
+  - line type (black/white)
+  - starting X
+  - starting Y
+  - starting heading
+
+  @ start up send
+  - battery level
+
+  @ feedback
+  - curX (int)
+  - curY (int)
+  - heading (int)
+  - battery level (int)
+  - pan deg (int)
+  - at intersection (boolean)
+*/
+
+#include "robot.h"
+
+// location and heading
+int destX;
+int destY;
+int maxX;
+int maxY;
+int homeX;
+int homeY;
+int tacho = 0;
+//int destPan;
+
+// sensors
+int LEFT_DARK;
+int LEFT_LIGHT;
+int RIGHT_DARK;
+int RIGHT_LIGHT;
+
+// others
+int last_sensor = 0;
+int status = 0; // flags
+
+void calibrate()
+{
+ int left, right;
+ 
+ setLightOn();
+
+ motorPower(25,-25);
+ repeat(10)
+ {
+  Wait(100);
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ }
+ stopWheels();
+ motorPower(-25,25);
+ repeat(20)
+ {
+  Wait(100);
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ }
+ stopWheels();
+ motorPower(25,-25);
+ repeat(10)
+ {
+  Wait(100);
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ }
+ stopWheels();
+
+ CALIBRATED = true;
+}
+
+void lineFollow()
+{
+ setLightOn();
+ 
+ Wait(100);
+ forwardSync(0);
+ //*
+ if( CALIBRATED )
+ {
+    do {
+      checkSonar();  // blocking
+      adjustLinePosition();
+    } while( aboveThreshold() && MODE!=STOPPED );
+ }
+ else
+ //*/
+ //*
+ {
+     do {
+      checkSonar();  // blocking
+      adjustLinePositionRaw();
+      //adjustLineSyncRaw();
+    } while( aboveThresholdRaw() && MODE!=STOPPED );
+ }
+
+
+
+ if( MODE != STOPPED )
+     MODE = INTERSECTION;
+
+ stopWheels();
+}
+
+/* turn the camera by a degree
+   +deg : clockwise
+   -deg : counter-clockwise
+*/
+
+task receiveCommand()
+{
+ string msg = "";
+ string cmd = "";
+ int space;
+ int value;
+ int i;
+ int len;
+
+ FOREVER
+ {
+  setLightOff();
+  
+  ReceiveMessage(INBOX,false,msg);
+
+  len = StrLen(msg);
+
+  if(len>0)
+  {
+   if( (len >= 3 && SubStr(msg,0,3) == "pan" )
+    || ( len >= 4 && SubStr(msg,0,4) == "stop" ) )
+   {
+    continue;
+   }
+   
+   ReceiveMessage(INBOX,true,msg);
+   len = StrLen(msg);
+
+   if( len >= 4 && SubStr(msg,0,4) == "left" )
+   {
+    MODE = TURNLEFT;
+    turnLeftWait( 400, 200 );
+    //turnLeftRotate();
+    stopWheels();
+    MODE = IDLE;
+   }
+   else if( len >= 5 && SubStr(msg,0,5) == "right" )
+   {
+    MODE = TURNRIGHT;
+    turnRightWait( 300, 200 );
+    stopWheels();
+    MODE = IDLE;
+   }
+   else if( len >= 10 && SubStr(msg,0,10) == "turnaround" )
+   {
+    MODE = TURNAROUND;
+    turnAround();
+    MODE = IDLE;
+   }
+   //*
+   else if( len >= 9 && SubStr(msg,0,9) == "calibrate" )
+   {
+    MODE = CALIBRATING;
+    calibrate();
+    MODE = IDLE;
+   }
+   //*/
+   else if( len >= 7 && SubStr(msg,0,7) == "forward" )
+   {
+    if( len == 7 )
+    {
+     MODE = LINE_FOLLOW;
+     lineFollow();
+    }
+    else
+    {
+     msg = SubStr(msg,8,len-8);
+     value = NumToStr( msg );
+
+     MODE = LINE_FOLLOW;
+     Wait(value); // split up into intervals?
+     if( MODE != INTERSECTION )
+     {
+      MODE = DESTINATION;
+     }
+     stopWheels();
+    }
+   }
+   else
+   {
+    PlayTone(1000, 50);
+   }
+
+  }
+ }
+}
+
+task cmdPan()
+{
+ int deg;
+ string msg;
+ int len;
+
+ FOREVER
+ {
+  ReceiveMessage(INBOX,false,msg);
+
+  len = StrLen(msg);
+
+  if( len >= 3 && SubStr(msg,0,3) == "pan" )
+  {
+   ReceiveMessage(INBOX,true,msg);
+
+   msg = SubStr( msg, 4, len );
+   deg = StrToNum( msg );
+   curPan += deg;
+
+   pan( deg );
+  }
+ }
+}
+
+// only stops forward command
+task cmdStop()
+{
+ int deg;
+ string msg;
+ int len;
+
+ FOREVER
+ {
+  ReceiveMessage(INBOX,false,msg);
+
+  len = StrLen(msg);
+
+  if( len >= 4 && SubStr(msg,0,4) == "stop" )
+  {
+   ReceiveMessage(INBOX,true,msg);
+
+//   StopTask(receiveCommand); // requires Enhanced Firmware
+//   StartTask(receiveCommand);
+
+    MODE = STOPPED;
+    
+    repeat(100)
+     stopWheels();
+  }
+ }
+}
+
+/*
+ * 1. current location (x,y)
+ * 2. current heading
+ * 3. current camera pan
+ * 4. battery life percent
+ * 5. status flags
+ *
+ * if OUTBOX is empty then fill it
+ */
+task sendFeedBack()
+{
+   const string d = " ";
+   string x, y, t, h, p, b, str, s, msg;
+
+   FOREVER
+   {
+       x = NumToStr(curX);
+       y = NumToStr(curY);
+       h = NumToStr(heading);
+       p = NumToStr(curPan);
+       b = NumToStr(battery());
+       s = NumToStr(status);
+       str = StrCat(x,d,y,d,h,d,p,d,b,d,s);
+
+      ReceiveMessage(OUTBOX,false,msg);
+
+      if( StrLen(msg) > 0 )
+      {
+       ReceiveMessage(OUTBOX,true,msg);
+      }
+
+      //SendResponseString(OUTBOX,str);
+      SendMessage(OUTBOX,str);
+
+      Wait(25);
+
+      status = 0;
+   }
+}
+
+task display()
+{
+ string out;
+ string in;
+ FOREVER
+ {
+    ClearScreen();
+    ReceiveMessage(OUTBOX,false,out);
+    //ReceiveMessage(INBOX,false,in)
+    TextOut(0,LCD_LINE3,out,false);
+    //TextOut(0,LCD_LINE5,in,false);
+    switch(MODE)
+    {
+     case STOPPED : TextOut(0,0,"STOPPED",false); break;
+     case IDLE : TextOut(0,0,"IDLE",false); break;
+     case DESTINATION : TextOut(0,0,"DESTINATION",false); break;
+     case LINE_FOLLOW : TextOut(0,0,"LINE_FOLLOW",false); break;
+     case INTERSECTION : TextOut(0,0,"INTERSECTION",false); break;
+     case TURNLEFT : TextOut(0,0,"TURNLEFT",false); break;
+     case TURNRIGHT : TextOut(0,0,"TURNRIGHT",false); break;
+     case TURNAROUND : TextOut(0,0,"TURNAROUND",false); break;
+     case SONARBLOCK : TextOut(0,0,"SONARBLOCK",false); break;
+     default : TextOut(0,0,"Invalid",false);
+    }
+
+    Wait(100);
+ }
+}
+
+task main()
+{
+ Precedes(receiveCommand,cmdPan,cmdStop,sendFeedBack,display);
+
+ setSonarRaw();
+ setLightRaw();
+ 
+ SendMessage(OUTBOX,"hello");
+  
+  /*
+ TextOut(0,0,"waiting",true);
+ string msg;
+ do {
+  ReceiveMessage(INBOX,true,msg);
+ } while( msg != "start" );
+
+ ClearScreen();
+ //*/
+ }
