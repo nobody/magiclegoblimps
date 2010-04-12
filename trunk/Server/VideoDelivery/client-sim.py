@@ -30,8 +30,8 @@ def run_client():
     s = wait_for_server()
     while True:
         try:
-            s.send(b'update')
             resp = s.recv(4096)
+            s.send(b'got it')
         except socket.error as ex:
             print(ex)
             s = wait_for_server()
@@ -40,8 +40,7 @@ def run_client():
         if len(resp) == 0:
             pass
         print('\n>>>\n')
-        print(str(resp))
-        time.sleep(1.0)
+        print(resp.decode('utf-8'))
 
 if __name__ == '__main__':
     try:

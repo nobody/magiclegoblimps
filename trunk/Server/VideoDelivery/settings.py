@@ -16,6 +16,8 @@ ARCHIVE_CSV_FILE = '/var/www/mlb/archive-feeds.csv'
 # QoS server settings
 QOS_SERVER_URL = 'localhost'
 QOS_SERVER_PORT = 5678
+MAX_CONNECTION_ATTEMPTS = 10
+CONNECTION_RETRY_INTERVAL = 10
 
 # Video server settings
 CURRENT_IP = getip()
