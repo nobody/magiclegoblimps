@@ -71,10 +71,10 @@ def get_robot(line):
     
 def prepare(vfeeds):
     """
-    Take a list of VidFeed objects and return a string representing those
+    Take a list of VidFeed objects and return a bytes object representing those
     objects in a format suitable to send to the QoS server.
     """
     s = str(datetime.today()) + '\n'
     for vf in vfeeds:
         s += vf.feed_url + ';' + vf.stream_url + ';\n'
-    return s
+    return s.encode()

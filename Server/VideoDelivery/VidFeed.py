@@ -7,10 +7,12 @@ class VidFeed():
 
     def __init__(self, vfeed=None):
         self.port = 0
-        self.config_file = ''
         self.feed_url = '' # input from IP cams
+
+        self.config_file = '' # ffserver config file
         self.feed_name = '' # from ffmpeg
         self.stream_name = '' # filename w/o ext. for flv stream
+
         self.stream_url = '' # url for the flv stream
         self.objects = [] # list of tuples (object_id, QoS_rating)
         self.last_update = None # timestamp

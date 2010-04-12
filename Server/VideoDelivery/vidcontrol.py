@@ -26,46 +26,58 @@ class VidControl():
     def __init__(self):
         # "constants"
         self.BUFFER_SIZE = 4096
-        self.CONFIG_FILE_PREFIX = 'ffserver-'
-        self.CONFIG_FILE_EXT = '.conf'
-        self.POLL_TIME = 0.7
-        
-        self.config_gen = config.Generator()
-
-        # TODO: wait until we are ready to communicate with the server before
-        # establishing a connection.
-        self.connect_QoS()
-        log('Connected to QoS server at ' + settings.QOS_SERVER_URL + ':' +
-                str(settings.QOS_SERVER_PORT))
-
         # complete info about all active feeds/streams
         self.feeds = []
-
         # redundant information may make certain operations eaiser
         self.ports = []
         self.config_files = []
         self.next_port = 8090
+        # used to generate configuration files
+        self.config_gen = config.Generator()
 
     def connect_QoS(self, addr=settings.QOS_SERVER_URL,
                     port=settings.QOS_SERVER_PORT):
         """
-        Setup a socket for communicating with the QoS server
+        Setup a socket for communicating with the QoS server. Returns True if
+        connection could be established and false otherwise. This function will
+        retry connection attempts up to a max number of times at an interval
+        specified in the settings file.
         """
-        #TODO: handle connection errors
         self.QoS_addr = (addr, port)
-        self.QoS_server = socket.socket()
-        self.QoS_server.connect(self.QoS_addr)
+        for i in range(0, settings.MAX_CONNECTION_ATTEMPTS):
+            try:
+                self.QoS_server = socket.socket()
+                self.QoS_server.connect(self.QoS_addr)
+            except socket.error as ex: # connection failed, retry
+                log(ex)
+                log('Attempt ' + str(i) + ' to connect to the QoS server '
+                    + ' failed miserably.')
+                time.sleep(settings.CONNECTION_RETRY_INTERVAL)
+            else: # we have a valid connection
+                log('Connected to QoS server at ' + addr + ':' + str(port))
+                return True
+        # give up
+        log('Could not connect to QoS server at ' + addr + ':' + str(port))
+        return False
 
     def poll_QoS(self):
         """
         Gets the latest camera/object metrics from the QoS server.
         """
         #TODO: handle errors communicating to server
-        self.QoS_server.send(b'update')
         response = self.QoS_server.recv(self.BUFFER_SIZE)
         pr = qosupdate.parse(response.decode('utf-8').splitlines(True))
         timestamp = pr[0]
         return pr[1]
+
+    def reply_to_QoS(self):
+        """
+        Send a response back to the QoS server, so it knows we received correct
+        data and that we are ready to receive more updates.
+        """
+        # TODO: handle error sending reply
+        reply = qosupdate.prepare(self.feeds)
+        self.QoS_server.send(reply)
 
     def update_feeds(self, vfeeds):
         """
@@ -146,25 +158,23 @@ class VidControl():
         5. archive video if necessary
         6. repeat
         """
-        # TODO: I would like this loop to be able to still run and monitor the
-        # processes while the server isn't running. Especially to check and
-        # see if the ffserver/ffmpeg processes are still running. It would be
-        # nice if we could either recover or cleanup after a camera feed goes
-        # offline or a child process crashes.
         log('Video Delivery server running at ' + settings.CURRENT_IP)
-        #TODO: connect here
+        if not self.connect_QoS():
+            return
         while True:
             try:
                 latest_feeds = self.poll_QoS()
             except socket.error as ex:
-                #TODO: handle error with polling QoS
-                print('lost connection to server')
-                # raise ex
-                break
+                log(ex)
+                print('lost connection to QoS server')
+                if not self.connect_QoS():
+                    break
+                else:
+                    continue
                 
             self.update_feeds(latest_feeds)
             # TODO: QoS and archiving
-            time.sleep(self.POLL_TIME)
+            self.reply_to_QoS()
 
     def killserver(self):
         """
@@ -175,8 +185,12 @@ class VidControl():
             # TODO: handle spurious errors when killing feeds
         self.QoS_server.close()
 
-if __name__ == '__main__':
-    # root directory is different based on which computer I'm developing on
+def change_working_directory():
+    """
+    Change the working directory to the first valid directory given in the
+    settings.ROOT_DIR list. If none of those is a valid directory, the program
+    defaults to running in the current working directory.
+    """
     for d in settings.ROOT_DIR:
         try:
             os.chdir(d)
@@ -184,11 +198,13 @@ if __name__ == '__main__':
             continue
         else:
             break
-    # Fall back to current directory if no root given
 
+if __name__ == '__main__':
+    change_working_directory()
     try:
         vc = VidControl()
         vc.runserver()
-    except KeyboardInterrupt:
+    except Exception as ex:
+        log('Fatal error: ' + str(ex))
         vc.killserver()
         log('Video Delivery server shutdown normally')
