@@ -32,7 +32,7 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
     ++handlers;
     handlerMutex.unlock();
     
-    std::cout<<"in handler fucntion\n";
+    std::cout<<"[RH] in handler fucntion\n";
     //enter the tcp connection pointer into the map
     connections[tcp_connection->socket().remote_endpoint()] = tcp_connection;
     tcp_connection->releaseSocket();
@@ -47,25 +47,25 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 	size_t count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(5), error);
 	connections[connEP]->releaseSocket();
 
-	std::cout<<"data read(" << count << "), socket released\n";
+	std::cout<<"[RH] data read(" << count << "), socket released\n";
 
 	//catch errors to tell when the connection closes;
 	if(error == boost::asio::error::eof){
-		std::cout<<"EOF\n";
+		std::cout<<"[RH] EOF\n";
         //die gracefully, think i can do it by calling the cleanup connection method
         	cleanupConn(connEP);
         return;
 		
 	}
 	if(error == boost::asio::error::operation_aborted){
-		std::cout<<"aborted..\n";
+		std::cout<<"[RH] aborted..\n";
 		//die gracefully
 		cleanupConn(connEP);
 
         return;
 	}
 
-	std::cout<<"made it past the error traps...\n";
+	std::cout<<"[RH] made it past the error traps...\n";
 	
 	//get the total number of bytes to read
 	char* arr = new char[5];
@@ -76,7 +76,7 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 	//iter++;
 	for(int i = 0; i < 5; ++i){
 		arr[i] = *iter;
-        printf("hex: %02X\n", *iter);
+        printf("[RH] hex: %02X\n", *iter);
 		//std::cout<<std::hex<<arr[i]<<"\n";
 		iter++;
 	}
@@ -93,13 +93,13 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 
 		//catch errors to tell when the connection closes;
 		if(error == boost::asio::error::eof){
-			std::cout<<"EOF\n";
+			std::cout<<"[RH] EOF\n";
 			//die gracefully;
 			cleanupConn(connEP);
 			return;
 		}
 		if(error == boost::asio::error::operation_aborted){
-			std::cout<<"aborted..\n";
+			std::cout<<"[RH] aborted..\n";
             		//die gracefully 
 			cleanupConn(connEP);
 			return;
@@ -184,13 +184,13 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
         objects->readUnlock();
         delete[] objArr;	
 
-        printf("Color: \n");
+        printf("[RH] Color: \n");
         ObjIt--;
         for (int i = 0; i < (*ObjIt)->getColorsize(); ++i){
             printf("%02X ", (*ObjIt)->getColor()[i]);
             fflush(stdout);
         }
-        printf("\nData being sent:\n");
+        printf("\n[RH] Data being sent:\n");
         for (int i = 0; i < byte_ptr->size; ++i){
             printf("%02X ", (unsigned)byte_ptr->array[i]);
             fflush(stdout);
@@ -208,14 +208,14 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
     }
 	
     //spawn a thread to listen on the socket and return the function
-    std::cout<<"launching threadd...\n";
+    std::cout<<"[RH] launching threadd...\n";
     boost::thread connThread(&RobotHandler::threaded_listen, this, connEP);
 
 }
 
 void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         
-	std::cout<<"Robot socket is being handled\n";
+	std::cout<<"[RH] Robot socket is being handled\n";
 
 	//declare loop  varibles
 	bool connected = true;
@@ -224,9 +224,9 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 	size_t count = 0;
 
 	//main listening loop for a server connection
-	std::cout<<"initiating loop\n";
+	std::cout<<"[RH] initiating loop\n";
 	while(connected){
-		std::cout<<"looping...\n";
+		std::cout<<"[RH] looping...\n";
 		//pull data from socket and release
 		//indexOfChar = boost::asio::read_until(connections[connEP]->socket(), inputBuffer, '\n', error);		
 			
@@ -236,34 +236,34 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(5), error);
 		connections[connEP]->releaseSocket();
 
-		std::cout<<"data read, socket released\n";
+		std::cout<<"[RH] data read, socket released\n";
 
 		//catch errors to tell when the connection closes;
 		if(error == boost::asio::error::eof){
-			std::cout<<"EOF\n";
+			std::cout<<"[RH] EOF\n";
 			connected = false;
 			continue;
 		}
 		if(error == boost::asio::error::operation_aborted){
-			std::cout<<"aborted..\n";
+			std::cout<<"[RH] aborted..\n";
 			connected = false;
 			continue;
 		}
 
-		std::cout<<"made it past the error traps...\n";
+		std::cout<<"[RH] made it past the error traps...\n";
 		
 		//get the total number of bytes to read
 		char* arr = new char[5];
 		boost::asio::streambuf::const_buffers_type data = inputBuffer.data();
 		boost::asio::buffers_iterator<boost::asio::streambuf::const_buffers_type> iter = boost::asio::buffers_begin(data);
 
-        std::cout << "iterating over data\n";
+        std::cout << "[RH] iterating over data\n";
 
 		//int type = *iter;
 		//iter++;
 		for(int i = 0; i < 5; ++i){
 			arr[i] = *iter;
-            printf("hex: %02X\n", *iter);
+            printf("[RH] hex: %02X\n", *iter);
 			//std::cout<<std::hex<<arr[i]<<"\n";
 			iter++;
 		}
@@ -280,19 +280,19 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 
 			//catch errors to tell when the connection closes;
 			if(error == boost::asio::error::eof){
-				std::cout<<"EOF\n";
+				std::cout<<"[RH] EOF\n";
 				connected = false;
 				continue;
 			}
 			if(error == boost::asio::error::operation_aborted){
-				std::cout<<"aborted..\n";
+				std::cout<<"[RH] aborted..\n";
 				connected = false;
 				continue;
 			}
 		}
 
 
-		std::cout<<"Recieved a message"<<std::endl;
+		std::cout<<"[RH] Recieved a message"<<std::endl;
 		//reset all the varibles with the new data
 		delete[] arr;
 		arr = new char[total];
@@ -308,7 +308,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		inputBuffer.consume((size_t)total);
 
 		//convert the char array to a 
-		std::cout<<"converting message to structs"<<std::endl;
+		std::cout<<"[RH] converting message to structs"<<std::endl;
 	
 		readReturn* message = new readReturn;
 		if(read_data((void*)arr, message) < 0){
@@ -322,7 +322,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		switch(message->type){
 			case P_ROBOT_UPDATE:
 			{	
-				std::cout<<"the message is an update"<<std::endl;
+				std::cout<<"[RH] the message is an update"<<std::endl;
 				//initilize stuff
 				Vector_ts<Robot*>::iterator it;
 				robotUpdate* robotData = new robotUpdate[message->size];
@@ -349,17 +349,17 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                                 msg_ss << robotData[i].objects[j] << ";" << robotData[i].qualities[j] << ";";
                             }
                             msg_ss << "\n";
-                            std::cout << "Calling write() on message \"" << msg_ss.str() << "\"\n";
+                            std::cout << "[RH] Calling write() on message \"" << msg_ss.str() << "\"\n";
                             vidHandler->write(msg_ss.str());
 							break;
 							///std::cout <<(*it)->getEndpoint() << " looking for: "<<connEP << std::endl;
 			    				//std::cout <<(*it)->getRID() << " looking for: " << robotData[i].RID << std::endl;
 						} else {
-                            std::cout << "These are not the droids you're looking for\n";
-                            std::cout <<(*it)->getEndpoint() << " looking for: "<<connEP << std::endl;
-                            std::cout <<(*it)->getRID() << " looking for: " << robotData[i].RID << std::endl;
+                            std::cout << "[RH] These are not the droids you're looking for\n";
+                            std::cout << "[RH]  " << (*it)->getEndpoint() << " looking for: "<<connEP << std::endl;
+                            std::cout << "[RH]  " << (*it)->getRID() << " looking for: " << robotData[i].RID << std::endl;
                             if ((*it)->getEndpoint() != connEP){
-                                std::cout << "WTF? Its from a different connection?(" << (*it)->getEndpoint() << " vs. " << connEP << ")\n";
+                                std::cout << "[RH] WTF? Its from a different connection?(" << (*it)->getEndpoint() << " vs. " << connEP << ")\n";
                             }
                         }
 					}
@@ -431,7 +431,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 			break;
 			default:
 			//its broken if it gets here, need to figure out what to do.
-			std::cerr<<"message was not of correct type\ntype was: "<<message->type<<std::endl;
+			std::cerr<<"[RH] message was not of correct type\n[RH] type was: "<<message->type<<std::endl;
             break;
 		}
 
@@ -457,12 +457,12 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
 
 	//loop over the robot vector and remove the elements with the 
 	//corresponding connection's endpoint
-	std::cout<<"want endpoint: "<<connEP<<std::endl;
+	std::cout<<"[RH] want endpoint: "<<connEP<<std::endl;
 	bool loop = true;
 	while(loop){
 		loop = false;
 		for(it = robots->begin(); it < robots->end(); ++it){
-			std::cout<<"have endpoint: " << (*it)->getEndpoint() << std::endl;
+			std::cout<<"[RH] have endpoint: " << (*it)->getEndpoint() << std::endl;
 			if ((*it)->getEndpoint() == connEP){
                 std::stringstream msg_ss;
                 msg_ss << "DELETE " << (*it)->getVideoURL() << "\n";
@@ -485,7 +485,7 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
 			connections.erase(iter);
 			break;
 		}
-		std::cerr<<"Robot Handler: couldn't find connection to delete\n";
+		std::cerr<<"[RH] Robot Handler: couldn't find connection to delete\n";
 	}
 
     handlerMutex.lock();

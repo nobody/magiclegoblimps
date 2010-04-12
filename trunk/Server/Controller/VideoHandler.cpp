@@ -22,7 +22,7 @@ void VideoHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection) {
         // there is another connection already
         tcp_connection->socket().close();
         tcp_connection->releaseSocket();
-        std::cerr << "VideoHandler only supports one connection\n";
+        std::cerr << "[VH] VideoHandler only supports one connection\n";
         return;
     }
     //boost::thread connThread(&VideoHandler::threaded_on_connect, this, tcp_connection);
@@ -109,7 +109,7 @@ void VideoHandler::read_handler(const boost::system::error_code& error,  std::si
     tcp::socket &sock = conn_->socket();;
 
 
-    std::cout << "VideoHandler read " << bytes_transferred << " bytes from client " << sock.remote_endpoint().address().to_string() << ":" << sock.remote_endpoint().port() << "\n";
+    std::cout << "[VH] VideoHandler read " << bytes_transferred << " bytes from client " << sock.remote_endpoint().address().to_string() << ":" << sock.remote_endpoint().port() << "\n";
     std::cout.flush();
 
     if (error == boost::asio::error::eof){
@@ -124,7 +124,7 @@ void VideoHandler::read_handler(const boost::system::error_code& error,  std::si
     std::string s(read_message_.data(bytes_transferred));
     read_message_.consume(bytes_transferred);
 
-    std::cout << "Got string \"" << s << "\"";
+    std::cout << "[VH] Got string \"" << s << "\"";
     std::cout.flush();
 
 
@@ -137,11 +137,11 @@ void VideoHandler::read_handler(const boost::system::error_code& error,  std::si
 }
 
 void VideoHandler::write_handler(const boost::system::error_code& error,  std::size_t bytes_transferred) {
-    std::cout << "VideoHandler wrote " << bytes_transferred << " bytes to a client\n";
+    std::cout << "[VH] VideoHandler wrote " << bytes_transferred << " bytes to a client\n";
     std::cout.flush();
     if (!error) {                                                                            
         std::string msg(write_queue_.front());
-        std::cout << "Successfully wrote \"" << msg << "\" to the socket.\n";
+        std::cout << "[VH] Successfully wrote \"" << msg << "\" to the socket.\n";
 
         write_queue_.pop_front();
         //while(!write_queue_.empty()){
@@ -177,7 +177,7 @@ void VideoHandler::write(std::string msg) {
         conn_->socket().get_io_service().post(boost::bind(&VideoHandler::internal_write, this, msg));
         conn_->releaseSocket();
     } else {
-        std::cout << "No video client to write to\n";
+        std::cout << "[VH] No video client to write to\n";
     }
 }
 
@@ -192,7 +192,7 @@ void VideoHandler::close() {
 void VideoHandler::do_close() {
     tcp::socket &sock = conn_->socket();;
 
-    std::cout << "Closing socket to " << sock.remote_endpoint().address().to_string() << ":" << sock.remote_endpoint().port() << "\n";
+    std::cout << "[VH] Closing socket to " << sock.remote_endpoint().address().to_string() << ":" << sock.remote_endpoint().port() << "\n";
     sock.close();
 
     conn_->releaseSocket();
