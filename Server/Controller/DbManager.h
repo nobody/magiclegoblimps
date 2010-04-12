@@ -54,6 +54,7 @@ class DbManager {
         static const char* db_pass;
         static const char* db_database;
         static const char* tbl_requests;
+        static const char* tbl_cameras;
 
         sql::mysql::MySQL_Driver *driver;
         Vector_ts<Object*>* objs_;
