@@ -17,7 +17,6 @@ AdminHandler::AdminHandler(){
 AdminHandler::AdminHandler(RobotHandler* robotControl_, Vector_ts<Robot*>* robots_): 
 robotControl(robotControl_), robots(robots_)
 {
-
 }
 
 AdminHandler::~AdminHandler(){
@@ -38,15 +37,15 @@ void AdminHandler::threaded_on_connect(boost::asio::ip::tcp::endpoint conn){
     TcpServer::TcpConnection::pointer tcp_connection(connections[conn]);
     //tcp::socket &sock = tcp_connection->socket();
 
-    boost::shared_ptr<session> sess(new session(tcp_connection, robots));
+    boost::shared_ptr<session> sess(new session(tcp_connection, robots, robotControl));
     sessions.push_back(sess);
     sess->start();
 
 
 }
 
-AdminHandler::session::session(TcpServer::TcpConnection::pointer tcp_, Vector_ts<Robot*>* robots_) 
-    : conn_(tcp_), robots(robots_)
+AdminHandler::session::session(TcpServer::TcpConnection::pointer tcp_, Vector_ts<Robot*>* robots_, RobotHandler* robotHandler) 
+    : conn_(tcp_), robots(robots_), robotControl(robotHandler)
 {
 }
 
@@ -108,16 +107,144 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
         return;
 
     }
-    /*
+
     command cmd;
     Robot* subject;
     
-    //you should initialize these things here
-    //parse the command
+    //parse the command id
+    std::string token = s.substr(0, s.find('$', 0));
+    s =  s.substr( s.find('$', 0), std::string::npos);
 
-    robotControl->sendCommand(&cmd, subject);
-*/
+    int switchvar = atoi(token.c_str());
 
+    //switch on the command
+    switch(switchvar){
+        case P_CMD_FWD:
+        {
+            
+            cmd.cmd = P_CMD_FWD;
+            
+            token = s.substr(0, s.find('$', 0));
+            s = s.substr(s.find('$', 0), std::string::npos);
+
+            int robotid = atoi(token.c_str());
+
+            robots->readLock();
+            Vector_ts<Robot*>::iterator it;
+
+            for(it = robots->begin(); it != robots->end(); ++it){
+                (*it)->lock();
+                if((*it)->getGlobalID() == robotid){
+                    subject = (*it);
+                    break;
+                }
+                (*it)->unlock();
+            }
+
+            cmd.RID = subject->getRID();
+            robotControl->sendCommand(&cmd, subject->getEndpoint());
+            (*it)->unlock();
+        }
+        break;
+
+        case P_CMD_LFT:
+        {
+            cmd.cmd = P_CMD_LFT;
+            
+            token = s.substr(0, s.find('$', 0));
+            s = s.substr(s.find('$', 0), std::string::npos);
+
+            int robotid = atoi(token.c_str());
+
+            robots->readLock();
+            Vector_ts<Robot*>::iterator it;
+
+            for(it = robots->begin(); it != robots->end(); ++it){
+                (*it)->lock();
+                if((*it)->getGlobalID() == robotid){
+                    subject = (*it);
+                    break;
+                }
+                (*it)->unlock();
+            }
+            
+            cmd.RID = subject->getRID();
+            robotControl->sendCommand(&cmd, subject->getEndpoint());
+            (*it)->unlock();
+        }
+        break;
+
+        case P_CMD_RGHT:
+        {
+            cmd.cmd = P_CMD_LFT;
+            
+            token = s.substr(0, s.find('$', 0));
+            s = s.substr(s.find('$', 0), std::string::npos);
+
+            int robotid = atoi(token.c_str());
+
+            robots->readLock();
+            Vector_ts<Robot*>::iterator it;
+
+            for(it = robots->begin(); it != robots->end(); ++it){
+                (*it)->lock();
+                if((*it)->getGlobalID() == robotid){
+                    subject = (*it);
+                    break;
+                }
+                (*it)->unlock();
+            }
+            
+            cmd.RID = subject->getRID();
+            robotControl->sendCommand(&cmd, subject->getEndpoint());
+            (*it)->unlock();
+        }
+        break;
+
+        case P_CMD_WEST:
+
+        break;
+        case P_CMD_MVTO:
+
+        break;
+        case P_CMD_CAMROT:
+        {
+            cmd.cmd = P_CMD_LFT;
+            
+            token = s.substr(0, s.find('$', 0));
+            s = s.substr(s.find('$', 0), std::string::npos);
+
+            int robotid = atoi(token.c_str());
+
+            robots->readLock();
+            Vector_ts<Robot*>::iterator it;
+
+            for(it = robots->begin(); it != robots->end(); ++it){
+                (*it)->lock();
+                if((*it)->getGlobalID() == robotid){
+                    subject = (*it);
+                    break;
+                }
+                (*it)->unlock();
+            }
+            
+            cmd.RID = subject->getRID();
+
+            token = s.substr(0, s.find('$', 0));
+            s = s.substr(s.find('$', 0), std::string::npos);
+
+            cmd.arg = atoi(token.c_str());
+
+
+            robotControl->sendCommand(&cmd, subject->getEndpoint());
+            (*it)->unlock();
+        }
+        break;
+        
+        default:
+        break;
+    }
+    
     boost::asio::async_read_until(sock, read_message_.buffer(), '\n', 
         boost::bind(&AdminHandler::session::read_handler, this, 
             boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));

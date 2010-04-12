@@ -217,7 +217,7 @@
 
             case P_COMMAND:
             {
-                command* data = (command*)data_;
+               command* data = (command*)data_;
                 short size = 3*sizeof(int);
                 for(int i = 0; i < number; ++i){
             
@@ -235,8 +235,8 @@
                         structs[i][j] = ref[j-2];
                     }
 
-                    //push command
-                    ref = (char*)&(data[i].command);
+                    //push.cmd
+                    ref = (char*)&(data[i].cmd);
                     for(int j = 6; j <10; ++j){
                         structs[i][j] = ref[j-6];
                     }
@@ -566,7 +566,7 @@ int readAssignment(void* array, assignment* &ass){
     return overall_size;
 }
 
-int readCommand(void* array, command* &com){
+int readCommand(void* array, command* com){
 
     char* arr = (char*)array;
     char* current = arr+5;
@@ -584,7 +584,7 @@ int readCommand(void* array, command* &com){
     for (int i = 0; i < overall_size; ++i) {
         short size;
         int rid;
-        int command;
+        int cmd;
         int args;
         
         // retreive size
@@ -598,8 +598,8 @@ int readCommand(void* array, command* &com){
             ref[j] = current[0]; current++;
         }
 
-        // retrieve command
-        ref = (char*)&command;
+        // retrieve.cmd
+        ref = (char*)cmd;
         for (int j = 0; j < (int)sizeof(int); ++j) {
             ref[j] = current[0]; current++;
         }
@@ -612,7 +612,7 @@ int readCommand(void* array, command* &com){
 
         //initallize struct
         com[i].RID = rid;
-        com[i].command = command;
+        com[i].cmd = cmd;
         com[i].arg = args;
     }
     return overall_size;
