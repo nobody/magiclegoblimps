@@ -62,12 +62,18 @@ class VidControl():
 
     def poll_QoS(self):
         """
-        Gets the latest camera/object metrics from the QoS server.
+        Gets the latest camera/object metrics from the QoS server. This
+        function returns a list of VidFeed objects, or None if the input data
+        was invalid.
         """
-        #TODO: handle errors communicating to server
         response = self.QoS_server.recv(self.BUFFER_SIZE)
-        pr = qosupdate.parse(response.decode('utf-8').splitlines(True))
-        timestamp = pr[0]
+        try:
+            lines = response.decode('utf-8').splitlines(True)
+            pr = qosupdate.parse(lines)
+        except Exception as ex:
+            log('Invalid data received from server: ' + str(ex))
+            return None
+        timestamp = pr[0] # we are ignoring this for now
         return pr[1]
 
     def reply_to_QoS(self):
@@ -87,6 +93,9 @@ class VidControl():
         1. Find and kill feeds in self.feeds that are not in vfeeds
         2. Find and launch feeds not in self.feeds that are in vfeeds
         """
+        if vfeeds is None:
+            return
+
         for f in self.feeds:
             if not f in vfeeds: # kill feed
                 self.kill_feed(f)
@@ -165,8 +174,7 @@ class VidControl():
             try:
                 latest_feeds = self.poll_QoS()
             except socket.error as ex:
-                log(ex)
-                print('lost connection to QoS server')
+                log('Lost connection to QoS server: ' + str(ex))
                 if not self.connect_QoS():
                     break
                 else:
@@ -206,5 +214,8 @@ if __name__ == '__main__':
         vc.runserver()
     except Exception as ex:
         log('Fatal error: ' + str(ex))
+        if settings.DEBUG:
+            raise ex
+    finally:
         vc.killserver()
-        log('Video Delivery server shutdown normally')
+    log('Video Delivery server shutdown normally')
