@@ -42,13 +42,14 @@ class AdminHandler : public TcpServer::ConnHandler {
 
         class session {
             public:
-                session(TcpServer::TcpConnection::pointer);
+                session(TcpServer::TcpConnection::pointer, Vector_ts<Robot*>*);
                 ~session();
 
                 void start();
 
             private:
                 TcpServer::TcpConnection::pointer conn_;
+                Vector_ts<Robot*>* robots;
                 message read_message_;
 
                 void write_handler(const boost::system::error_code& error,  std::size_t bytes_transferred);
