@@ -13,6 +13,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
+#include <cstdlib>
 
 #include "TcpServer.h"
 #include "message.h"
@@ -42,7 +43,7 @@ class AdminHandler : public TcpServer::ConnHandler {
 
         class session {
             public:
-                session(TcpServer::TcpConnection::pointer, Vector_ts<Robot*>*);
+                session(TcpServer::TcpConnection::pointer, Vector_ts<Robot*>*, RobotHandler* );
                 ~session();
 
                 void start();
@@ -50,6 +51,7 @@ class AdminHandler : public TcpServer::ConnHandler {
             private:
                 TcpServer::TcpConnection::pointer conn_;
                 Vector_ts<Robot*>* robots;
+                RobotHandler* robotControl;
                 message read_message_;
 
                 void write_handler(const boost::system::error_code& error,  std::size_t bytes_transferred);
