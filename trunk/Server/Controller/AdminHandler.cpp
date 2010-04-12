@@ -38,15 +38,15 @@ void AdminHandler::threaded_on_connect(boost::asio::ip::tcp::endpoint conn){
     TcpServer::TcpConnection::pointer tcp_connection(connections[conn]);
     //tcp::socket &sock = tcp_connection->socket();
 
-    boost::shared_ptr<session> sess(new session(tcp_connection));
+    boost::shared_ptr<session> sess(new session(tcp_connection, robots));
     sessions.push_back(sess);
     sess->start();
 
 
 }
 
-AdminHandler::session::session(TcpServer::TcpConnection::pointer tcp_) 
-    : conn_(tcp_)
+AdminHandler::session::session(TcpServer::TcpConnection::pointer tcp_, Vector_ts<Robot*>* robots_) 
+    : conn_(tcp_), robots(robots_)
 {
 }
 
