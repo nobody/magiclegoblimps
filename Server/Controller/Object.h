@@ -71,11 +71,20 @@ class Object {
             return objID_ < obj.getOID();
         }
 
+        void lock(){
+            mutex.lock();
+        }
+
+        void unlock(){
+            mutex.unlock();
+        }
+
     private:
         int objID_;
         std::string name_;
         char* color_;
         int colorsize_;
+        boost::mutex mutex;
 
 };
 
