@@ -29,9 +29,12 @@
 #define P_CMD_FWD 1
 #define P_CMD_LFT  2
 #define P_CMD_RGHT 3
-#define P_CMD_WEST 4
-#define P_CMD_MVTO 5
-#define P_CMD_CAMROT 6
+#define P_CMD_CAMROT 4
+#define P_CMD_DEL_OBJ 5
+#define P_CMD_RLS_RBT 6
+
+#define P_CMD_WEST 100
+#define P_CMD_MVTO 200
 
 //macros
 #define P_HIGH(x) (x >> 16) & 0x0000ffff

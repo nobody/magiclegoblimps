@@ -599,7 +599,7 @@ int readCommand(void* array, command* com){
         }
 
         // retrieve.cmd
-        ref = (char*)cmd;
+        ref = (char*)&cmd;
         for (int j = 0; j < (int)sizeof(int); ++j) {
             ref[j] = current[0]; current++;
         }

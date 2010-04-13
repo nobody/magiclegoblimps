@@ -38,16 +38,18 @@ controller::controller(boost::asio::io_service& io_service)
         objs = new Vector_ts<Object*>();
     }
 
-    db = new DbManager(objs);
+    used_robots = new Vector_ts<Robot*>();
 
-    admin = new AdminHandler;
-    adminSrv = new TcpServer(io_service, 10000, admin);
+    db = new DbManager(objs);
 
     vids = new VideoHandler(robots, objs);
     vidsSrv = new TcpServer(io_service, 20000, vids);
 
     robo = new RobotHandler(robots, objs, vids);
     roboSrv = new TcpServer(io_service, 9999, robo);
+
+    admin = new AdminHandler(robo, robots, used_robots, objs);
+    adminSrv = new TcpServer(io_service, 10000, admin);
 
     boost::thread qosThread(&controller::controllerThread, this);
 }
@@ -67,6 +69,9 @@ controller::~controller() {
 
     delete robofile;
     delete objfile;
+
+    delete objs;
+    delete used_robots;
 }
 
 

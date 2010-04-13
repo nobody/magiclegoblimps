@@ -24,7 +24,7 @@
 class AdminHandler : public TcpServer::ConnHandler {
     public:
         AdminHandler();
-        AdminHandler(RobotHandler* robotControl_, Vector_ts<Robot*>* robots_);
+        AdminHandler(RobotHandler* robotControl_, Vector_ts<Robot*>* robots_, Vector_ts<Robot*>* inUse_, Vector_ts<Object*>* objects_);
         virtual ~AdminHandler();
 
         typedef std::map<boost::asio::ip::tcp::endpoint, TcpServer::TcpConnection::pointer> conn_map;
@@ -40,10 +40,12 @@ class AdminHandler : public TcpServer::ConnHandler {
 
         RobotHandler* robotControl;
         Vector_ts<Robot*>* robots;
+        Vector_ts<Robot*>* inUse;
+        Vector_ts<Object*>* objects;
 
         class session {
             public:
-                session(TcpServer::TcpConnection::pointer, Vector_ts<Robot*>*, RobotHandler* );
+                session(TcpServer::TcpConnection::pointer, Vector_ts<Robot*>*, Vector_ts<Robot*>*, RobotHandler*, Vector_ts<Object*>* );
                 ~session();
 
                 void start();
@@ -51,6 +53,8 @@ class AdminHandler : public TcpServer::ConnHandler {
             private:
                 TcpServer::TcpConnection::pointer conn_;
                 Vector_ts<Robot*>* robots;
+                Vector_ts<Robot*>* inUse;
+                Vector_ts<Object*>* objects;
                 RobotHandler* robotControl;
                 message read_message_;
 
