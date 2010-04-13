@@ -58,6 +58,13 @@ public:
         else
             return false;
     }
+    inline bool operator ==(Robot& aRobot) const{
+        if(robotEP ==  aRobot.getEndpoint()  && RID == aRobot.getRID())
+            return true;
+        else
+            return false;
+            
+    }
     
     //the vector that holds the object ids of objects in view
     std::map<int, int>* list;

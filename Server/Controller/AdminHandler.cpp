@@ -14,8 +14,8 @@ AdminHandler::conn_map AdminHandler::connections;
 AdminHandler::AdminHandler(){
 }
 
-AdminHandler::AdminHandler(RobotHandler* robotControl_, Vector_ts<Robot*>* robots_): 
-robotControl(robotControl_), robots(robots_)
+AdminHandler::AdminHandler(RobotHandler* robotControl_, Vector_ts<Robot*>* robots_, Vector_ts<Robot*>* inUse_, Vector_ts<Object*>* objects_): 
+robotControl(robotControl_), robots(robots_), inUse(inUse_), objects(objects_)
 {
 }
 
@@ -37,15 +37,15 @@ void AdminHandler::threaded_on_connect(boost::asio::ip::tcp::endpoint conn){
     TcpServer::TcpConnection::pointer tcp_connection(connections[conn]);
     //tcp::socket &sock = tcp_connection->socket();
 
-    boost::shared_ptr<session> sess(new session(tcp_connection, robots, robotControl));
+    boost::shared_ptr<session> sess(new session(tcp_connection, robots, inUse,  robotControl, objects));
     sessions.push_back(sess);
     sess->start();
 
 
 }
 
-AdminHandler::session::session(TcpServer::TcpConnection::pointer tcp_, Vector_ts<Robot*>* robots_, RobotHandler* robotHandler) 
-    : conn_(tcp_), robots(robots_), robotControl(robotHandler)
+AdminHandler::session::session(TcpServer::TcpConnection::pointer tcp_, Vector_ts<Robot*>* robots_, Vector_ts<Robot*>* inUse_,RobotHandler* robotHandler, Vector_ts<Object*>* objects_) 
+    : conn_(tcp_), robots(robots_), inUse(inUse_), objects(objects_), robotControl(robotHandler)
 {
 }
 
@@ -116,7 +116,7 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
     s =  s.substr( s.find('$', 0), std::string::npos);
 
     int switchvar = atoi(token.c_str());
-
+    bool isUsed = false;
     //switch on the command
     switch(switchvar){
         case P_CMD_FWD:
@@ -131,6 +131,7 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
 
             robots->readLock();
             Vector_ts<Robot*>::iterator it;
+            Vector_ts<Robot*>::iterator used_it;
 
             for(it = robots->begin(); it != robots->end(); ++it){
                 (*it)->lock();
@@ -140,6 +141,19 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                 }
                 (*it)->unlock();
             }
+
+
+            inUse->lock();
+                
+            for(used_it = inUse->begin(); used_it != inUse->end(); ++used_it){
+                if((*used_it) == subject)
+                     isUsed = true;
+            }
+
+
+            if(!isUsed)
+                inUse->push_back(subject);
+            inUse->unlock();
 
             cmd.RID = subject->getRID();
             robotControl->sendCommand(&cmd, subject->getEndpoint());
@@ -158,6 +172,7 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
 
             robots->readLock();
             Vector_ts<Robot*>::iterator it;
+            Vector_ts<Robot*>::iterator used_it;
 
             for(it = robots->begin(); it != robots->end(); ++it){
                 (*it)->lock();
@@ -167,6 +182,19 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                 }
                 (*it)->unlock();
             }
+
+
+            inUse->lock();
+                
+            for(used_it = inUse->begin(); used_it != inUse->end(); ++used_it){
+                if((*used_it) == subject)
+                     isUsed = true;
+            }
+
+
+            if(!isUsed)
+                inUse->push_back(subject);
+            inUse->unlock();
             
             cmd.RID = subject->getRID();
             robotControl->sendCommand(&cmd, subject->getEndpoint());
@@ -185,6 +213,8 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
 
             robots->readLock();
             Vector_ts<Robot*>::iterator it;
+            Vector_ts<Robot*>::iterator used_it;
+
 
             for(it = robots->begin(); it != robots->end(); ++it){
                 (*it)->lock();
@@ -194,6 +224,18 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                 }
                 (*it)->unlock();
             }
+
+            inUse->lock();
+                
+            for(used_it = inUse->begin(); used_it != inUse->end(); ++used_it){
+                if((*used_it) == subject)
+                     isUsed = true;
+            }
+
+
+            if(!isUsed)
+                inUse->push_back(subject);
+            inUse->unlock();
             
             cmd.RID = subject->getRID();
             robotControl->sendCommand(&cmd, subject->getEndpoint());
@@ -218,6 +260,7 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
 
             robots->readLock();
             Vector_ts<Robot*>::iterator it;
+            Vector_ts<Robot*>::iterator used_it;
 
             for(it = robots->begin(); it != robots->end(); ++it){
                 (*it)->lock();
@@ -228,6 +271,20 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                 (*it)->unlock();
             }
             
+
+            inUse->lock();
+                
+            for(used_it = inUse->begin(); used_it != inUse->end(); ++used_it){
+                if((*used_it) == subject)
+                     isUsed = true;
+            }
+
+
+            if(!isUsed)
+                inUse->push_back(subject);
+            inUse->unlock();
+
+
             cmd.RID = subject->getRID();
 
             token = s.substr(0, s.find('$', 0));
@@ -240,10 +297,56 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
             (*it)->unlock();
         }
         break;
+        case P_CMD_RLS_RBT:
+        {
+        
+            token = s.substr(0, s.find('$', 0));
+            s = s.substr(s.find('$', 0), std::string::npos);
+
+            int robotid = atoi(token.c_str());
+
+            Vector_ts<Robot*>::iterator it;
+
+            inUse->lock();
+            for(it = inUse->begin(); it != inUse->end(); ++it){
+                if((*it)->getGlobalID() == robotid){    
+                    inUse->erase(it);
+                    break;
+                }
+            }
+            inUse->unlock();
+
+        }
+        break;
+
+        case P_CMD_DEL_OBJ:
+        {
+            token = s.substr(0, s.find('$', 0));
+            s = s.substr(s.find('$', 0), std::string::npos);
+
+            int objID = atoi(token.c_str());
+
+            Vector_ts<Object*>::iterator it;
+
+            objects->lock();
+
+            for(it = objects->begin(); it != objects->end(); ++it){
+                if((*it)->getOID() == objID){
+                    objects->erase(it);
+                    break;
+                }
+            }
+
+            objects->unlock();
+
+        }
+        break;
         
         default:
         break;
     }
+
+    robots->readUnlock();
     
     boost::asio::async_read_until(sock, read_message_.buffer(), '\n', 
         boost::bind(&AdminHandler::session::read_handler, this, 

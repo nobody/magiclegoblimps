@@ -11,6 +11,7 @@
 
 #include "Point.h"
 #include "Robot.h"
+#include <boost/thread/mutex.hpp>
 
 class Object {
     public:

@@ -55,6 +55,7 @@ class controller {
 
         Vector_ts<Robot*>* robots;
         Vector_ts<Object*>* objs;
+        Vector_ts<Robot*>* used_robots;
 
         static DataFile *robofile;
         static DataFile *objfile;
