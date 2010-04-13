@@ -10,7 +10,6 @@
 
 #include "controller.h"
 
-DataFile* controller::robofile;
 DataFile* controller::objfile;
 
 controller::controller(boost::asio::io_service& io_service) 
@@ -20,19 +19,12 @@ controller::controller(boost::asio::io_service& io_service)
         
 
     // check if static variables are NULL and initialize them if necessary
-    if (!robofile)
-        robofile = new DataFile("robots.dat",  DataFile::ROBOT);
     if(!objfile)
         objfile  = new DataFile("objects.dat", DataFile::OBJECT);
     
-    //robots = new Vector_ts<Robot*>();
-    robots = (Vector_ts<Robot* >*) robofile->read();
+    robots = new Vector_ts<Robot*>();
     objs   = (Vector_ts<Object*>*)  objfile->read();
     //objs = new Vector_ts<Object*>();
-    if (!robots) {
-        std::cerr << "!!WARNING!! Robot data file unreadable. Creating new vector\n";
-        robots = new Vector_ts<Robot*>();
-    }
     if (!objs) {
         std::cerr << "!!WARNING!! Object data file unreadable. Creating new vector\n";
         objs = new Vector_ts<Object*>();
@@ -41,11 +33,12 @@ controller::controller(boost::asio::io_service& io_service)
     used_robots = new Vector_ts<Robot*>();
 
     db = new DbManager(objs);
+    db->truncateCameras();
 
     vids = new VideoHandler(robots, objs);
     vidsSrv = new TcpServer(io_service, 20000, vids);
 
-    robo = new RobotHandler(robots, objs, vids);
+    robo = new RobotHandler(robots, objs, vids, db);
     roboSrv = new TcpServer(io_service, 9999, robo);
 
     admin = new AdminHandler(robo, robots, used_robots, objs);
@@ -67,31 +60,17 @@ controller::~controller() {
     delete vids;
     delete vidsSrv;
 
-    delete robofile;
     delete objfile;
 
     delete objs;
     delete used_robots;
 }
 
-
-int controller::writeRobots(Vector_ts<Robot*>* robots) {
-    if (robofile == NULL)
-        return -1;
-
-    robots->lock();
-    int ret = robofile->write(robots);
-    robots->unlock();
-
-    return ret;
-}
 int controller::writeObjects(Vector_ts<Object*>* objects) {
     if (objfile == NULL)
         return -1;
 
-    objects->lock();
     int ret = objfile->write(objects);
-    objects->unlock();
 
     return ret;
 }
@@ -109,8 +88,8 @@ int controller::testdb() {
         std::cout << "Demand for " << iter->first << ": " << iter->second << "\n";
     }
 
-    robots->lock();
-    objs->lock();
+    objs->readLock();
+    robots->readLock();
     Robot** r = new Robot*[robots->size()];
     Object** o = new Object*[objs->size()];
     double* dem = new double[objs->size()];
@@ -149,6 +128,10 @@ int controller::testdb() {
 
 
     delete demand;
+
+    robots->readUnlock();
+    objs->readUnlock();
+
 
     return 0;
 }

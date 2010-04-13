@@ -127,6 +127,19 @@ bool DbManager::getRequests( demand_t*& m ) {
         delete rs_obj;
     }
 
+    try{                    
+        cmd = "TRUNCATE ";
+        cmd += DbManager::tbl_requests;
+        stmt->execute(cmd);
+    } catch(...){
+        delete rs;
+        delete stmt;
+        delete con;
+
+        return false;
+    }
+
+
     delete rs;
     delete stmt;
     con->commit();
@@ -161,10 +174,44 @@ void DbManager::printRequests() {
     delete con;
 }
 
-bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
+bool DbManager::truncateCameras() {
+    sql::Connection *con;
+    sql::Statement *stmt;
+    std::string cmd;
+
+    try {
+        con = driver->connect(db_uri, db_user, db_pass);
+    } catch (...) {
+        std::cout << "[db] Failed to connect to database\n";
+        return false;
+    }
+
+    stmt = con->createStatement();
+
+    cmd = "USE ";
+    cmd += DbManager::db_database;
+    stmt->execute(cmd);
+
+    try{                    
+        cmd = "TRUNCATE ";
+        cmd += DbManager::tbl_cameras;
+        stmt->execute(cmd);
+    } catch(...){
+        delete stmt;
+        delete con;
+
+        return false;
+    }
+
+    delete stmt;
+    delete con;
+
+    return true;
+}
+
+bool DbManager::insertCameras( Vector_ts<Robot*>* robots) {
     if (!robots)
         return false;
-
 
     sql::Connection *con;
     sql::Statement *stmt;
@@ -184,10 +231,91 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
     cmd += DbManager::db_database;
     stmt->execute(cmd);
 
-    robots->lock();
+    robots->readLock();
     if (robots->size() > 0) {
+        Vector_ts<Robot*>::iterator it;
+        Vector_ts<Robot*>::iterator it_end = robots->end();
 
+        for (it = robots->begin(); it < it_end; ++it) {
+            (*it)->lock();
+            std::stringstream ss;
+            ss << "INSERT INTO " << tbl_cameras 
+               << " (`camera_id`, `camera_type`, `camera_curr_x`, `camera_curr_y`, `camera_resolution`, `camera_fps`) VALUES ('";
+            ss << (*it)->getGlobalID()
+               << "', '";
+            if ((*it)->getCamera() < 3 && (*it)->getCamera() >= 0) {
+                ss << (*it)->getCamera();
+            } else {
+                ss << "2";
+            }
+            ss << "', '"
+               << (*it)->getXCord()
+               << "', '"
+               << (*it)->getYCord()
+               << "', GEOMFROMTEXT('POINT(";
+            if ((*it)->getCamera() < 3 && (*it)->getCamera() >= 0) {
+                ss << Robot::camdata[(*it)->getCamera()][0]
+                   << " "
+                   << Robot::camdata[(*it)->getCamera()][1];
+            } else {
+                ss << "0 0";
+            }
+            ss << ")'), '";
+            if ((*it)->getCamera() < 3 && (*it)->getCamera() >= 0) {
+                ss << Robot::camdata[(*it)->getCamera()][2];
+            } else {
+                ss << "NULL";
+            }
+            ss << "')";
+            cmd = ss.str();
+            std::cout << "[db] generated query \"" << cmd << "\"\n";
 
+            try {
+                stmt->execute(cmd);
+            } catch(...){
+                std::cout << "[db] Failed query: " << cmd << "\n";
+                
+                delete stmt;
+                con->rollback();
+                delete con;
+
+                (*it)->unlock();
+                robots->readUnlock();
+                return false;
+            }
+            std::cout << "[db] Succeeded query: " << cmd << "\n";
+            (*it)->unlock();
+        }
+    }
+    robots->readUnlock();
+    con->commit();
+
+    return true;
+}
+bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
+    if (!robots)
+        return false;
+
+    sql::Connection *con;
+    sql::Statement *stmt;
+    std::string cmd;
+    
+    try {
+        con = driver->connect(db_uri, db_user, db_pass);
+    } catch (...) {
+        std::cout << "[db] Failed to connect to database\n";
+        return false;
+    }
+
+    con->setAutoCommit(0);
+    stmt = con->createStatement();
+
+    cmd = "USE ";
+    cmd += DbManager::db_database;
+    stmt->execute(cmd);
+
+    robots->readLock();
+    if (robots->size() > 0) {
         Vector_ts<Robot*>::iterator it;
         Vector_ts<Robot*>::iterator it_end = robots->end();
 
@@ -200,7 +328,22 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
                << (*it)->getXCord()
                << "', '"
                << (*it)->getYCord()
-               << "', NULL)";
+               << "', '";
+            int max_qual = -1;
+            int max_qual_id = -1;
+            std::map<int, int>* list = (*it)->list;
+            std::map<int, int>::iterator ito = list->begin();
+            for (; ito != list->end(); ++ito) {
+                //std::cout << "[db] comparing max_qual_id:" << max_qual_id << "(" << max_qual << ") with id:" << ito->first << "(" << ito->second << ")\n";
+                if (max_qual < ito->second) {
+                    max_qual_id = ito->first;
+                    max_qual = ito->second;
+                }
+            }
+            if (max_qual_id > -1)
+                ss << max_qual_id << "')";
+            else 
+                ss << "NULL');";
             cmd = ss.str();
 
             try {
@@ -213,16 +356,14 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
                 delete con;
 
                 (*it)->unlock();
-                robots->unlock();
+                robots->readUnlock();
                 return false;
             }
             std::cout << "[db] Succeeded query: " << cmd << "\n";
             (*it)->unlock();
-            
         }
-
     }
-    robots->unlock();
+    robots->readUnlock();
     con->commit();
 
     return true;

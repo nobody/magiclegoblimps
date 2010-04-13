@@ -14,12 +14,14 @@
 #define R_CISCO 2
 #define R_BROKEM 3
 
+
 #include <boost/thread/mutex.hpp>
 #include <boost/asio.hpp>
 #include "Point.h"
 
 class Robot {
 public:
+    static const int camdata[][3];
     Robot();
     Robot(boost::asio::ip::tcp::endpoint EP, int RID_);
     virtual ~Robot();
@@ -32,7 +34,7 @@ public:
     boost::asio::ip::tcp::endpoint getEndpoint();
 
     Point pos;
-    int camType __attribute__ ((deprecated)); //0 = Cisco, 1 = d-link
+    //int camType __attribute__ ((deprecated)); //0 = Cisco, 1 = d-link
     int getXCord();
     int getYCord();
     int getCamera();
