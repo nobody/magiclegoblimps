@@ -15,13 +15,14 @@
 #include "Vector_ts.h"
 #include "Robot.h"
 #include "Object.h"
+#include "DbManager.h"
 #include "protocol.h"
 
 typedef std::map<boost::asio::ip::tcp::endpoint,TcpServer::TcpConnection::pointer> conn_map;
 class RobotHandler: public TcpServer::ConnHandler{
     public:
     RobotHandler();
-    RobotHandler(Vector_ts<Robot*>* robots_, Vector_ts<Object*>* objects_, VideoHandler* vids_);
+    RobotHandler(Vector_ts<Robot*>* robots_, Vector_ts<Object*>* objects_, VideoHandler* vids_, DbManager* db_);
     ~RobotHandler();
     virtual void onConnect(TcpServer::TcpConnection::pointer tcp_connection);
     virtual void shutdown();
@@ -40,6 +41,7 @@ class RobotHandler: public TcpServer::ConnHandler{
     Vector_ts<Robot*>* robots;
     Vector_ts<Object*>* objects;
     VideoHandler* vidHandler;
+    DbManager* db;
 
 };
 

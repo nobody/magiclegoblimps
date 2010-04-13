@@ -45,6 +45,8 @@ class DbManager {
 
         bool getRequests( demand_t*& );
         bool normalize( demand_t*& );
+        bool truncateCameras( );
+        bool insertCameras( Vector_ts<Robot*>* );
         bool updateCameras( Vector_ts<Robot*>* );
 
 

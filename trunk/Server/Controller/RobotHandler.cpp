@@ -11,11 +11,9 @@
 conn_map RobotHandler::connections;
 
 RobotHandler::RobotHandler(){}
-RobotHandler::RobotHandler(Vector_ts<Robot*>* robots_, Vector_ts<Object*>* objects_, VideoHandler* vids_)
-    : vidHandler(vids_)
+RobotHandler::RobotHandler(Vector_ts<Robot*>* robots_, Vector_ts<Object*>* objects_, VideoHandler* vids_, DbManager* db_)
+    : robots(robots_), objects(objects_), vidHandler(vids_), db(db_)
 {
-	robots = robots_;
-	objects = objects_;
     handlers = 0;
     running = true;
 }
@@ -158,6 +156,9 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 
 	//clean up stuff from 
 	delete message;
+
+    // let the server know about the robots
+    db->insertCameras(robots);
 
 	//now that we have processed the new robots from this controller, we need to 
 	//send the controller the list of objects, first we need to construct an array of

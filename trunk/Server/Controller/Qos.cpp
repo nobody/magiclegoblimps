@@ -39,7 +39,7 @@ double Qos::calcQos(){
 
 //Calculate the Qos metric between an object and a robot
 double Qos::calcQos(Object* o, Robot* r){
-	return (r ? dist(r->pos, o->pos) * Qos::CAM_VALUES[r->camType] : 0);
+	return (r ? dist(r->pos, o->pos) * Qos::CAM_VALUES[r->getCamera()] : 0);
 
 }
 
