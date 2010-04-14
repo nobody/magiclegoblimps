@@ -67,7 +67,7 @@ int DataFile::write(void* data)
                 std::cout << "Writing data to ROBOT file\n";
                 file.write(byteArr.array, byteArr.size);
 
-                delete[] byteArr.array;
+                //delete[] byteArr.array;
 
                 retVal = 1;
             }
@@ -109,7 +109,7 @@ int DataFile::write(void* data)
                 //delete the object array
                 delete[] o;
 
-                delete[] byteArr.array;
+                //delete[] byteArr.array;
 
                 retVal = 1;
             }

@@ -132,7 +132,7 @@
                 for (int i = 0; i < number; ++i) {
                     int str_len = data[i].name->size() + 1;
                     const char* name = data[i].name->c_str();
-                    int size = sizeof(int) * 4 + str_len + data[i].color_size + 1;
+                    int size = sizeof(int) * 4 + str_len + data[i].color_size;
 
                     structs[i] = new char[size];
 
@@ -172,10 +172,10 @@
                     idx += sizeof(int);
 
                     // push color
-                    for (int j = idx; j < (idx + data[i].color_size + 1); ++j) {
+                    for (int j = idx; j < (idx + data[i].color_size); ++j) {
                         structs[i][j] = data[i].color[j - idx];
                     }
-                    idx += data[i].color_size + 1;
+                    idx += data[i].color_size;
 
                     // add the length of this array to the total length and store it
                     sizes[i] = size;

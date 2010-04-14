@@ -92,7 +92,7 @@ struct byteArray{
     char* array;
     int size;
     ~byteArray(){
-	delete array;
+        delete[] array;
     }
 };
 struct readReturn{

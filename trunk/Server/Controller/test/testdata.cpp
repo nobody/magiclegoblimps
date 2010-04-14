@@ -52,10 +52,28 @@ int main() {
 
     Vector_ts<Object*>* objs = new Vector_ts<Object*>;
 
-    char tmp[] = "qwertyuiopasdf";
-    Object* obj1 = new Object(15, "Object 1", tmp, 13);
+    char tmp1[] = "qwertyuiopasdf";
+    char tmp2[] = "qwertyuiopasdf";
+    char tmp3[] = "qwertyuiopasdf";
+    char tmp4[] = "qwertyuiopasdf";
+    char tmp5[] = "qwertyuiopasdf";
+    char tmp6[] = "qwertyuiopasdf";
+    char tmp7[] = "qwertyuiopasdf";
+    Object* obj1 = new Object(1, "Object 1", tmp1, 13);
+    Object* obj2 = new Object(2, "Object 2", tmp2, 13);
+    Object* obj3 = new Object(3, "Object 3", tmp3, 13);
+    Object* obj4 = new Object(4, "Object 4", tmp4, 13);
+    Object* obj5 = new Object(5, "Object 5", tmp5, 13);
+    Object* obj6 = new Object(6, "Object 6", tmp6, 13);
+    Object* obj7 = new Object(15, "Object 15", tmp7, 13);
 
     objs->push_back(obj1);
+    objs->push_back(obj2);
+    objs->push_back(obj3);
+    objs->push_back(obj4);
+    objs->push_back(obj5);
+    objs->push_back(obj6);
+    objs->push_back(obj7);
 
     dfo.write(objs);
 
