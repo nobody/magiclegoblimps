@@ -33,7 +33,7 @@
 
 
 enum result_t { SUCCESS, FAILURE };
-typedef std::map<int, boost::rational<int> > demand_t;
+typedef std::map<int, double > demand_t;
 
 
 class DbManager {

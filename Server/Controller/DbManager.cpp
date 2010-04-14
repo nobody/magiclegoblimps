@@ -43,8 +43,21 @@ DbManager::~DbManager() {
 
 bool DbManager::normalize(demand_t*& d ) {
     demand_t::iterator it;
-    boost::rational<int> total_demand;
+    double total_demand;
     
+    objs_->readLock();
+    std::cout << "[db] objs_->size():" << objs_->size() << "\n";
+    for (Vector_ts<Object*>::iterator ito = objs_->begin(); ito < objs_->end(); ++ito) {
+        (*ito)->lock();
+        int OID = (*ito)->getOID();
+        (*ito)->unlock();
+
+        if (old)
+            (*old)[OID] = (*old)[OID];
+        (*d)[OID] = (*d)[OID];
+    }
+    objs_->readUnlock();
+
     if (old) {
         for (it = old->begin(); it != old->end(); ++it) {
             it->second /= 4;
@@ -52,7 +65,8 @@ bool DbManager::normalize(demand_t*& d ) {
     }
     
     for (it = d->begin(); it != d->end(); ++it) {
-        it->second += (*old)[it->first];
+        if (old)
+            it->second += (*old)[it->first];
         total_demand += it->second;
     }
 
@@ -74,12 +88,13 @@ bool DbManager::normalize(demand_t*& d ) {
         
     }
 
-    boost::rational<int> sum;
+    double sum = 0;
     for (it = d->begin(); it != d->end(); ++it) {
         sum += it->second;
     }
     std::cout << "[db] demand sum: " << sum << "\n"; 
 
+    return true;
 }
 
 bool DbManager::getRequests( demand_t*& m ) {
@@ -361,7 +376,6 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
             std::map<int, int>* list = (*it)->list;
             std::map<int, int>::iterator ito = list->begin();
             for (; ito != list->end(); ++ito) {
-                //std::cout << "[db] comparing max_qual_id:" << max_qual_id << "(" << max_qual << ") with id:" << ito->first << "(" << ito->second << ")\n";
                 if (max_qual < ito->second) {
                     max_qual_id = ito->first;
                     max_qual = ito->second;

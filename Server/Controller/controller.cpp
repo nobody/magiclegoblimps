@@ -87,7 +87,7 @@ int controller::testdb() {
     //db->printRequests();
     std::cout << "\n-----------------------------\n";
 
-    std::map<int, boost::rational<int> > *demand;
+    std::map<int, double > *demand;
     db->getRequests(demand);
     db->normalize(demand);
 
@@ -110,7 +110,7 @@ int controller::testdb() {
     for (int i = 0; i < objs->size(); ++i) {
         o[i] = objs->at(i);;
         o[i]->lock();
-        dem[i] = boost::rational_cast<double>((*demand->find(i)).second);
+        dem[i] =(*demand->find(i)).second;
     }
 
     Qos q(r, robots->size(), o, objs->size(), dem);
@@ -144,8 +144,7 @@ int controller::testdb() {
     return 0;
 }
 void controller::controllerThread(){
-    //std::map<int, boost::rational<int> > *demand = new std::map<int, boost::rational<int> >;
-    std::map<int, boost::rational<int> > *demand = NULL;
+    std::map<int, double > *demand = NULL;
     while(running){
         std::cout << "[controller] executing the main loop\n";
 
