@@ -9,12 +9,12 @@
 
 using namespace std;
 
-enum RobotFacing
+enum RobotHeading
 {
-	POSITIVE_X = 0,
-	NEGATIVE_X = 1,
-	POSITIVE_Y = 2,
-	NEGATIVE_Y = 3,
+	NORTH = 0,
+	EAST = 1,
+	SOUTH = 2,
+	WEST = 3,
 };
 
 class Robot
@@ -40,6 +40,8 @@ public:
 	int GetLocationX() { return locationX_; }
 	int GetLocationY() { return locationY_; }
 
+	void SetUpdate(int x, int y, int heading, int pan, int battery, int status);
+
 private:
 	int id_;
 
@@ -55,8 +57,11 @@ private:
 	int locationX_;
 	int locationY_;
 
-	RobotFacing robotFacing_;
-	float cameraFacing_;
+	RobotHeading robotHeading_;
+	int cameraDirection_;
+
+	int batteryLevel_;
+	int status_;
 };
 
 #endif

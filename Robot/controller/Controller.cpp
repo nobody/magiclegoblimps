@@ -78,19 +78,29 @@ bool Controller::ConnectToServer(string ip)
 
 	//send robot init stuff
 	byteArray sendArray;
+	robotInit* init;
 
-	robotInit* init = new robotInit[robots_.size()];
-
-	for (int i = 0; i < robots_.size(); i++)
+	if (robots_.empty())
 	{
-		init[i].RID = robots_[i]->GetID();
-		if (robots_[i]->GetCamera()->GetDLinkCam())
-			init[i].cameraType = P_DLINK;
-		else
-			init[i].cameraType = P_CISCO;
-		//init[i].VideoURL = robots_[i]->GetCamera()->GetVideoURL();
-		init[i].x = robots_[i]->GetLocationX();
-		init[i].y = robots_[i]->GetLocationY();
+		init = new robotInit[1];
+
+		init[1].RID = -1;
+	}
+	else
+	{
+		init = new robotInit[robots_.size()];
+
+		for (int i = 0; i < robots_.size(); i++)
+		{
+			init[i].RID = robots_[i]->GetID();
+			if (robots_[i]->GetCamera()->GetDLinkCam())
+				init[i].cameraType = P_DLINK;
+			else
+				init[i].cameraType = P_CISCO;
+			//init[i].VideoURL = robots_[i]->GetCamera()->GetVideoURL();
+			init[i].x = robots_[i]->GetLocationX();
+			init[i].y = robots_[i]->GetLocationY();
+		}
 	}
 
 	write_data(P_ROBOT_INIT, init, robots_.size(), &sendArray);
@@ -256,13 +266,10 @@ void Controller::ClientThread(void* params)
 
 bool Controller::Command(int id, int command, int arg)
 {
-	//should translate command from server format into our command format
-	//then send it on to the requested robot
-
 	//example of command translation (not actual command)
 	if (command == 1)
 	{
-		robots_[id]->ExecuteCommand("move " + arg);
+		robots_[id]->ExecuteCommand("forward " + arg);
 	}
 
 	return true;
@@ -352,6 +359,7 @@ void Controller::Disconnect()
 		robots_.erase(robots_.begin() + i);
 	}
 
+	//should delete the static vector of objects on disconnect
 	/*
 	for (int i = 0; i < Camera.GetTrackableObjects().size(); i++)
 	{
@@ -394,9 +402,20 @@ void Controller::Update()
 			{
 				try
 				{
-					cout << "Robot " << (*it)->GetID() << " " <<
-						(*it)->GetNXT()->ReadMessage() << 
-						endl;
+					string update = (*it)->GetNXT()->ReadMessage();
+
+					vector<string> tokens;
+					tokenize(update, tokens, " ");
+
+					(*it)->SetUpdate(atoi(tokens[0].c_str()),
+						atoi(tokens[1].c_str()),
+						atoi(tokens[2].c_str()),
+						atoi(tokens[3].c_str()),
+						atoi(tokens[4].c_str()),
+						atoi(tokens[5].c_str()));
+
+					cout << "X: " << (*it)->GetLocationX() << endl;
+					cout << "Y: " << (*it)->GetLocationY() << endl;
 				}
 				catch (Nxt_exception& e)
 				{
@@ -421,8 +440,22 @@ void Controller::Update()
 				update[i].y = robots_[i]->GetLocationY();
 				update[i].listSize = 
 					robots_[i]->GetCamera()->GetVisibleObjects().size();
-				//update[i].objects =
-				//update[i].qualities =
+
+				int* objects = new int[update[i].listSize];
+				for (int i = 0; i < update[i].listSize; i++)
+				{
+					objects[i] = 
+						robots_[i]->GetCamera()->GetVisibleObjects()[i]->GetID();
+				}
+				update[i].objects = objects;
+
+				int* qualities = new int[update[1].listSize];
+				for (int i = 0; i < update[i].listSize; i++)
+				{
+					qualities[i] = 
+						robots_[i]->GetCamera()->GetVisibleObjects()[i]->GetQuality();
+				}
+				update[i].qualities = qualities;
 			}
 
 			write_data(P_ROBOT_UPDATE, update, robots_.size(), &sendArray);

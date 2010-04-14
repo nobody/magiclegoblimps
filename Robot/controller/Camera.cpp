@@ -42,7 +42,8 @@ bool Camera::Connect()
 	else
 		camUrl_ += ciscoUrl_;
 
-	capture_ = cvCreateFileCapture(camUrl_.c_str());
+	//comment this out to disable the camera
+	//capture_ = cvCreateFileCapture(camUrl_.c_str());
 
 	if (capture_ == 0)
 		return false;
@@ -58,7 +59,7 @@ void Camera::Disconnect()
 	cvReleaseCapture(&capture_);
 	capture_ = 0;
 
-	//needs to be left to the controller
+	//should be left to the controller
 	for (int i = 0; i < trackableObjects_.size(); i++)
 	{
 		delete trackableObjects_[i];
@@ -76,10 +77,10 @@ void Camera::SetDLinkCam(bool dLinkCam)
 	dLinkCam_ = dLinkCam;
 }
 
+//clean some of this up into member variables/functions
 IplImage *image = 0, *hsv = 0, *hue = 0, *mask = 0, *backProject = 0, 
 	*histImage = 0;
 CvHistogram *hist = 0;
-
 bool selectObject = false;
 bool trackObject = false;
 bool showHist = false;
@@ -159,6 +160,7 @@ void Camera::StartDisplay()
 	displayWindowName_ = "RobotView " + ip_;
 	cvNamedWindow(displayWindowName_.c_str(), CV_WINDOW_AUTOSIZE);
 	cvSetMouseCallback(displayWindowName_.c_str(), onMouse, 0);
+	//uncomment these if we need to more finely adjust color values
 	//cvCreateTrackbar("VMin", displayWindowName_.c_str(), &vMin, 256, 0);
 	//cvCreateTrackbar("VMax", displayWindowName_.c_str(), &vMax, 256, 0);
 	//cvCreateTrackbar("SMin", displayWindowName_.c_str(), &sMin, 256, 0);

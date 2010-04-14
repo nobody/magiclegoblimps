@@ -36,6 +36,14 @@ void NXT::Disconnect()
 	connection_->disconnect();
 }
 
+string NXT::GetAddress()
+{
+	Device_info info;	
+	brick_->get_device_info(info);
+
+	return info.bt_address;
+}
+
 void NXT::SendMessage(string message)
 {
 	brick_->write_msg(message, OUT_MAILBOX, false);

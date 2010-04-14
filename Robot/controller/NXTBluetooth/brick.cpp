@@ -52,7 +52,7 @@ void Brick::write_msg(string message, int inbox, bool reply){
 
 string Brick::read_msg(int inbox, bool remove){
   unsigned int i;
-  unsigned char answer[NXT_BUFFER_SIZE+2];
+  unsigned char answer[NXT_BUFFER_SIZE+4];
   unsigned char command[7];
   command[0]=0x05;  //command length
   command[1]=0x00;
