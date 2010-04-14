@@ -42,10 +42,18 @@ DbManager::~DbManager() {
 }
 
 bool DbManager::normalize(demand_t*& d ) {
-    int total_demand = 0;
     demand_t::iterator it;
+    boost::rational<int> total_demand;
+    
+    if (old) {
+        for (it = old->begin(); it != old->end(); ++it) {
+            it->second /= 4;
+        }
+    }
+    
     for (it = d->begin(); it != d->end(); ++it) {
-        total_demand += it->second.numerator() / it->second.denominator();
+        it->second += (*old)[it->first];
+        total_demand += it->second;
     }
 
     if (!old){
@@ -60,11 +68,18 @@ bool DbManager::normalize(demand_t*& d ) {
         // phase out old demand
         // for now, let's just put the percentage of votes
         for (it = d->begin(); it != d->end(); ++it) {
-            it->second = it->second / total_demand;
+            it->second = ( it->second / total_demand );
             std::cout << "[db] noramlized demand for " << it->first << ":" << it->second << "\n"; 
         }
         
     }
+
+    boost::rational<int> sum;
+    for (it = d->begin(); it != d->end(); ++it) {
+        sum += it->second;
+    }
+    std::cout << "[db] demand sum: " << sum << "\n"; 
+
 }
 
 bool DbManager::getRequests( demand_t*& m ) {
