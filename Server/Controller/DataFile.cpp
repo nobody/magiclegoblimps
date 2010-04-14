@@ -88,10 +88,12 @@ int DataFile::write(void* data)
                 object* o = new object[objects->size()];
                 int i = 0;
                 for (it = objects->begin(); it < it_end; ++it) {
+                    (*it)->lock();
                     o[i].OID = (*it)->getOID();
                     o[i].name = new std::string((*it)->getName());
                     o[i].color_size = (*it)->getColorsize();
                     o[i].color = (*it)->getColor();
+                    (*it)->unlock();
 
                     ++i;
                 }

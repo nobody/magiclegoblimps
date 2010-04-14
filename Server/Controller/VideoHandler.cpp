@@ -25,7 +25,6 @@ void VideoHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection) {
         std::cerr << "[VH] VideoHandler only supports one connection\n";
         return;
     }
-    //boost::thread connThread(&VideoHandler::threaded_on_connect, this, tcp_connection);
     threaded_on_connect(tcp_connection);
 }
 
@@ -40,28 +39,6 @@ void VideoHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_con
     // print the current date/time
     boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
     msg_ss << now << "\n";
-
-    // send object information
-    {
-        objs_->readLock();
-
-        Vector_ts<Object*>::iterator it;
-        Vector_ts<Object*>::iterator it_end = objs_->end();
-
-        for (it=objs_->begin(); it < it_end; ++it) {
-            msg_ss << (*it)->getOID();
-            msg_ss << ";";
-            msg_ss << (*it)->getName();
-            msg_ss << ";";
-            // replace colorsize with qos
-            msg_ss << (*it)->getColorsize();
-            msg_ss << ";";
-
-            msg_ss << "\n";
-        }
-        objs_->readUnlock();
-    }
-    msg_ss << '\n';
 
     // send robot information
     {
@@ -91,11 +68,6 @@ void VideoHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_con
     msg_ss << '\n';
 
     std::string msg = msg_ss.str();
-
-    /*boost::asio::async_write(sock, boost::asio::buffer(msg), 
-        boost::bind(&VideoHandler::write_handler, this, 
-        boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
-        */
 
     boost::asio::async_read_until(sock, read_message_.buffer(), '\n', 
         boost::bind(&VideoHandler::read_handler, this, 
@@ -144,7 +116,6 @@ void VideoHandler::write_handler(const boost::system::error_code& error,  std::s
         std::cout << "[VH] Successfully wrote \"" << msg << "\" to the socket.\n";
 
         write_queue_.pop_front();
-        //while(!write_queue_.empty()){
         if (!write_queue_.empty()){
             boost::asio::async_write(conn_->socket(), boost::asio::buffer(write_queue_.front()), 
                 boost::bind(&VideoHandler::write_handler, this, 
@@ -198,7 +169,6 @@ void VideoHandler::do_close() {
     conn_->releaseSocket();
 
     conn_ = TcpServer::TcpConnection::pointer();;
-    //delete this;
 }
 
 void VideoHandler::shutdown(){}

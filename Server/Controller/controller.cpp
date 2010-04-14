@@ -24,7 +24,6 @@ controller::controller(boost::asio::io_service& io_service)
     
     robots = new Vector_ts<Robot*>();
     objs   = (Vector_ts<Object*>*)  objfile->read();
-    //objs = new Vector_ts<Object*>();
     if (!objs) {
         std::cerr << "!!WARNING!! Object data file unreadable. Creating new vector\n";
         objs = new Vector_ts<Object*>();
@@ -34,6 +33,15 @@ controller::controller(boost::asio::io_service& io_service)
 
     db = new DbManager(objs);
     db->truncateCameras();
+
+    // let's make sure that the database server knows ablut all our objects
+    objs->readLock();
+    if (objs->size() > 0) {
+        for (Vector_ts<Object*>::iterator it = objs->begin(); it < objs->end(); ++it) {
+            db->insertObject(*it);
+        }
+    }
+    objs->readUnlock();
 
     vids = new VideoHandler(robots, objs);
     vidsSrv = new TcpServer(io_service, 20000, vids);
@@ -76,7 +84,7 @@ int controller::writeObjects(Vector_ts<Object*>* objects) {
 }
 
 int controller::testdb() {
-    db->printRequests();
+    //db->printRequests();
     std::cout << "\n-----------------------------\n";
 
     std::map<int, boost::rational<int> > *demand;
@@ -101,7 +109,7 @@ int controller::testdb() {
 
     for (int i = 0; i < objs->size(); ++i) {
         o[i] = objs->at(i);;
-        //o[i]->lock();
+        o[i]->lock();
         dem[i] = boost::rational_cast<double>((*demand->find(i)).second);
     }
 
@@ -119,7 +127,7 @@ int controller::testdb() {
     }
 
     for (int i = 0; i < objs->size(); ++i) {
-        //o[i]->unlock();
+        o[i]->unlock();
     }
 
     delete[] o;
@@ -136,7 +144,13 @@ int controller::testdb() {
     return 0;
 }
 void controller::controllerThread(){
+    std::map<int, boost::rational<int> > *demand = new std::map<int, boost::rational<int> >;
+    //std::map<int, boost::rational<int> > *demand;
     while(running){
+        std::cout << "[controller] executing the main loop\n";
+
+        db->getRequests(demand);
+        db->normalize(demand);
 
         db->updateCameras(robots);
 

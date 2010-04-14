@@ -118,6 +118,30 @@ int main() {
     std::cout << std::endl;
     char buffer[1];
 
+    sleep(1);
+
+    object *objs = new object[1];
+    objs[0].OID = 6;
+    objs[0].name = new std::string("Obj 6");
+    objs[0].color_size = 10;
+    objs[0].color = "1234567890";
+
+    byteArray objArr;
+    if (write_data(P_OBJECT, objs, 1, &objArr)) {
+        std::cerr << "Failed to create object array\n";
+        return -1;
+    }
+
+    conn = write(sock, objArr.array, objArr.size);
+    std::cout << "Wrote object data to socket:\n";
+    for (int i = 0; i < objArr.size; ++i) {
+        printf("%02X ", objArr.array[i]);
+    }
+    std::cout << std::endl;
+
+    
+
+    std::cout << "Read object data from socket:\n";
     while (0 < (conn = read(sock, buffer, 1))) {
         printf("%02X ", (unsigned)*buffer);
         fflush(stdout);
