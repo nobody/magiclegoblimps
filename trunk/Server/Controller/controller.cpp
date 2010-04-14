@@ -144,8 +144,8 @@ int controller::testdb() {
     return 0;
 }
 void controller::controllerThread(){
-    std::map<int, boost::rational<int> > *demand = new std::map<int, boost::rational<int> >;
-    //std::map<int, boost::rational<int> > *demand;
+    //std::map<int, boost::rational<int> > *demand = new std::map<int, boost::rational<int> >;
+    std::map<int, boost::rational<int> > *demand = NULL;
     while(running){
         std::cout << "[controller] executing the main loop\n";
 

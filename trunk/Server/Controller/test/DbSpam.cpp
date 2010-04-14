@@ -123,5 +123,6 @@ int main() {
     delete stmt;
     delete con;
 
+    return 0;
     return true;
 }
