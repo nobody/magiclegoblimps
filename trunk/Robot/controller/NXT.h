@@ -17,6 +17,8 @@ public:
 	int GetPort() { return bluetoothPort_; }
 	void SetPort(int port);
 
+	string GetAddress();
+
 	void SendMessage(string message);
 	string ReadMessage();
 

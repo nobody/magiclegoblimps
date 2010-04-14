@@ -38,6 +38,11 @@ public:
 
 	int GetQuality();
 
+	static char* BoxToArray(CvBox2D box);
+	static CvBox2D ArrayToBox(char* arr);
+	static char* HistogramToArray(CvHistogram* hist);
+	static CvHistogram* ArrayToHistogram(char* arr);
+
 private:
 	int id_;
 

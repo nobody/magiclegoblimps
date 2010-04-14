@@ -11,6 +11,9 @@ Robot::Robot(int port, string ip, bool dLink)
 	camConnected_ = false;
 	robotOnline_ = false;
 	robotActive_ = false;
+
+	batteryLevel_ = 0;
+	status_ = 0;
 }
 
 Robot::~Robot()
@@ -76,20 +79,63 @@ void Robot::Disconnect()
 
 void Robot::ExecuteCommand(string command)
 {
-	//do all the required tasks for each command (mostly sending NXT messages)
-
 	vector<string> tokens;
 	tokenize(command, tokens, " ");
 
 	if (tokens.size() == 0)
 		return;
-
+	
 	if (tokens[0].compare("target") == 0)
 	{
 		camera_->SetTarget(atoi(tokens[1].c_str()));
 	}
 	else
 	{
+		//command
+		//=======
+		//pan x
+		//stop
+		//left
+		//right
+		//turnaround
+		//calibrate
+		//forward
+		//forward x
+
 		nxt_->SendMessage(command);
 	}
+}
+
+void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, 
+	int status)
+{
+	locationX_ = x;
+	locationY_ = y;
+	if (heading = 0)
+		robotHeading_ = NORTH;
+	else if (heading = 1)
+		robotHeading_ = EAST;
+	else if (heading = 2)
+		robotHeading_ = SOUTH;
+	else if (heading = 3)
+		robotHeading_ = WEST;
+	cameraDirection_ = pan;
+	batteryLevel_ = battery;
+	status_ = status;
+
+	//left shift status
+
+	//status
+	//======
+	//idle 1
+	//destination 2
+	//line follow 4
+	//intersection 8
+	//turn left 16
+	//turn right 32
+	//turnaround 64
+	//sonar block 128
+	//calibrate 256
+	//pan 512
+	//stop 1024
 }

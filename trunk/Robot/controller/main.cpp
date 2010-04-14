@@ -16,6 +16,8 @@ Controller* controller;
 
 bool running = true;
 
+//need to change all vectors to iterators, not for loops
+
 void LocalInput()
 {
 	//all of this needs serious error checking and cleaning up
@@ -126,13 +128,35 @@ void LocalInput()
 	//test port/id command
 	if (tokens[0].compare("test") == 0)
 	{
-		string command = "";
+		string command = tokens[2];
 
-		for (int i = 2; i < tokens.size(); i++)
+		for (int i = 3; i < tokens.size(); i++)
 			command += " " + tokens[i];
 
 		controller->GetRobot(
 			atoi(tokens[1].c_str()))->ExecuteCommand(command);
+	}
+
+	//testbox
+	if (tokens[0].compare("testbox") == 0)
+	{
+		CvBox2D testBox;
+		testBox.angle = 30;
+		testBox.center.x = 4;
+		testBox.center.y = 2;
+		testBox.size.height = 10;
+		testBox.size.width = 5;
+
+		char* testArr = TrackingObject::BoxToArray(testBox);
+		CvBox2D newBox = TrackingObject::ArrayToBox(testArr);
+
+		cout << newBox.angle << endl;
+		cout << newBox.center.x << endl;
+		cout << newBox.center.y << endl;
+		cout << newBox.size.height << endl;
+		cout << newBox.size.width << endl;
+
+		delete testArr;
 	}
 }
 
