@@ -138,27 +138,31 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 	robotInit* robotData = new robotInit[message->size];
 	robotData = (robotInit*)(message->array);
 
-   	//get a lock on the vector
-	robots->lock();
-	for(int i = 0; i < message->size; ++i){
-		Robot* temp = new Robot(connEP, robotData[i].RID);
-       		 temp->setXCord(robotData[i].x);
-        	 temp->setYCord(robotData[i].y);
-        	 temp->setCamera(robotData[i].cameraType);
-		 //temp->setList(robotData[i].list, robotData[i].listSize);
-        	 temp->setVideoURL(std::string(*robotData[i].VideoURL));
-        
-        	robots->push_back(temp);
-        	//might want to clean up some stuff here if patrick doesn't fix destructor
-	}
-	robots->unlock();
-	delete[] robotData;	
+    if(!(robotData[0].RID < 0)){
 
-	//clean up stuff from 
-	delete message;
+        //get a lock on the vector
+        robots->lock();
+        for(int i = 0; i < message->size; ++i){
+            Robot* temp = new Robot(connEP, robotData[i].RID);
+                 temp->setXCord(robotData[i].x);
+                 temp->setYCord(robotData[i].y);
+                 temp->setCamera(robotData[i].cameraType);
+             //temp->setList(robotData[i].list, robotData[i].listSize);
+                 temp->setVideoURL(std::string(*robotData[i].VideoURL));
+            
+                robots->push_back(temp);
+                //might want to clean up some stuff here if patrick doesn't fix destructor
+        }
+        robots->unlock();
+        delete[] robotData;	
 
-    // let the server know about the robots
-    db->insertCameras(robots);
+        //clean up stuff from 
+        delete message;
+
+        // let the server know about the robots
+        db->insertCameras(robots);
+
+    }
 
 	//now that we have processed the new robots from this controller, we need to 
 	//send the controller the list of objects, first we need to construct an array of
@@ -207,7 +211,7 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
         connections[connEP]->releaseSocket();
         delete byte_ptr;
     }else{
-        objects->readLock();
+        objects->readUnlock();
     }
 	
     //spawn a thread to listen on the socket and return the function
