@@ -21,8 +21,12 @@ const char* DbManager::db_uri = "tcp://localhost";
 const char* DbManager::db_user = "testing";
 const char* DbManager::db_pass = "testing";
 const char* DbManager::db_database = "mydb";
+
 const char* DbManager::tbl_requests = "requests";
 const char* DbManager::tbl_cameras = "cameras";
+const char* DbManager::tbl_objects = "animals";
+
+const char* DbManager::col_object_id = "animal_id";
 
 DbManager::DbManager(Vector_ts<Object*>* objs) 
     : objs_(objs)
@@ -44,21 +48,27 @@ bool DbManager::normalize(demand_t*& d ) {
         total_demand += it->second.numerator() / it->second.denominator();
     }
 
-//    if (!old){
+    if (!old){
         // for now, let's just put the percentage of votes
         for (it = d->begin(); it != d->end(); ++it) {
             it->second = it->second / total_demand;
+            std::cout << "[db] noramlized demand for " << it->first << ":" << it->second << "\n"; 
         }
         
         return true;
-//    } else {
+    } else {
         // phase out old demand
+        // for now, let's just put the percentage of votes
+        for (it = d->begin(); it != d->end(); ++it) {
+            it->second = it->second / total_demand;
+            std::cout << "[db] noramlized demand for " << it->first << ":" << it->second << "\n"; 
+        }
         
-//    }
+    }
 }
 
 bool DbManager::getRequests( demand_t*& m ) {
-    if (old)
+    if (old != NULL)
         delete old;
     old = m;
 
@@ -103,10 +113,12 @@ bool DbManager::getRequests( demand_t*& m ) {
 
         int req_obj = rs->getInt("request_animal");
 
-        cmd = "SELECT count(*) FROM ";
-        cmd += DbManager::tbl_requests;
-        cmd += " WHERE request_animal = ";
-        cmd.append(1, (char)(req_obj + 0x30)); // convert int to ascii 
+        std::stringstream ss;
+        ss << "SELECT count(*) FROM "
+           << DbManager::tbl_requests
+           << " WHERE request_animal = '"
+           << req_obj << "'";
+        cmd = ss.str();
 
         std::cout << "[db] Executing query: " << cmd << "\n";
         try{
@@ -367,6 +379,88 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
     con->commit();
 
     return true;
+}
+
+bool DbManager::insertObject( Object* obj ) {
+    if (!obj)
+        return false;
+
+    sql::Connection *con;
+    sql::Statement *stmt;
+    sql::ResultSet *rs;
+    std::string cmd;
+
+    try {
+        con = driver->connect(db_uri, db_user, db_pass);
+    } catch (...) {
+        std::cout << "[db] Failed to connect to database\n";
+        return false;
+    }
+
+    con->setAutoCommit(0);
+    stmt = con->createStatement();
+
+    cmd = "USE ";
+    cmd += DbManager::db_database;
+    stmt->execute(cmd);
+
+    // lock the object
+    obj->lock();
+
+    std::stringstream ss;
+    ss << "SELECT * FROM "<< tbl_objects << " WHERE " << col_object_id << "='" << obj->getOID() << "'";
+    cmd = ss.str();
+
+    try{
+        rs = stmt->executeQuery(cmd);
+    }catch(...){
+        std::cout << "[db] Failed query: " << cmd << "\n";
+        
+        delete stmt;
+        con->rollback();
+        delete con;
+
+        obj->unlock();
+        return false;
+    }
+
+    if (rs->rowsCount() == 0) {
+        // no such object, we should add it
+        std::stringstream ins_ss;
+        ins_ss << "INSERT INTO " << tbl_objects 
+               << " (`animal_id`, `animal_name`, `animal_num_views`,"
+               << " `animal_curr_x`, `animal_curr_y`, `animal_last_x`, `animal_last_y`) VALUES ('"
+               << obj->getOID()
+               << "', '"
+               << obj->getName()
+               << "', '0', '"
+               << "0', '0', '0', '0')";
+        cmd = ins_ss.str();
+
+        try{
+            stmt->execute(cmd);
+        }catch(...){
+            std::cout << "[db] Failed query: " << cmd << "\n";
+            
+            delete rs;
+            delete stmt;
+            con->rollback();
+            delete con;
+
+            obj->unlock();
+            return false;
+        }
+        std::cout << "[db] Succeeded query: " << cmd << "\n";
+
+    }
+
+    con->commit();
+
+    obj->unlock();
+
+
+    return true;
+
 }
 
 

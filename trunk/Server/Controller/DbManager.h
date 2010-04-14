@@ -49,6 +49,8 @@ class DbManager {
         bool insertCameras( Vector_ts<Robot*>* );
         bool updateCameras( Vector_ts<Robot*>* );
 
+        bool insertObject( Object* );
+
 
     private:
         static const char* db_uri;
@@ -57,6 +59,8 @@ class DbManager {
         static const char* db_database;
         static const char* tbl_requests;
         static const char* tbl_cameras;
+        static const char* tbl_objects;
+        static const char* col_object_id;
 
         sql::mysql::MySQL_Driver *driver;
         Vector_ts<Object*>* objs_;

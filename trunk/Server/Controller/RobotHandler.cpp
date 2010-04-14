@@ -171,10 +171,12 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
         Vector_ts<Object*>::iterator ObjIt = objects->begin();
 
         for(int i = 0; i < objects->size(); ++i){
+            (*ObjIt)->lock();
             objArr[i].OID = (*ObjIt)->getOID();
             objArr[i].name = new std::string((*ObjIt)->getName());
             objArr[i].color_size = (*ObjIt)->getColorsize();
             objArr[i].color = (*ObjIt)->getColor();
+            (*ObjIt)->unlock();
 
             ++ObjIt;
         }
@@ -383,9 +385,11 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 
 				for(int i = 0; i < message->size; ++i){
 					bool exists = false;
-					for(it = objects->begin(); it != objects->end(); ++it){
+					for(it = objects->begin(); it != objects->end() && !exists; ++it){
+                        (*it)->lock();
 						if(objs[i].OID == (*it)->getOID() || !objs[i].name->compare((*it)->getName()))
 							exists = true;
+                        (*it)->unlock();
 					}
 
 					if(!exists){
@@ -393,6 +397,8 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 						objects->lock();
 						objects->push_back(temp);
 						objects->unlock();
+
+                        db->insertObject(temp);
 
 						conn_map::iterator conn_iter;
 						for(conn_iter = connections.begin(); conn_iter != connections.end(); conn_iter++){

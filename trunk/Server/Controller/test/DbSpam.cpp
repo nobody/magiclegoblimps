@@ -16,6 +16,8 @@
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/variate_generator.hpp>
 
+#include <sstream>
+
 int main() {
     const char* db_uri = "tcp://localhost";
     const char* db_user = "testing";
@@ -66,6 +68,8 @@ int main() {
         return false;
     }
 
+    /*
+     // this will be taken care of in the controller
     try{
         cmd = "TRUNCATE ";
         cmd += tbl_requests;
@@ -77,19 +81,25 @@ int main() {
 
         return false;
     }
+    */
 
+    int sum = 0;
     while(rs->next()) {
         int req_obj = rs->getInt("animal_id");
         int count = rnd();
-        std::cout << "rnd() returned: " << count << "\n";
+        sum += count;
+        std::cout << "rnd() returned: " << count << " for Object:" << req_obj << "\n";
 
         while (count-- > 0) {
-            cmd = "INSERT INTO ";
-            cmd += tbl_requests;
-            cmd += " (`request_ip`, `request_time`, `request_zone`, `request_animal`) VALUES ";
-            cmd += "( '1.1.1.1', CURRENT_TIMESTAMP, '1', '";
-            cmd += req_obj + '0';
-            cmd += "')";
+            std::stringstream ss;
+            ss << "INSERT INTO "
+               << tbl_requests
+               << " (`request_ip`, `request_time`, `request_zone`, `request_animal`) VALUES "
+               << "( '1.1.1.1', CURRENT_TIMESTAMP, '1', '"
+               << req_obj
+               << "')";
+
+            cmd = ss.str();
 
             //std::cout << "Executing query: " << cmd << "\n";
             try{
@@ -101,10 +111,13 @@ int main() {
                 delete stmt;
                 delete con;
 
-                return false;
+                sum -= count;
+                break;
             }
         }
     }
+
+    std::cout << "Simulated " << sum << " users\n";
 
     delete rs;
     delete stmt;
