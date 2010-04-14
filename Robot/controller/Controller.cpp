@@ -15,9 +15,16 @@ Controller::Controller()
 	connected_ = false;
 }
 
+Controller::Controller(int xDim, int yDim)
+{
+	timer_= 0;
+	xMax = xDim;
+	yMax = yDim;
+}
+
 bool Controller::ConnectToServer(string ip)
 {
-	WSADATA wsaData;
+	/*WSADATA wsaData;
 	connectSocket_ = INVALID_SOCKET;
 	struct addrinfo *result = NULL, *ptr = NULL, hints;
 	char recvBuf[BUFFER_LENGTH];
@@ -110,7 +117,7 @@ bool Controller::ConnectToServer(string ip)
 
 	_beginthread(ClientThread, 0, NULL);
 
-	connected_ = true;
+	connected_ = true;*/
 
 	return true;
 }
@@ -118,7 +125,7 @@ bool Controller::ConnectToServer(string ip)
 //creates a listening server socket for testing with self
 bool Controller::Serve()
 {
-	WSADATA wsaData;
+	/*WSADATA wsaData;
     SOCKET listenSocket = INVALID_SOCKET;
     struct addrinfo *result = NULL, hints;
     int iResult = 0;
@@ -186,7 +193,7 @@ bool Controller::Serve()
 
     closesocket(listenSocket);
 
-	cout << "Client connected." << endl;
+	cout << "Client connected." << endl;*/
 
     return true;
 }
@@ -196,72 +203,72 @@ void Controller::ClientThread(void* params)
 	int iResult = 0;
 	char recvBuf[BUFFER_LENGTH];
 	int recvBufLen = BUFFER_LENGTH;
-	while (true)
-	{
-        iResult = recv(connectSocket_, recvBuf, recvBufLen, 0);
-        if (iResult > 0)
-		{
-			readReturn* data = new readReturn;
+	//while (true)
+	//{
+ //       iResult = recv(connectSocket_, recvBuf, recvBufLen, 0);
+ //       if (iResult > 0)
+	//	{
+	//		readReturn* data = new readReturn;
 
-			read_data(recvBuf, data);
+	//		read_data(recvBuf, data);
 
-			int type = data->type;
+	//		int type = data->type;
 
-			if (type == P_OBJECT)
-			{
-				object* obj = new object[data->size];
-				obj = (object*)data->array;
+	//		if (type == P_OBJECT)
+	//		{
+	//			object* obj = new object[data->size];
+	//			obj = (object*)data->array;
 
-				for (int i = 0; i < data->size; i++)
-				{
-					cout << "Adding Object " << obj[i].OID << 
-						" : " << obj[i].name << endl;
+	//			for (int i = 0; i < data->size; i++)
+	//			{
+	//				cout << "Adding Object " << obj[i].OID << 
+	//					" : " << obj[i].name << endl;
 
-					//TrackingObject* newObj = TrackingObject(
-					//add to the tracking objects vector
-				}
-			}
-			else if (type == P_ASSIGNMENT)
-			{
-				assignment* assign = new assignment[data->size];
-				assign = (assignment*)data->array;
+	//				//TrackingObject* newObj = TrackingObject(
+	//				//add to the tracking objects vector
+	//			}
+	//		}
+	//		else if (type == P_ASSIGNMENT)
+	//		{
+	//			assignment* assign = new assignment[data->size];
+	//			assign = (assignment*)data->array;
 
-				for (int i = 0; i < data->size; i++)
-				{
-					cout << "Assigning Robot " << assign[i].RID << 
-						" to Object " << assign[i].OID << endl;
-					robots_[assign[i].RID]->ExecuteCommand(
-						"target " + assign[i].OID);
-				}
+	//			for (int i = 0; i < data->size; i++)
+	//			{
+	//				cout << "Assigning Robot " << assign[i].RID << 
+	//					" to Object " << assign[i].OID << endl;
+	//				robots_[assign[i].RID]->ExecuteCommand(
+	//					"target " + assign[i].OID);
+	//			}
 
-				delete[] assign;
-			}
-			else if (type == P_COMMAND)
-			{
-				command* comm = new command[data->size];
-				comm = (command*)data->array;
+	//			delete[] assign;
+	//		}
+	//		else if (type == P_COMMAND)
+	//		{
+	//			command* comm = new command[data->size];
+	//			comm = (command*)data->array;
 
-				for (int i = 0; i < data->size; i++)
-				{
-					cout << "Command Robot " << comm[i].RID << 
-						" to " << comm[i].cmd << " with arg " << comm[i].arg <<
-						endl;
-					Command(comm[i].RID, comm[i].cmd, comm[i].arg);
-				}
+	//			for (int i = 0; i < data->size; i++)
+	//			{
+	//				cout << "Command Robot " << comm[i].RID << 
+	//					" to " << comm[i].cmd << " with arg " << comm[i].arg <<
+	//					endl;
+	//				Command(comm[i].RID, comm[i].cmd, comm[i].arg);
+	//			}
 
-				delete[] comm;
-			}
+	//			delete[] comm;
+	//		}
 
-			delete data;
-		}
-        else if (iResult == 0)
-		{
-            printf("Connection closed\n");
-			_endthread();
-		}
-        else
-            printf("recv failed: %d\n", WSAGetLastError());
-    } 
+	//		delete data;
+	//	}
+ //       else if (iResult == 0)
+	//	{
+ //           printf("Connection closed\n");
+	//		_endthread();
+	//	}
+ //       else
+ //           printf("recv failed: %d\n", WSAGetLastError());
+ //   } 
 }
 
 bool Controller::Command(int id, int command, int arg)
@@ -279,7 +286,7 @@ bool Controller::Command(int id, int command, int arg)
 //test commands as if they were from the server
 bool Controller::TestServer(int type)
 {
-	byteArray sendArray;
+	/*byteArray sendArray;
 
 	if (type == P_OBJECT)
 	{
@@ -310,8 +317,9 @@ bool Controller::TestServer(int type)
         WSACleanup();
         return false;
     }
+	return true;
 
-	delete[] sendArray.array;
+	delete[] sendArray.array;*/
 
 	return true;
 }
@@ -352,12 +360,12 @@ vector<Robot*> Controller::GetRobotVector()
 
 void Controller::Disconnect()
 {
-	for (int i = 0; i < robots_.size(); i++)
+	/*for (int i = 0; i < robots_.size(); i++)
 	{
 		robots_[i]->Disconnect();
 		delete robots_[i];
 		robots_.erase(robots_.begin() + i);
-	}
+	}*/
 
 	//should delete the static vector of objects on disconnect
 	/*
@@ -369,19 +377,19 @@ void Controller::Disconnect()
 	}
 	*/
 
-	if (connectSocket_ != NULL)
-	{
-		//socket might need shutdown
-		closesocket(connectSocket_);
-	    WSACleanup();
-	}
+	//if (connectSocket_ != NULL)
+	//{
+	//	//socket might need shutdown
+	//	closesocket(connectSocket_);
+	//    WSACleanup();
+	//}
 
-	if (serverSocket_ != NULL)
-	{
-		//socket might need shutdown
-		closesocket(serverSocket_);
-	    WSACleanup();
-	}
+	//if (serverSocket_ != NULL)
+	//{
+	//	//socket might need shutdown
+	//	closesocket(serverSocket_);
+	//    WSACleanup();
+	//}
 }
 
 void Controller::Update()
@@ -392,7 +400,7 @@ void Controller::Update()
 
 	timer_ += interval;
 
-	if (timer_ > POLL_INTERVAL)
+	/*if (timer_ > POLL_INTERVAL)
 	{
 		vector<Robot*>::iterator it;
 
@@ -476,5 +484,144 @@ void Controller::Update()
 		}
 
 		timer_ = 0;
+	}*/
+}
+
+Path* Controller::genPath(Robot& robot)
+{
+	priority_queue<Path*, vector<Path*>, Path> pathHeap;
+	vector<GridLoc*> illMoves = getIllMoves();
+	vector<GridLoc*> moves = getValidMoves(*robot.getLocation(),
+		illMoves);
+
+	//Make sure the destination is not in the list of illegal
+	//locations
+	for(int i = 0; i < illMoves.size(); i++)
+	{
+		if(illMoves[i] == robot.getDestination())
+			illMoves.erase(illMoves.begin()+i);
 	}
+
+	Path* pth;
+	for(int i = 0; i < moves.size(); i++)
+	{
+		pth = new Path();
+		pth->extend(moves[i]);
+		pth->calcMetric(*robot.getLocation(), 
+			*robot.getDestination());
+		pathHeap.push(pth);
+		illMoves.push_back(moves[i]);
+	}
+
+	Path* best = pathHeap.top();
+	pathHeap.pop();
+
+	if(best != NULL)
+	{
+		while(*best->getEnd() != *robot.getDestination())
+		{
+			moves = getValidMoves(*best->getEnd(), illMoves);
+			for(int i = 0; i < moves.size(); i++)
+			{
+				Path* newPath = best->copy();
+				newPath->extend(moves[i]);
+				newPath->calcMetric(*robot.getLocation(),
+					*robot.getDestination());
+				pathHeap.push(newPath);
+				illMoves.push_back(moves[i]);
+			}
+
+			if(pathHeap.size() != 0)
+			{
+				best = pathHeap.top();
+				pathHeap.pop();
+			}
+			else
+			{
+				return best;
+			}
+		}
+		return best;
+	}
+	else 
+		return NULL;
+}
+
+vector<GridLoc*> Controller::getValidMoves(GridLoc loc, 
+						  vector<GridLoc*> illMoves)
+{
+	vector<GridLoc*> moves;
+
+	int xLoc = loc.getX();
+	int yLoc = loc.getY();
+	
+	if(xLoc > 0 && xLoc < xMax)
+	{
+		GridLoc* xplus = new GridLoc(xLoc+1, yLoc);
+		GridLoc* xminus = new GridLoc(xLoc-1, yLoc);
+		moves.push_back(xplus);
+		moves.push_back(xminus);
+	}
+	else if(xLoc == 0)
+	{
+		GridLoc* xplus = new GridLoc(xLoc+1, yLoc);
+		moves.push_back(xplus);
+	}
+	else if(xLoc == xMax)
+	{
+		GridLoc* xminus = new GridLoc(xLoc-1, yLoc);
+		moves.push_back(xminus);
+	}
+
+	if(yLoc > 0 && yLoc < yMax)
+	{
+		GridLoc* yplus = new GridLoc(xLoc, yLoc+1);
+		GridLoc* yminus = new GridLoc(xLoc, yLoc-1);
+		moves.push_back(yplus);
+		moves.push_back(yminus);
+	}
+	else if(yLoc == 0)
+	{
+		GridLoc* yplus = new GridLoc(xLoc, yLoc+1);
+		moves.push_back(yplus);
+	}
+	else if(yLoc == yMax)
+	{
+		GridLoc* yminus = new GridLoc(xLoc, yLoc-1);
+		moves.push_back(yminus);
+	}
+
+	//vector<GridLoc*> validMoves;
+	for(int i = 0; i < illMoves.size(); i++)
+	{
+		int j = 0;
+		while(j < moves.size())
+		{
+			if(*moves[j] == *illMoves[i])
+			{
+				moves.erase(moves.begin()+j);
+				break;
+			}
+			else
+			{
+				j++;
+			}
+		}
+	}
+
+	return moves;
+}
+
+vector<GridLoc*> Controller::getIllMoves()
+{
+	vector<GridLoc*> illMoves;
+
+	for(int i = 0; i < robots_.size(); i++)
+	{
+		GridLoc* robLoc = 
+			new GridLoc(robots_[i]->getLocation()->getX(),
+			robots_[i]->getLocation()->getY());
+		illMoves.push_back(robLoc);
+	}
+	return illMoves;
 }

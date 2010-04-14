@@ -2,10 +2,13 @@
 #define ROBOT_H
 
 #include <string>
-
+#include <queue>
 #include "Camera.h"
 #include "NXT.h"
 #include "Tokenizer.h"
+#include "GridLoc.h"
+#include "Path.h"
+
 
 using namespace std;
 
@@ -35,6 +38,16 @@ public:
 	bool GetCamConnected() { return camConnected_; }
 	bool GetRobotOnline() { return robotOnline_; }
 
+	void setDestination(GridLoc* newD);
+	void updateLocation();
+	void setNextLoc(GridLoc* newNextLoc);
+	void setPath(Path* newPath);
+
+	GridLoc* getLocation()		{ return loc; }
+	GridLoc* getNextLoc()		{ return nextLoc; }
+	GridLoc* getDestination()	{ return dest; }
+	Path* getPath()				{ return robPath; }
+
 	void ExecuteCommand(string command);
 
 	int GetLocationX() { return locationX_; }
@@ -54,14 +67,20 @@ private:
 	bool robotOnline_;
 	bool robotActive_;
 
-	int locationX_;
-	int locationY_;
+	GridLoc* loc;
+	GridLoc* nextLoc;
+	GridLoc* dest;
+
+	float locationX_;
+	float locationY_;
 
 	RobotHeading robotHeading_;
 	int cameraDirection_;
 
 	int batteryLevel_;
 	int status_;
+
+	Path* robPath;
 };
 
 #endif

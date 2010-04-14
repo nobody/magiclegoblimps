@@ -4,6 +4,7 @@ Robot::Robot(int port, string ip, bool dLink)
 {
 	nxt_ = new NXT(port);
 	camera_ = new Camera(ip, dLink);
+	//camera_ = new Camera(ip, dLink);
 
 	id_ = port;
 
@@ -14,12 +15,20 @@ Robot::Robot(int port, string ip, bool dLink)
 
 	batteryLevel_ = 0;
 	status_ = 0;
+
+	loc = new GridLoc();
+	dest = new GridLoc();
+
+	cout << "Bringing Robot " << id_ << " online..." << endl;
+
+	//Robot::Connect();
 }
 
 Robot::~Robot()
 {
+	cout << "Why does this get called?\n";
 	delete nxt_;
-	delete camera_;
+	//delete camera_;
 }
 
 void Robot::Connect()
@@ -138,4 +147,30 @@ void Robot::SetUpdate(int x, int y, int heading, int pan, int battery,
 	//calibrate 256
 	//pan 512
 	//stop 1024
+}
+
+void Robot::setDestination(GridLoc* newD)
+{
+	delete dest;
+	dest = newD;
+}
+
+void Robot::updateLocation()
+{
+	//delete loc;
+	loc = nextLoc;
+	setNextLoc(robPath->advPath());
+}
+
+void Robot::setNextLoc(GridLoc* newNextLoc)
+{
+	//delete nextLoc;
+	nextLoc = newNextLoc;
+}
+
+void Robot::setPath(Path* newPath)
+{
+	if(robPath)
+		delete robPath;
+	robPath = newPath;
 }

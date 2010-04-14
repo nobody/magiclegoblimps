@@ -7,12 +7,15 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <Windows.h>
+#include <queue>
+#include <process.h>
 
+#include "Path.h"
 #include "Robot.h"
 #include "Tokenizer.h" 
 #include "TrackingObject.h"
 
-#include "Server\protocol.h"
+#include "Server/protocol.h"
 
 using namespace std;
 
@@ -20,6 +23,7 @@ class Controller
 {
 public:
 	Controller();
+	Controller(int xDim, int yDim);
 
 	bool ConnectToServer(string ip);
 
@@ -38,6 +42,11 @@ public:
 
 	void Disconnect();
 
+	Path* genPath(Robot& robot);
+	vector<GridLoc*> getValidMoves(GridLoc loc, 
+		vector<GridLoc*> illMoves);
+	vector<GridLoc*> getIllMoves();
+
 	void Update();
 
 private:
@@ -45,8 +54,13 @@ private:
 	static const int BUFFER_LENGTH = 512;
 
 	char* port_;
+	int xMax;
+	int yMax;
 
 	bool connected_;
+
+	vector<GridLoc*> permIllegalLocs;
+	//vector<Robot*> robots_;
 
 	static vector<Robot*> robots_;
 
