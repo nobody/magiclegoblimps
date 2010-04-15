@@ -412,6 +412,7 @@ int readRobotInit(void* array, robotInit* &robots) {
         robots[i].RID = rid;
         robots[i].x = x;
         robots[i].y = y;
+        robots[i].cameraType = cameraType;
         robots[i].VideoURL = new std::string(url);
 
         delete[] url;
@@ -440,7 +441,7 @@ int readRobotUpdate(void* array, robotUpdate* &robots){
         int y;
         int listSize;
         int* list;
-        int* qos;
+        float* qos;
         int* xs;
         int* ys;
         
@@ -474,7 +475,7 @@ int readRobotUpdate(void* array, robotUpdate* &robots){
         }
 
         list = new int[listSize];
-        qos = new int[listSize];
+        qos = new float[listSize];
         xs = new int[listSize];
         ys = new int[listSize];
         ref = (char*)list;

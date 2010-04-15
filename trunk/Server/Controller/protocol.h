@@ -71,7 +71,7 @@ struct robotUpdate{
     int y;
     int listSize;
     int* objects;
-    int* qualities;
+    float* qualities;
     int* xs;
     int* ys;
     ~robotUpdate(){

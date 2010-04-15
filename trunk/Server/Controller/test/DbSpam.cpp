@@ -17,12 +17,18 @@
 #include <boost/random/variate_generator.hpp>
 
 #include <sstream>
+#include <stdlib.h>
 
-int main() {
+int main(int argc, char** argv) {
+    //const char* db_uri = "tcp://0-22-19-13-ab-d8.dyn.utdallas.edu";
+    //const char* db_user = "servergroup";
+    //const char* db_pass = "agrajag";
+    //const char* db_database = "zoocam";
     const char* db_uri = "tcp://localhost";
     const char* db_user = "testing";
     const char* db_pass = "testing";
     const char* db_database = "mydb";
+
     const char* tbl_requests = "requests";
     const char* tbl_objects = "animals";
 
@@ -32,9 +38,13 @@ int main() {
 #else
 #error The non-deterministic random device is currently available on Linux only.
 #endif
-    boost::uniform_int<> range(1, 100);
-    boost::variate_generator<boost::random_device&, boost::uniform_int<> > rnd(dev, range);
 
+    int total = 1000;
+    if (argc > 1) {
+        total = atoi(argv[1]);
+    }
+    boost::uniform_int<> range(0, total);
+    boost::variate_generator<boost::random_device&, boost::uniform_int<> > rnd(dev, range);
 
     sql::mysql::MySQL_Driver *driver = sql::mysql::get_mysql_driver_instance();
     sql::Connection *con;
@@ -68,27 +78,13 @@ int main() {
         return false;
     }
 
-    /*
-     // this will be taken care of in the controller
-    try{
-        cmd = "TRUNCATE ";
-        cmd += tbl_requests;
-        stmt->execute(cmd);
-    } catch(...){
-        delete rs;
-        delete stmt;
-        delete con;
-
-        return false;
-    }
-    */
-
     int sum = 0;
     while(rs->next()) {
         int req_obj = rs->getInt("animal_id");
         int count = rnd();
         sum += count;
-        std::cout << "rnd() returned: " << count << " for Object:" << req_obj << "\n";
+        //std::cout << "rnd() returned: " << count << " for Object:" << req_obj << "\n";
+        std::cout << count <<  "\n";
 
         std::stringstream ss;
         ss << "INSERT INTO "
