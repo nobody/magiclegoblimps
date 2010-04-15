@@ -52,9 +52,9 @@ void VideoHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_con
 
             msg_ss << (*it)->getVideoURL();
             msg_ss << ";";
-            std::map<int, int>* list = (*it)->list;
+            std::map<int, float>* list = (*it)->list;
 
-            std::map<int, int>::iterator i = list->begin();
+            std::map<int, float>::iterator i = list->begin();
             for (; i != list->end(); ++i) {
                 msg_ss << (*i).first << ";" << (*i).second << ";";
             }

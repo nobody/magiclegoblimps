@@ -151,7 +151,7 @@ bool DbManager::getRequests( demand_t*& m ) {
            << req_obj << "'";
         cmd = ss.str();
 
-        std::cout << "[db] Executing query: " << cmd << "\n";
+        //std::cout << "[db] Executing query: " << cmd << "\n";
         try{
              rs_obj = stmt->executeQuery(cmd);
         }catch(...){
@@ -274,6 +274,7 @@ bool DbManager::insertCameras( Vector_ts<Robot*>* robots) {
     cmd += DbManager::db_database;
     stmt->execute(cmd);
 
+    bool ret = true;
     robots->readLock();
     if (robots->size() > 0) {
         Vector_ts<Robot*>::iterator it;
@@ -311,20 +312,21 @@ bool DbManager::insertCameras( Vector_ts<Robot*>* robots) {
             }
             ss << "')";
             cmd = ss.str();
-            std::cout << "[db] generated query \"" << cmd << "\"\n";
+            //std::cout << "[db] generated query \"" << cmd << "\"\n";
 
             try {
                 stmt->execute(cmd);
             } catch(...){
                 std::cout << "[db] Failed query: " << cmd << "\n";
                 
-                delete stmt;
-                con->rollback();
-                delete con;
+                //delete stmt;
+                //con->rollback();
+                //delete con;
 
                 (*it)->unlock();
-                robots->readUnlock();
-                return false;
+                //robots->readUnlock();
+                ret = false;
+                continue;
             }
             std::cout << "[db] Succeeded query: " << cmd << "\n";
             (*it)->unlock();
@@ -333,7 +335,10 @@ bool DbManager::insertCameras( Vector_ts<Robot*>* robots) {
     robots->readUnlock();
     con->commit();
 
-    return true;
+    delete stmt;
+    delete con;
+
+    return ret;
 }
 bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
     if (!robots)
@@ -357,6 +362,7 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
     cmd += DbManager::db_database;
     stmt->execute(cmd);
 
+    bool ret = true;
     robots->readLock();
     if (robots->size() > 0) {
         Vector_ts<Robot*>::iterator it;
@@ -372,10 +378,10 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
                << "', '"
                << (*it)->getYCord()
                << "', '";
-            int max_qual = -1;
+            float max_qual = -1;
             int max_qual_id = -1;
-            std::map<int, int>* list = (*it)->list;
-            std::map<int, int>::iterator ito = list->begin();
+            std::map<int, float>* list = (*it)->list;
+            std::map<int, float>::iterator ito = list->begin();
             for (; ito != list->end(); ++ito) {
                 if (max_qual < ito->second) {
                     max_qual_id = ito->first;
@@ -393,13 +399,14 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
             } catch(...){
                 std::cout << "[db] Failed query: " << cmd << "\n";
                 
-                delete stmt;
-                con->rollback();
-                delete con;
+                //delete stmt;
+                //con->rollback();
+                //delete con;
 
                 (*it)->unlock();
-                robots->readUnlock();
-                return false;
+                //robots->readUnlock();
+                ret = false;
+                continue;
             }
             std::cout << "[db] Succeeded query: " << cmd << "\n";
             (*it)->unlock();
@@ -408,7 +415,10 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
     robots->readUnlock();
     con->commit();
 
-    return true;
+    delete stmt;
+    delete con;
+
+    return ret;
 }
 
 bool DbManager::insertObject( Object* obj ) {

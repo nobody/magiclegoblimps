@@ -45,7 +45,7 @@ public:
     void setXCord(int x);
     void setYCord(int y);
     void setVideoURL(std::string);
-    void setList(int* objects, int* qualities, int size);
+    void setList(int* objects, float* qualities, int size);
 
     //some useful operators
     inline bool operator<(Robot& aRobot) const{
@@ -69,7 +69,7 @@ public:
     }
     
     //the vector that holds the object ids of objects in view
-    std::map<int, int>* list;
+    std::map<int, float>* list;
 
 private:
     //mutex for thread safety
