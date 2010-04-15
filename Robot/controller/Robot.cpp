@@ -109,8 +109,7 @@ void Robot::ExecuteCommand(string command)
 	}
 }
 
-void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, 
-	int status)
+void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, int status)
 {
 	loc->setX(x);
 	loc->setY(y);
@@ -143,17 +142,15 @@ void Robot::SetUpdate(int x, int y, int heading, int pan, int battery,
 	//stop 1024
 }
 
+void Robot::centerCameraOnTarget(int deg)
+{
+	cameraDirection_ = deg;
+}
+
 void Robot::setDestination(GridLoc* newD)
 {
 	delete dest;
 	dest = newD;
-}
-
-void Robot::updateLocation()
-{
-	//delete loc;
-	loc = nextLoc;
-	setNextLoc(robPath->advPath());
 }
 
 void Robot::setNextLoc(GridLoc* newNextLoc)
@@ -167,4 +164,11 @@ void Robot::setPath(Path* newPath)
 	if(robPath)
 		delete robPath;
 	robPath = newPath;
+}
+
+void Robot::updateLocation()
+{
+	//delete loc;
+	loc = nextLoc;
+	setNextLoc(robPath->advPath());
 }

@@ -20,6 +20,15 @@ float TrackingObject::GetCenteredPercentage(int width)
 	return dist / width * 200;
 }
 
+float TrackingObject::GetQuality()
+{
+	//return quality metric
+	//some combination of size and distance from center
+	//should be between 0 - 1
+
+	return 0;
+}
+
 float TrackingObject::GetSizePercentage()
 {
 	float origArea = originalBox_.size.width * originalBox_.size.height;
@@ -28,13 +37,11 @@ float TrackingObject::GetSizePercentage()
 	return currentArea / origArea * 100;
 }
 
-float TrackingObject::GetQuality()
+int TrackingObject::CenterDistanceToDegrees(int width, bool cam)
 {
-	//return quality metric
-	//some combination of size and distance from center
-	//should be between 0 - 1
+	int dist = (width / 2) - trackBox_.center.x;
 
-	return 0;
+	return dist / width * 45;
 }
 
 char* TrackingObject::BoxToArray(CvBox2D box)

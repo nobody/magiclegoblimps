@@ -33,19 +33,20 @@ public:
 	void Connect();
 	void Disconnect();
 
-	bool GetNXTConnected() { return nxtConnected_; }
 	bool GetCamConnected() { return camConnected_; }
+	bool GetNXTConnected() { return nxtConnected_; }
 	bool GetRobotOnline() { return robotOnline_; }
 
+	void centerCameraOnTarget(int deg);
 	void setDestination(GridLoc* newD);
-	void updateLocation();
 	void setNextLoc(GridLoc* newNextLoc);
 	void setPath(Path* newPath);
+	void updateLocation();
 
 	GridLoc* getLocation()		{ return loc; }
 	GridLoc* getNextLoc()		{ return nextLoc; }
 	GridLoc* getDestination()	{ return dest; }
-	Path* getPath()				{ return robPath; }
+	Path* getPath()			{ return robPath; }
 
 	void ExecuteCommand(string command);
 
