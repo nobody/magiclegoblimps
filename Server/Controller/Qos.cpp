@@ -46,9 +46,11 @@ double Qos::calcQos(Object* o, Robot* r){
 //Returns decimal on [0,1] representing difference from optimal
 double Qos::dist(Point p1, Point p2){
 	double d = sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y));
-	
-	return abs(d - Qos::OPTIMAL_DIST);
-	
+	if(d >= Qos::OPTIMAL_DIST){
+		return Qos::OPTIMAL_DIST / (double)d; //Optimal / Actual if D > optimal
+	}else{
+		return 1 - abs(d - Qos::OPTIMAL_DIST)/(double)Qos::OPTIMAL_DIST; //Calculates percent error from goal value if d < optimal
+	}
 
 }
 
