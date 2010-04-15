@@ -9,7 +9,6 @@
 #include "GridLoc.h"
 #include "Path.h"
 
-
 using namespace std;
 
 enum RobotHeading
@@ -49,9 +48,6 @@ public:
 	Path* getPath()				{ return robPath; }
 
 	void ExecuteCommand(string command);
-
-	int GetLocationX() { return locationX_; }
-	int GetLocationY() { return locationY_; }
 
 	void SetUpdate(int x, int y, int heading, int pan, int battery, int status);
 

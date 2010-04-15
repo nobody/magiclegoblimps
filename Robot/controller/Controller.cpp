@@ -16,9 +16,15 @@ Controller::Controller()
 
 Controller::Controller(int xDim, int yDim)
 {
-	timer_= 0;
 	xMax = xDim;
 	yMax = yDim;
+
+	timer_= 0;
+	connectSocket_ = NULL;
+	serverSocket_ = NULL;
+	port_ = "7626";
+
+	connected_ = false;
 }
 
 bool Controller::ConnectToServer(string ip)
@@ -106,8 +112,8 @@ bool Controller::ConnectToServer(string ip)
 			else
 				init[i].cameraType = P_CISCO;
 			init[i].VideoURL = &(*it)->GetCamera()->GetVideoURL();
-			init[i].x = (*it)->GetLocationX();
-			init[i].y = (*it)->GetLocationY();
+			init[i].x = (*it)->getLocation()->getX();
+			init[i].y = (*it)->getLocation()->getY();
 
 			i++;
 		}
@@ -453,8 +459,8 @@ void Controller::Update()
 			for (it = robots_.begin(); it != robots_.end(); it++)
 			{
 				update[i].RID = (*it)->GetID();
-				update[i].x = (*it)->GetLocationX();
-				update[i].y = (*it)->GetLocationY();
+				update[i].x = (*it)->getLocation()->getX();
+				update[i].y = (*it)->getLocation()->getY();
 				update[i].listSize = 
 					(*it)->GetCamera()->GetVisibleObjects().size();
 
