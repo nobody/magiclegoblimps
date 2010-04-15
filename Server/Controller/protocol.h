@@ -72,9 +72,13 @@ struct robotUpdate{
     int listSize;
     int* objects;
     int* qualities;
+    int* xs;
+    int* ys;
     ~robotUpdate(){
         delete[] objects;
 	delete[] qualities;
+	delete[] xs;
+	delete[] ys;
     }
 };
 struct object{
@@ -104,6 +108,8 @@ struct readReturn{
 struct assignment{
     int RID;
     int OID;
+    int x;
+    int y;
 };
 
 struct command{
