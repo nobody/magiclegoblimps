@@ -4,7 +4,6 @@ Robot::Robot(int port, string ip, bool dLink)
 {
 	nxt_ = new NXT(port);
 	camera_ = new Camera(ip, dLink);
-	//camera_ = new Camera(ip, dLink);
 
 	id_ = port;
 
@@ -21,14 +20,13 @@ Robot::Robot(int port, string ip, bool dLink)
 
 	cout << "Bringing Robot " << id_ << " online..." << endl;
 
-	//Robot::Connect();
+	Robot::Connect();
 }
 
 Robot::~Robot()
 {
-	cout << "Why does this get called?\n";
 	delete nxt_;
-	//delete camera_;
+	delete camera_;
 }
 
 void Robot::Connect()
@@ -118,8 +116,8 @@ void Robot::ExecuteCommand(string command)
 void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, 
 	int status)
 {
-	locationX_ = x;
-	locationY_ = y;
+	loc->setX(x);
+	loc->setY(y);
 	if (heading = 0)
 		robotHeading_ = NORTH;
 	else if (heading = 1)
