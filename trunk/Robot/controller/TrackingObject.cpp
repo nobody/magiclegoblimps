@@ -55,7 +55,6 @@ CvBox2D TrackingObject::ArrayToBox(char* arr)
 {
 	CvBox2D box;
 	int fSize = sizeof(float);
-	short size = fSize * 5;
 
 	char* chunk = new char[fSize];
 	

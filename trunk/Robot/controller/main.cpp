@@ -16,8 +16,6 @@ Controller* controller;
 
 bool running = true;
 
-//need to change all vectors to iterators, not for loops
-
 void LocalInput()
 {
 	//all of this needs serious error checking and cleaning up

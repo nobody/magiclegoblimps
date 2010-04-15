@@ -58,13 +58,6 @@ void Camera::Disconnect()
 
 	cvReleaseCapture(&capture_);
 	capture_ = 0;
-
-	//should be left to the controller
-	for (int i = 0; i < trackableObjects_.size(); i++)
-	{
-		delete trackableObjects_[i];
-		trackableObjects_.erase(trackableObjects_.begin() + i);
-	}
 }
 
 void Camera::SetIP(string ip)
@@ -213,24 +206,26 @@ void Camera::DisplayFrame()
 		//displays the centered/distance information
 		if (inKey_ == 'c')
 		{
-			for (int i = 0; i < visibleObjects_.size(); i++)
+			vector<TrackingObject*>::iterator it;
+
+			for (it = visibleObjects_.begin(); it != visibleObjects_.end(); it++)
 			{
 				float dist = 
-					visibleObjects_[i]->GetCenteredPercentage(image->width);
+					(*it)->GetCenteredPercentage(image->width);
 
 				if (dist < CENTERED_EPSILON && dist > -CENTERED_EPSILON)
 				{
-					cout << visibleObjects_[i]->GetID() << " is centered." << 
+					cout << (*it)->GetID() << " is centered." << 
 						endl;
 				}
 				else
 				{
-					cout << visibleObjects_[i]->GetID() << " is " << dist <<
+					cout << (*it)->GetID() << " is " << dist <<
 						"% from the center." << endl;
 				}
 
-				cout << visibleObjects_[i]->GetID() << " is size " <<
-					visibleObjects_[i]->GetSizePercentage() << "%" << endl;
+				cout << (*it)->GetID() << " is size " <<
+					(*it)->GetSizePercentage() << "%" << endl;
 			}
 		}
 
@@ -353,20 +348,22 @@ void Camera::Update()
 			CV_RGB(255, 0, 0), 3, CV_AA, 0);
 	}
 
+	vector<TrackingObject*>::iterator it;
+
 	if (possibleObjects_.size() > 0)
 	{
-		for (int i = 0; i < possibleObjects_.size(); i++)
+		for (it = possibleObjects_.begin(); it != possibleObjects_.end(); it++)
 		{
 			cvCalcBackProject(&hue, backProject, 
-				possibleObjects_[i]->GetHistogram());
+				(*it)->GetHistogram());
 			cvAnd(backProject, mask, backProject, 0);
-			trackBox = possibleObjects_[i]->GetTrackingBox();
+			trackBox = (*it)->GetTrackingBox();
 			cvCamShift(backProject, 
-				possibleObjects_[i]->GetTrackingWindow(), 
+				(*it)->GetTrackingWindow(), 
 				cvTermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 10, 1),
 				&trackComp, &trackBox);
-			possibleObjects_[i]->SetTrackingBox(trackBox);
-			possibleObjects_[i]->SetTrackingWindow(trackComp.rect);
+			(*it)->SetTrackingBox(trackBox);
+			(*it)->SetTrackingWindow(trackComp.rect);
 
 			if (!image->origin)
 				trackBox.angle = -trackBox.angle;
@@ -375,39 +372,39 @@ void Camera::Update()
 
 	if (visibleObjects_.size() > 0)
 	{
-		for (int i = 0; i < visibleObjects_.size(); i++)
+		for (it = visibleObjects_.begin(); it != visibleObjects_.end(); it++)
 		{
 			cvCalcBackProject(&hue, backProject, 
-				visibleObjects_[i]->GetHistogram());
+				(*it)->GetHistogram());
 			cvAnd(backProject, mask, backProject, 0);
-			trackBox = visibleObjects_[i]->GetTrackingBox();
+			trackBox = (*it)->GetTrackingBox();
 			cvCamShift(backProject, 
-				visibleObjects_[i]->GetTrackingWindow(), 
+				(*it)->GetTrackingWindow(), 
 				cvTermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 10, 1),
 				&trackComp, &trackBox);
-			visibleObjects_[i]->SetTrackingBox(trackBox);
-			visibleObjects_[i]->SetTrackingWindow(trackComp.rect);
+			(*it)->SetTrackingBox(trackBox);
+			(*it)->SetTrackingWindow(trackComp.rect);
 
 			if (!image->origin)
 				trackBox.angle = -trackBox.angle;
 
 			if (showTracking_)
 			{
-				if (visibleObjects_[i]->GetID() == target_)
+				if ((*it)->GetID() == target_)
 				{
-					cvEllipseBox(image, visibleObjects_[i]->GetTrackingBox(),
+					cvEllipseBox(image, (*it)->GetTrackingBox(),
 						CV_RGB(0, 255, 0), 3, CV_AA, 0);
 				}
 				else
 				{
-					cvEllipseBox(image, visibleObjects_[i]->GetTrackingBox(),
+					cvEllipseBox(image, (*it)->GetTrackingBox(),
 						CV_RGB(0, 0, 255), 3, CV_AA, 0);
 				}
 			}
 
-			if (visibleObjects_[i]->GetSizePercentage() > MAX_SIZE ||
-				visibleObjects_[i]->GetSizePercentage() < MIN_SIZE)
-				visibleObjects_.erase(visibleObjects_.begin() + i);
+			if ((*it)->GetSizePercentage() > MAX_SIZE ||
+				(*it)->GetSizePercentage() < MIN_SIZE)
+				visibleObjects_.erase(it);
 		}
 	}
 
@@ -430,9 +427,11 @@ void Camera::Scan()
 
 	//should check if object is already visible before rescanning
 
-	for (int i = 0; i < possibleObjects_.size(); i++)
+	vector<TrackingObject*>::iterator it;
+
+	for (it = possibleObjects_.begin(); it != possibleObjects_.end(); it++)
 	{
-		possibleObjects_[i]->SetTrackingWindow(cvRect(0, 0, image->width, 
+		(*it)->SetTrackingWindow(cvRect(0, 0, image->width, 
 			image->height));
 	}
 
@@ -442,11 +441,14 @@ void Camera::Scan()
 
 void Camera::Lock()
 {
-	for (int i = 0; i < possibleObjects_.size(); i++)
+
+	vector<TrackingObject*>::iterator it;
+
+	for (it = possibleObjects_.begin(); it != possibleObjects_.end(); it++)
 	{
-		if (possibleObjects_[i]->GetSizePercentage() > MAX_SIZE ||
-			possibleObjects_[i]->GetSizePercentage() < MIN_SIZE)
-			possibleObjects_.erase(possibleObjects_.begin() + i);
+		if ((*it)->GetSizePercentage() > MAX_SIZE ||
+			(*it)->GetSizePercentage() < MIN_SIZE)
+			possibleObjects_.erase(it);
 	}
 
 	visibleObjects_ = possibleObjects_;
