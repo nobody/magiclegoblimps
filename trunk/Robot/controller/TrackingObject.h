@@ -42,13 +42,14 @@ public:
 	}
 
 	float GetCenteredPercentage(int width);
+	float GetQuality();
 	float GetSizePercentage();
 
-	float GetQuality();
+	int CenterDistanceToDegrees(int width, bool cam);
 
 	static char* BoxToArray(CvBox2D box);
-	static CvBox2D ArrayToBox(char* arr);
 	static char* HistogramToArray(CvHistogram* hist);
+	static CvBox2D ArrayToBox(char* arr);
 	static CvHistogram* ArrayToHistogram(char* arr);
 
 private:
