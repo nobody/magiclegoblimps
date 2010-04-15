@@ -17,10 +17,6 @@ Robot::Robot(int port, string ip, bool dLink)
 
 	loc = new GridLoc();
 	dest = new GridLoc();
-
-	cout << "Bringing Robot " << id_ << " online..." << endl;
-
-	Robot::Connect();
 }
 
 Robot::~Robot()

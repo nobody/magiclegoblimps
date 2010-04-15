@@ -28,10 +28,11 @@ float TrackingObject::GetSizePercentage()
 	return currentArea / origArea * 100;
 }
 
-int TrackingObject::GetQuality()
+float TrackingObject::GetQuality()
 {
 	//return quality metric
 	//some combination of size and distance from center
+	//should be between 0 - 1
 
 	return 0;
 }
@@ -81,26 +82,21 @@ CvBox2D TrackingObject::ArrayToBox(char* arr)
 	return box;
 }
 
-//test
-#include <iostream>
-
 char* TrackingObject::HistogramToArray(CvHistogram* hist)
 {
-	char* arr;
+	cvSave("histogram.xml", hist);
 
-	//histogram
-	//=========
-	//int type
-	//CvArr* bins
-	//float tresh[CV_MAX_DIM][2];
-	//CvMatND mat
+	ifstream file;
+	file.open("histogram.xml", ios::in);
 
-	/*
-	std::cout << "type " << histogram_->type << endl;
-	std::cout << "bins " << histogram_->bins << endl;
-	std::cout << "tresh " << histogram_->thresh << endl;
-	std::cout << "mat " << histogram_->mat << endl;
-	*/
+	stringstream buffer;
+	buffer << file.rdbuf();
+	string contents(buffer.str());
+
+	char* arr = new char[contents.length() + 1];
+	strcpy(arr, contents.c_str());
+
+	file.close();
 
 	return arr;
 }
@@ -108,6 +104,13 @@ char* TrackingObject::HistogramToArray(CvHistogram* hist)
 CvHistogram* TrackingObject::ArrayToHistogram(char* arr)
 {
 	CvHistogram* hist;
+
+	ofstream file;
+	file.open("histogram.xml", ios::out |  ios::trunc);
+	file << arr;
+	file.close();
+
+	hist = (CvHistogram*)cvLoad("histogram.xml");
 
 	return hist;
 }

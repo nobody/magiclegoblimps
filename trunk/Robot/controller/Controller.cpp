@@ -95,7 +95,8 @@ bool Controller::ConnectToServer(string ip)
 	if (robots_.empty())
 	{
 		init = new robotInit[1];
-		init[1].RID = -1;
+		init[0].RID = -1;
+		init[0].VideoURL = NULL;
 	}
 	else
 	{
@@ -364,6 +365,7 @@ void Controller::RemoveRobot(int id)
 			(*it)->Disconnect();
 			delete (*it);
 			robots_.erase(it);
+			break;
 		}
 	}
 }
@@ -375,24 +377,36 @@ vector<Robot*> Controller::GetRobotVector()
 
 void Controller::Disconnect()
 {
-	vector<Robot*>::iterator it;
-
-	for (it = robots_.begin(); it != robots_.end(); it++)
+	if (robots_.size() > 0)
 	{
-		(*it)->Disconnect();
-		delete (*it);
-		robots_.erase(it);
+		vector<Robot*>::iterator it;
+
+		for (it = robots_.begin(); it != robots_.end(); it++)
+		{
+			(*it)->Disconnect();
+			delete (*it);
+		}
+
+		robots_.clear();
 	}
 
-	vector<TrackingObject*>::iterator oit;
-
-	for (oit = Camera::GetTrackableObjects().begin(); oit != 
-		Camera::GetTrackableObjects().end(); oit++)
+	//vectors incompatible error
+	//needs fixing for cleaning up
+	/*
+	if (Camera::GetTrackableObjects().size() > 0)
 	{
-		delete (*oit);
-		Camera::GetTrackableObjects().erase(oit);
-	}
+		vector<TrackingObject*>::iterator it;
 
+		for (it = Camera::GetTrackableObjects().begin(); it != 
+			Camera::GetTrackableObjects().end(); it++)
+		{
+			delete (*it);
+		}
+
+		Camera::GetTrackableObjects().clear();
+	}
+	*/
+	
 	if (connectSocket_ != NULL)
 	{
 		//socket might need shutdown
