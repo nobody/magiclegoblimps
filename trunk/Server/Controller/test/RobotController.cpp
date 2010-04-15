@@ -44,6 +44,10 @@ int main() {
     update[0].objects[0] = 1;
     update[0].qualities = new int[1];
     update[0].qualities[0] = 1;
+    update[0].xs= new int[1];
+    update[0].xs[0] = 1;
+    update[0].ys= new int[1];
+    update[0].ys[0] = 1;
 
     update[1].RID = 1;
     update[1].x = 2;
@@ -55,6 +59,12 @@ int main() {
     update[1].qualities = new int[2];
     update[1].qualities[0] = 2;
     update[1].qualities[1] = 3;
+    update[1].xs= new int[2];
+    update[1].xs[0] = 2;
+    update[1].xs[1] = 3;
+    update[1].ys= new int[2];
+    update[1].ys[0] = 2;
+    update[1].ys[1] = 3;
 
     update[2].RID = 2;
     update[2].x = 3;
@@ -68,6 +78,14 @@ int main() {
     update[2].qualities[0] = 1;
     update[2].qualities[1] = 2;
     update[2].qualities[2] = 5;
+    update[2].xs= new int[3];
+    update[2].xs[0] = 1;
+    update[2].xs[1] = 2;
+    update[2].xs[2] = 5;
+    update[2].ys= new int[3];
+    update[2].ys[0] = 1;
+    update[2].ys[1] = 2;
+    update[2].ys[2] = 5;
 
     byteArray updArr;
     if (write_data(P_ROBOT_UPDATE, update, 3, &updArr)) {
