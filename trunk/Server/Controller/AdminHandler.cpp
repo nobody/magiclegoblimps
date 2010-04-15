@@ -102,7 +102,7 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
     std::cout << "Got string \"" << s << "\"\n";
     std::cout.flush();
 
-    if(!s.compare(std::string("shutdown"))){
+    if(!s.compare(std::string("shutdown\n"))){
         
         return;
 

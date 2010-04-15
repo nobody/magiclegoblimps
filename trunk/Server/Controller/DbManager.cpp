@@ -52,9 +52,10 @@ bool DbManager::normalize(demand_t*& d ) {
         int OID = (*ito)->getOID();
         (*ito)->unlock();
 
+        // make sure we have entries for all objects
         if (old)
-            (*old)[OID] = (*old)[OID];
-        (*d)[OID] = (*d)[OID];
+            (*old)[OID];
+        (*d)[OID];
     }
     objs_->readUnlock();
 
