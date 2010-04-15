@@ -12,6 +12,7 @@
 #define SPEED 30
 #define SPEED_ADJUST 4
 #define SPD_ADJ_CAL 3
+#define SPEED_CONTROL 15
 #define TURN90 160
 #define TURN180 320
 #define PAN_RATIO 7 / 3
@@ -37,16 +38,17 @@ int curPan = 0;
 #define FAR 100
 
 // MODE
-#define STOPPED 0
-#define IDLE 1
-#define DESTINATION 2
-#define LINE_FOLLOW 3
-#define INTERSECTION 4
-#define TURNLEFT 5
-#define TURNRIGHT 6
-#define TURNAROUND 7
-#define SONARBLOCK 8
-#define CALIBRATING
+#define IDLE 1                //1
+#define DESTINATION 2         //2
+#define LINE_FOLLOW 3         //4
+#define INTERSECTION 4        //8
+#define TURNLEFT 5            //16
+#define TURNRIGHT 6           //32
+#define TURNAROUND 7          //64
+#define SONARBLOCK 8          //128
+#define CALIBRATING 9         //256
+#define PAN 10                //512
+#define STOPPED 11            //1024
 
 int MODE = 0;
 
@@ -77,14 +79,39 @@ int heading;
 int STATUS = 0;
 int CALIBRATED = 0;
 
+
+void setLightOn()
+{
+ SetSensorType(_SENSOR_LEFT, SENSOR_TYPE_LIGHT_ACTIVE);
+ SetSensorType(_SENSOR_RIGHT, IN_TYPE_LIGHT_ACTIVE);
+}
+
+void setLightOff()
+{
+ SetSensorType(_SENSOR_LEFT, SENSOR_TYPE_LIGHT_INACTIVE);
+ SetSensorType(_SENSOR_RIGHT, IN_TYPE_LIGHT_INACTIVE);
+}
+
+void setLightRaw()
+{
+ SetSensorMode(_SENSOR_LEFT, SENSOR_MODE_RAW);
+ SetSensorMode(_SENSOR_RIGHT, SENSOR_MODE_RAW);
+}
+
+void setSonarRaw()
+{
+ SetSensorLowspeed(_SONAR);
+}
+
 void setStatus(int s)
 {
- STATUS |= s;
+ STATUS |= (1 << s);
 }
 
 void remStatus(int s)
 {
- STATUS &= !s;
+ s = 1 << s;
+ STATUS &= -1-(1 << s);
 }
 
 int battery()
@@ -114,11 +141,6 @@ void forward()
  motorPower(SPEED,SPEED);
 }
 
-void forwardSync(int turnpct)
-{
- OnFwdSync(MOTOR_BOTH,SPEED,turnpct);
-}
-
 void forwardWait(int ms)
 {
  forward();
@@ -128,11 +150,15 @@ void forwardWait(int ms)
 
 void turnRight()
 {
+ setStatus(TURNRIGHT);
+ 
  ResetRotationCount(MOTOR_LEFT);
  motorPower(SPEED,-SPEED);
  while(MotorRotationCount(MOTOR_LEFT)<TURN90);
  stopMotors();
  heading = (heading + 1) % 4;
+ 
+ remStatus(TURNRIGHT);
 }
 
 void turnRightWait(int before, int after)
@@ -144,11 +170,15 @@ void turnRightWait(int before, int after)
 
 void turnLeft()
 {
+ setStatus(TURNLEFT);
+ 
  ResetRotationCount(MOTOR_RIGHT);
  motorPower(-SPEED,SPEED);
  while(MotorRotationCount(MOTOR_RIGHT)<TURN90);
  stopMotors();
  heading = (heading) ? (heading - 1) : 3;
+ 
+ remStatus(TURNLEFT);
 }
 
 void turnLeftWait(int before, int after)
@@ -158,23 +188,39 @@ void turnLeftWait(int before, int after)
  forwardWait(after);
 }
 
-void turnLeftRotate()
-{
- RotateMotorEx(MOTOR_BOTH,SPEED,180,100,true,true);
-}
-
 void turnAround()
 {
+ setStatus(TURNAROUND);
+ 
  ResetRotationCount(MOTOR_LEFT);
  motorPower(SPEED,-SPEED);
  while(MotorRotationCount(MOTOR_LEFT)<TURN180);
  stopMotors();
  heading = (heading + 2) % 4;
+ 
+ remStatus(TURNAROUND);
 }
 
+// degrees
 void pan(int deg)
 {
+ setStatus(PAN);
+ 
+ // normalize input
+ while( deg < -360 )
+        deg += 360;
+ deg %= 360;
+ 
+ curPan += deg;
+ 
  RotateMotor(MOTOR_CAMERA,PAN_SPEED,deg*PAN_RATIO);
+ 
+ // normalize current
+ while( curPan < 0 )
+        curPan += 360;
+ curPan %= 360;
+ 
+ remStatus(PAN);
 }
 
 int sensorLeft()
@@ -191,22 +237,45 @@ int sensorRight()
  return ( value*100 / range);
 }
 
-int maxSensor()
+void lineCorrect()
 {
- int left = sensorLeft();
- int right = sensorRight();
- return (left>right) ? left : right;
+ int left, right;
+  
+ setLightOn();
+ Wait(10);
+ do
+ {
+    left = sensorLeft();
+    right = sensorRight();
+
+    if( left < right )
+    {
+     motorPower(-SPEED,SPEED);
+    }
+    else
+    {
+     motorPower(SPEED,-SPEED);
+    }
+ } while( abs(right-left) > 5 );
+ 
+ stopWheels();
 }
 
 void checkSonar()
 {
  if( SONAR <= NEAR )
  {
+  setStatus(SONARBLOCK);
+  
   int last = MODE;
   MODE = SONAR;
+  
   stopWheels();
   while( SONAR <= NEAR );
+
   MODE = last;
+  
+  remStatus(SONARBLOCK);
  }
 }
 
@@ -214,31 +283,11 @@ void adjustLinePosition()
 {
  int pos = sensorRight() - sensorLeft();
  int adj = pos * SPD_ADJ_CAL;
- motorPower( SPEED - adj, SPEED + adj );
-}
 
-void adjustLinePositionRaw()
-{
- int pos = SENSOR_RIGHT - SENSOR_LEFT;
- pos *= 2/3;
- int adj = pos*pos;
- adj = Sqrt(adj);
- adj = Sqrt(adj);
- adj = (pos>0)?adj:-adj;
- adj = pos / SPEED_ADJUST;
- motorPower( SPEED + adj, SPEED - adj );
-}
+ if( adj < -SPEED_CONTROL ) adj = -SPEED_CONTROL;
+ else if( adj > SPEED_CONTROL ) adj = SPEED_CONTROL;
 
-void adjustLineSyncRaw()
-{
- int pos = SENSOR_RIGHT - SENSOR_LEFT;
- //int adj = pos / SPEED_ADJUST;
- pos *= 2/3;
- int adj = pos*pos;
- adj = Sqrt(adj);
- adj = Sqrt(adj);
- adj = (pos>0)?adj:-adj;
- forwardSync(adj);
+ motorPower( SPEED - adj, SPEED + adj);
 }
 
 bool aboveThreshold()
@@ -248,38 +297,91 @@ bool aboveThreshold()
  return false;
 }
 
-bool aboveThresholdRaw()
+void intersection()
 {
- if( SENSOR_LEFT > THRESHOLDRAW || SENSOR_RIGHT > THRESHOLDRAW )
-     return true;
- return false;
+ if( MODE != STOPPED ){
+     MODE = INTERSECTION;
+
+     switch(heading)
+     {
+      case NORTH : curY++; break;
+      case EAST  : curX++; break;
+      case SOUTH : curY--; break;
+      case WEST  : curX--; break;
+     }
+ }
 }
 
-void setLightOn()
+void lineFollow()
 {
- SetSensorType(_SENSOR_LEFT, SENSOR_TYPE_LIGHT_ACTIVE);
- SetSensorType(_SENSOR_RIGHT, IN_TYPE_LIGHT_ACTIVE);
+ setStatus(LINE_FOLLOW);
+ setLightOn();
+
+ Wait(100);
+
+ do {
+   checkSonar();  // blocking
+   adjustLinePosition();
+ } while( aboveThreshold() && MODE!=STOPPED );
+
+ intersection();
+
+ stopWheels();
+ remStatus(LINE_FOLLOW);
 }
 
-void setLightOff()
-{
- SetSensorType(_SENSOR_LEFT, SENSOR_TYPE_LIGHT_INACTIVE);
- SetSensorType(_SENSOR_RIGHT, IN_TYPE_LIGHT_INACTIVE);
-}
-
-void setLightRaw()
-{
- SetSensorMode(_SENSOR_LEFT, SENSOR_MODE_RAW);
- SetSensorMode(_SENSOR_RIGHT, SENSOR_MODE_RAW);
-}
-
-void setSonarRaw()
-{
- SetSensorLowspeed(_SONAR);
-}
-
-/*
 void calibrate()
 {
+ setStatus(CALIBRATING);
+ 
+ int left, right;
+
+ setLightOn();
+
+ motorPower(25,-25);
+ repeat(10)
+ {
+  Wait(100);
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ }
+ stopWheels();
+ motorPower(-25,25);
+ repeat(20)
+ {
+  Wait(100);
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ }
+ stopWheels();
+ motorPower(25,-25);
+ repeat(10)
+ {
+  Wait(100);
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ }
+ stopWheels();
+
+ CALIBRATED = true;
+ 
+ remStatus(CALIBRATING);
 }
-*/

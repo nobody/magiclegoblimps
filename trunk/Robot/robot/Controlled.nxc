@@ -1,151 +1,15 @@
-/*
-  @ commands
-  - start   (one time only)
-  - forward
-  - forward ms
-  - left
-  - right
-  - turnaround
-  - pan deg
-  - stop
-
-  @ start up receive
-  - line type (black/white)
-  - starting X
-  - starting Y
-  - starting heading
-
-  @ start up send
-  - battery level
-
-  @ feedback
-  - curX (int)
-  - curY (int)
-  - heading (int)
-  - battery level (int)
-  - pan deg (int)
-  - at intersection (boolean)
-*/
-
 #include "robot.h"
 
-// location and heading
-int destX;
-int destY;
-int maxX;
-int maxY;
-int homeX;
-int homeY;
-int tacho = 0;
-//int destPan;
-
-// sensors
-int LEFT_DARK;
-int LEFT_LIGHT;
-int RIGHT_DARK;
-int RIGHT_LIGHT;
-
-// others
-int last_sensor = 0;
-int status = 0; // flags
-
-void calibrate()
+bool testCommand(string msg, string cmd)
 {
- int left, right;
- 
- setLightOn();
-
- motorPower(25,-25);
- repeat(10)
- {
-  Wait(100);
-  left = SENSOR_LEFT;
-  right = SENSOR_RIGHT;
-
-  if(left<LEFT_MIN) LEFT_MIN = left;
-  else if(left>LEFT_MAX) LEFT_MAX = left;
-
-  if(right<RIGHT_MIN) RIGHT_MIN = right;
-  else if(right>RIGHT_MAX) RIGHT_MAX = right;
- }
- stopWheels();
- motorPower(-25,25);
- repeat(20)
- {
-  Wait(100);
-  left = SENSOR_LEFT;
-  right = SENSOR_RIGHT;
-
-  if(left<LEFT_MIN) LEFT_MIN = left;
-  else if(left>LEFT_MAX) LEFT_MAX = left;
-
-  if(right<RIGHT_MIN) RIGHT_MIN = right;
-  else if(right>RIGHT_MAX) RIGHT_MAX = right;
- }
- stopWheels();
- motorPower(25,-25);
- repeat(10)
- {
-  Wait(100);
-  left = SENSOR_LEFT;
-  right = SENSOR_RIGHT;
-
-  if(left<LEFT_MIN) LEFT_MIN = left;
-  else if(left>LEFT_MAX) LEFT_MAX = left;
-
-  if(right<RIGHT_MIN) RIGHT_MIN = right;
-  else if(right>RIGHT_MAX) RIGHT_MAX = right;
- }
- stopWheels();
-
- CALIBRATED = true;
+ int len = StrLen(cmd);
+ return (StrLen(msg) >= len && SubStr(msg,0,len) == cmd);
 }
-
-void lineFollow()
-{
- setLightOn();
- 
- Wait(100);
- forwardSync(0);
- //*
- if( CALIBRATED )
- {
-    do {
-      checkSonar();  // blocking
-      adjustLinePosition();
-    } while( aboveThreshold() && MODE!=STOPPED );
- }
- else
- //*/
- //*
- {
-     do {
-      checkSonar();  // blocking
-      adjustLinePositionRaw();
-      //adjustLineSyncRaw();
-    } while( aboveThresholdRaw() && MODE!=STOPPED );
- }
-
-
-
- if( MODE != STOPPED )
-     MODE = INTERSECTION;
-
- stopWheels();
-}
-
-/* turn the camera by a degree
-   +deg : clockwise
-   -deg : counter-clockwise
-*/
 
 task receiveCommand()
 {
  string msg = "";
- string cmd = "";
- int space;
  int value;
- int i;
  int len;
 
  FOREVER
@@ -154,55 +18,59 @@ task receiveCommand()
   
   ReceiveMessage(INBOX,false,msg);
 
-  len = StrLen(msg);
-
-  if(len>0)
+  if(StrLen(msg)>0)
   {
-   if( (len >= 3 && SubStr(msg,0,3) == "pan" )
-    || ( len >= 4 && SubStr(msg,0,4) == "stop" ) )
+   if( testCommand(msg,"pan") || testCommand(msg,"stop" ) )
    {
     continue;
    }
    
    ReceiveMessage(INBOX,true,msg);
-   len = StrLen(msg);
+   //len = StrLen(msg);
 
-   if( len >= 4 && SubStr(msg,0,4) == "left" )
+   if( testCommand(msg,"left" ) )
    {
     MODE = TURNLEFT;
-    turnLeftWait( 400, 200 );
-    //turnLeftRotate();
+    turnLeftWait( 400, 300 );
+    lineCorrect();
     stopWheels();
     MODE = IDLE;
    }
-   else if( len >= 5 && SubStr(msg,0,5) == "right" )
+   else if( testCommand(msg,"right" ) )
    {
     MODE = TURNRIGHT;
-    turnRightWait( 300, 200 );
+    turnRightWait( 400, 300 );
+    lineCorrect();
     stopWheels();
     MODE = IDLE;
    }
-   else if( len >= 10 && SubStr(msg,0,10) == "turnaround" )
+   else if( testCommand(msg,"turnaround" ) )
    {
     MODE = TURNAROUND;
     turnAround();
     MODE = IDLE;
    }
    //*
-   else if( len >= 9 && SubStr(msg,0,9) == "calibrate" )
+   else if( testCommand(msg,"calibrate" ) )
    {
     MODE = CALIBRATING;
     calibrate();
     MODE = IDLE;
    }
    //*/
-   else if( len >= 7 && SubStr(msg,0,7) == "forward" )
+   else if( testCommand(msg,"correct") )
    {
-    if( len == 7 )
+    lineCorrect();
+   }
+   
+   else if( testCommand(msg,"forward") )
+   {
+    //if( len == 7 )
     {
      MODE = LINE_FOLLOW;
      lineFollow();
     }
+    /*
     else
     {
      msg = SubStr(msg,8,len-8);
@@ -216,6 +84,7 @@ task receiveCommand()
      }
      stopWheels();
     }
+    */
    }
    else
    {
@@ -238,13 +107,12 @@ task cmdPan()
 
   len = StrLen(msg);
 
-  if( len >= 3 && SubStr(msg,0,3) == "pan" )
+  if( testCommand(msg,"pan") )
   {
    ReceiveMessage(INBOX,true,msg);
 
    msg = SubStr( msg, 4, len );
    deg = StrToNum( msg );
-   curPan += deg;
 
    pan( deg );
   }
@@ -264,7 +132,7 @@ task cmdStop()
 
   len = StrLen(msg);
 
-  if( len >= 4 && SubStr(msg,0,4) == "stop" )
+  if( testCommand(msg,"stop") )
   {
    ReceiveMessage(INBOX,true,msg);
 
@@ -300,7 +168,7 @@ task sendFeedBack()
        h = NumToStr(heading);
        p = NumToStr(curPan);
        b = NumToStr(battery());
-       s = NumToStr(status);
+       s = NumToStr(STATUS);
        str = StrCat(x,d,y,d,h,d,p,d,b,d,s);
 
       ReceiveMessage(OUTBOX,false,msg);
@@ -310,15 +178,13 @@ task sendFeedBack()
        ReceiveMessage(OUTBOX,true,msg);
       }
 
-      //SendResponseString(OUTBOX,str);
-      SendMessage(OUTBOX,str);
+      SendResponseString(OUTBOX,str);
 
-      Wait(25);
-
-      status = 0;
+      Wait(23);
    }
 }
 
+/*
 task display()
 {
  string out;
@@ -347,23 +213,14 @@ task display()
     Wait(100);
  }
 }
+*/
 
 task main()
 {
- Precedes(receiveCommand,cmdPan,cmdStop,sendFeedBack,display);
+ Precedes(receiveCommand,cmdPan,cmdStop,sendFeedBack);
 
  setSonarRaw();
  setLightRaw();
  
  SendMessage(OUTBOX,"hello");
-  
-  /*
- TextOut(0,0,"waiting",true);
- string msg;
- do {
-  ReceiveMessage(INBOX,true,msg);
- } while( msg != "start" );
-
- ClearScreen();
- //*/
- }
+}
