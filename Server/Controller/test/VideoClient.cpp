@@ -109,7 +109,7 @@ AdminClient::~AdminClient(){
 
 
 void AdminClient::read_handler(const boost::system::error_code& error, std::size_t bytes) {
-    std::cout << "Recieved " << bytes << " bytes.\n";
+//    std::cout << "Recieved " << bytes << " bytes.\n";
 
     // The extra parens around the first argument here are necessary 
     // to avoid g++ interpreting this as a function declaration
@@ -125,12 +125,12 @@ void AdminClient::read_handler(const boost::system::error_code& error, std::size
     }
 
     std::string s(read_message_.data(bytes));
-    std::cout << "Built string.\n";
+//    std::cout << "Built string.\n";
 
     read_message_.consume(bytes);
-    std::cout << read_message_.buffer().size() << " bytes remaining in buffer.\n";
+//    std::cout << read_message_.buffer().size() << " bytes remaining in buffer.\n";
 
-    std::cout << s << "-----------------------\n";
+    std::cout << s;// << "-----------------------\n";
 
     boost::system::error_code err;
     boost::asio::async_read_until(sock_, read_message_.buffer(), '\n', 

@@ -348,6 +348,8 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 							(*it)->setList(robotData[i].objects, robotData[i].qualities, robotData[i].listSize);
 
                             std::stringstream msg_ss;
+                            boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+                            msg_ss << now << "\n\n";
                             msg_ss << (*it)->getVideoURL() << ";";
 
 							(*it)->unlock();
@@ -476,6 +478,8 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
 			std::cout<<"[RH] have endpoint: " << (*it)->getEndpoint() << std::endl;
 			if ((*it)->getEndpoint() == connEP){
                 std::stringstream msg_ss;
+                boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+                msg_ss << now << "\n\n";
                 msg_ss << "DELETE " << (*it)->getVideoURL() << "\n";
                 vidHandler->write(msg_ss.str());
 				delete (*it);

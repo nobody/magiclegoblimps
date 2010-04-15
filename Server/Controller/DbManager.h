@@ -12,8 +12,6 @@
 #include <map>
 #include <stdlib.h>
 
-#include <boost/rational.hpp>
-
 // MySQL Connector C++
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>

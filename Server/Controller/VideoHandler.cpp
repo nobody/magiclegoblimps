@@ -38,7 +38,7 @@ void VideoHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_con
     
     // print the current date/time
     boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-    msg_ss << now << "\n";
+    msg_ss << now << "\n\n";
 
     // send robot information
     {
