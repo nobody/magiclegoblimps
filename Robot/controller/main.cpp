@@ -156,6 +156,19 @@ void LocalInput()
 
 		delete testArr;
 	}
+
+	//testhist
+	if (tokens[0].compare("testhist") == 0)
+	{
+		char* testArr = TrackingObject::HistogramToArray(
+			Camera::GetTrackableObjects()[0]->GetHistogram());
+
+		CvHistogram* testHist = TrackingObject::ArrayToHistogram(testArr);
+
+		Camera::GetTrackableObjects()[0]->SetHistogram(testHist);
+
+		delete testArr;
+	}
 }
 
 int main(int argc, char* argv[])

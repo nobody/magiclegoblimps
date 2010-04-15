@@ -1,6 +1,8 @@
 #ifndef TRACKINGOBJECT_H
 #define TRACKINGOBJECT_H
 
+#include <iostream>
+#include <fstream>
 #include <cv.h>
 
 using namespace std;
@@ -24,6 +26,12 @@ public:
 	CvRect GetTrackingWindow() { return trackWindow_; }
 	CvHistogram* GetHistogram() { return histogram_; }
 
+	//test function
+	void SetHistogram(CvHistogram* hist)
+	{
+		histogram_ = hist;
+	}
+
 	void SetTrackingBox(CvBox2D trackBox)
 	{
 		trackBox_ = trackBox;
@@ -36,7 +44,7 @@ public:
 	float GetCenteredPercentage(int width);
 	float GetSizePercentage();
 
-	int GetQuality();
+	float GetQuality();
 
 	static char* BoxToArray(CvBox2D box);
 	static CvBox2D ArrayToBox(char* arr);

@@ -1,7 +1,7 @@
 #include "Camera.h"
 
 //static member variables must be redeclared in source
-int Camera::nextObject_;
+int Camera::nextObject_ = -1;
 vector<TrackingObject*> Camera::trackableObjects_;
 
 Camera::Camera(string ip, bool dLinkCam)
@@ -43,7 +43,7 @@ bool Camera::Connect()
 		camUrl_ += ciscoUrl_;
 
 	//comment this out to disable the camera
-	//capture_ = cvCreateFileCapture(camUrl_.c_str());
+	capture_ = cvCreateFileCapture(camUrl_.c_str());
 
 	if (capture_ == 0)
 		return false;
@@ -192,8 +192,7 @@ void Camera::DisplayFrame()
 			newObject->SetTrackingWindow(cvRect(0, 0, 
 				image->width, image->height));
 
-			newObject->SetID(nextObject_);
-			nextObject_++;
+			newObject->SetID(GetNextAvailableID());
 
 			trackableObjects_.push_back(newObject);
 
@@ -418,7 +417,9 @@ void Camera::Update()
 
 int Camera::GetNextAvailableID()
 {
-	return 0;
+	//this needs to be better
+	nextObject_++;
+	return nextObject_;
 }
 
 void Camera::Scan()
