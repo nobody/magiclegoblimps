@@ -3,7 +3,6 @@
 //static member variables must be redeclared in source
 vector<Robot*> Controller::robots_;
 SOCKET Controller::connectSocket_;
-//vector<TrackingObject*> Camera::GetTrackableObjects();
 
 Controller::Controller()
 {
@@ -24,7 +23,7 @@ Controller::Controller(int xDim, int yDim)
 
 bool Controller::ConnectToServer(string ip)
 {
-	/*WSADATA wsaData;
+	WSADATA wsaData;
 	connectSocket_ = INVALID_SOCKET;
 	struct addrinfo *result = NULL, *ptr = NULL, hints;
 	char recvBuf[BUFFER_LENGTH];
@@ -90,23 +89,27 @@ bool Controller::ConnectToServer(string ip)
 	if (robots_.empty())
 	{
 		init = new robotInit[1];
-
 		init[1].RID = -1;
 	}
 	else
 	{
 		init = new robotInit[robots_.size()];
 
-		for (int i = 0; i < robots_.size(); i++)
+		vector<Robot*>::iterator it;
+		int i = 0;
+
+		for (it = robots_.begin(); it != robots_.end(); it++)
 		{
-			init[i].RID = robots_[i]->GetID();
-			if (robots_[i]->GetCamera()->GetDLinkCam())
+			init[i].RID = (*it)->GetID();
+			if ((*it)->GetCamera()->GetDLinkCam())
 				init[i].cameraType = P_DLINK;
 			else
 				init[i].cameraType = P_CISCO;
-			//init[i].VideoURL = robots_[i]->GetCamera()->GetVideoURL();
-			init[i].x = robots_[i]->GetLocationX();
-			init[i].y = robots_[i]->GetLocationY();
+			init[i].VideoURL = &(*it)->GetCamera()->GetVideoURL();
+			init[i].x = (*it)->GetLocationX();
+			init[i].y = (*it)->GetLocationY();
+
+			i++;
 		}
 	}
 
@@ -117,7 +120,7 @@ bool Controller::ConnectToServer(string ip)
 
 	_beginthread(ClientThread, 0, NULL);
 
-	connected_ = true;*/
+	connected_ = true;
 
 	return true;
 }
@@ -125,7 +128,7 @@ bool Controller::ConnectToServer(string ip)
 //creates a listening server socket for testing with self
 bool Controller::Serve()
 {
-	/*WSADATA wsaData;
+	WSADATA wsaData;
     SOCKET listenSocket = INVALID_SOCKET;
     struct addrinfo *result = NULL, hints;
     int iResult = 0;
@@ -193,7 +196,7 @@ bool Controller::Serve()
 
     closesocket(listenSocket);
 
-	cout << "Client connected." << endl;*/
+	cout << "Client connected." << endl;
 
     return true;
 }
@@ -203,72 +206,74 @@ void Controller::ClientThread(void* params)
 	int iResult = 0;
 	char recvBuf[BUFFER_LENGTH];
 	int recvBufLen = BUFFER_LENGTH;
-	//while (true)
-	//{
- //       iResult = recv(connectSocket_, recvBuf, recvBufLen, 0);
- //       if (iResult > 0)
-	//	{
-	//		readReturn* data = new readReturn;
+	while (true)
+	{
+        iResult = recv(connectSocket_, recvBuf, recvBufLen, 0);
+        if (iResult > 0)
+		{
+			readReturn* data = new readReturn;
 
-	//		read_data(recvBuf, data);
+			read_data(recvBuf, data);
 
-	//		int type = data->type;
+			int type = data->type;
 
-	//		if (type == P_OBJECT)
-	//		{
-	//			object* obj = new object[data->size];
-	//			obj = (object*)data->array;
+			if (type == P_OBJECT)
+			{
+				object* obj = new object[data->size];
+				obj = (object*)data->array;
 
-	//			for (int i = 0; i < data->size; i++)
-	//			{
-	//				cout << "Adding Object " << obj[i].OID << 
-	//					" : " << obj[i].name << endl;
+				for (int i = 0; i < data->size; i++)
+				{
+					cout << "Adding Object " << obj[i].OID << 
+						" : " << obj[i].name << endl;
 
-	//				//TrackingObject* newObj = TrackingObject(
-	//				//add to the tracking objects vector
-	//			}
-	//		}
-	//		else if (type == P_ASSIGNMENT)
-	//		{
-	//			assignment* assign = new assignment[data->size];
-	//			assign = (assignment*)data->array;
+					//TrackingObject* newObj = TrackingObject(
+					//add to the tracking objects vector
+				}
+			}
+			else if (type == P_ASSIGNMENT)
+			{
+				assignment* assign = new assignment[data->size];
+				assign = (assignment*)data->array;
 
-	//			for (int i = 0; i < data->size; i++)
-	//			{
-	//				cout << "Assigning Robot " << assign[i].RID << 
-	//					" to Object " << assign[i].OID << endl;
-	//				robots_[assign[i].RID]->ExecuteCommand(
-	//					"target " + assign[i].OID);
-	//			}
+				for (int i = 0; i < data->size; i++)
+				{
+					cout << "Assigning Robot " << assign[i].RID << 
+						" to Object " << assign[i].OID << endl;
+					/*
+					GetRobot(assign[i].RID)->ExecuteCommand("target " + 
+						assign[i].OID);
+					*/
+				}
 
-	//			delete[] assign;
-	//		}
-	//		else if (type == P_COMMAND)
-	//		{
-	//			command* comm = new command[data->size];
-	//			comm = (command*)data->array;
+				delete[] assign;
+			}
+			else if (type == P_COMMAND)
+			{
+				command* comm = new command[data->size];
+				comm = (command*)data->array;
 
-	//			for (int i = 0; i < data->size; i++)
-	//			{
-	//				cout << "Command Robot " << comm[i].RID << 
-	//					" to " << comm[i].cmd << " with arg " << comm[i].arg <<
-	//					endl;
-	//				Command(comm[i].RID, comm[i].cmd, comm[i].arg);
-	//			}
+				for (int i = 0; i < data->size; i++)
+				{
+					cout << "Command Robot " << comm[i].RID << 
+						" to " << comm[i].cmd << " with arg " << comm[i].arg <<
+						endl;
+					Command(comm[i].RID, comm[i].cmd, comm[i].arg);
+				}
 
-	//			delete[] comm;
-	//		}
+				delete[] comm;
+			}
 
-	//		delete data;
-	//	}
- //       else if (iResult == 0)
-	//	{
- //           printf("Connection closed\n");
-	//		_endthread();
-	//	}
- //       else
- //           printf("recv failed: %d\n", WSAGetLastError());
- //   } 
+			delete data;
+		}
+        else if (iResult == 0)
+		{
+            printf("Connection closed\n");
+			_endthread();
+		}
+        else
+            printf("recv failed: %d\n", WSAGetLastError());
+    } 
 }
 
 bool Controller::Command(int id, int command, int arg)
@@ -276,7 +281,7 @@ bool Controller::Command(int id, int command, int arg)
 	//example of command translation (not actual command)
 	if (command == 1)
 	{
-		robots_[id]->ExecuteCommand("forward " + arg);
+		//GetRobot(id)->ExecuteCommand("forward " + arg);
 	}
 
 	return true;
@@ -286,7 +291,7 @@ bool Controller::Command(int id, int command, int arg)
 //test commands as if they were from the server
 bool Controller::TestServer(int type)
 {
-	/*byteArray sendArray;
+	byteArray sendArray;
 
 	if (type == P_OBJECT)
 	{
@@ -319,7 +324,7 @@ bool Controller::TestServer(int type)
     }
 	return true;
 
-	delete[] sendArray.array;*/
+	delete[] sendArray.array;
 
 	return true;
 }
@@ -331,10 +336,12 @@ void Controller::AddRobot(Robot* robot)
 
 Robot* Controller::GetRobot(int id)
 {
-	for (int i = 0; i < robots_.size(); i++)
+	vector<Robot*>::iterator it;
+
+	for (it = robots_.begin(); it != robots_.end(); it++)
 	{
-		if (robots_[i]->GetID() == id)
-			return robots_[i];
+		if ((*it)->GetID() == id)
+			return (*it);
 	}
 
 	return NULL;
@@ -342,13 +349,15 @@ Robot* Controller::GetRobot(int id)
 
 void Controller::RemoveRobot(int id)
 {
-	for (int i = 0; i < robots_.size(); i++)
+	vector<Robot*>::iterator it;
+
+	for (it = robots_.begin(); it != robots_.end(); it++)
 	{
-		if (robots_[i]->GetID() == id)
+		if ((*it)->GetID() == id)
 		{
-			robots_[i]->Disconnect();
-			delete robots_[i];
-			robots_.erase(robots_.begin() + i);
+			(*it)->Disconnect();
+			delete (*it);
+			robots_.erase(it);
 		}
 	}
 }
@@ -360,36 +369,37 @@ vector<Robot*> Controller::GetRobotVector()
 
 void Controller::Disconnect()
 {
-	/*for (int i = 0; i < robots_.size(); i++)
-	{
-		robots_[i]->Disconnect();
-		delete robots_[i];
-		robots_.erase(robots_.begin() + i);
-	}*/
+	vector<Robot*>::iterator it;
 
-	//should delete the static vector of objects on disconnect
-	/*
-	for (int i = 0; i < Camera.GetTrackableObjects().size(); i++)
+	for (it = robots_.begin(); it != robots_.end(); it++)
 	{
-		delete Camera.GetTrackableObjects()[i];
-		Camera.GetTrackableObjects().erase(
-			Camera.GetTrackableObjects().begin() + i);
+		(*it)->Disconnect();
+		delete (*it);
+		robots_.erase(it);
 	}
-	*/
 
-	//if (connectSocket_ != NULL)
-	//{
-	//	//socket might need shutdown
-	//	closesocket(connectSocket_);
-	//    WSACleanup();
-	//}
+	vector<TrackingObject*>::iterator oit;
 
-	//if (serverSocket_ != NULL)
-	//{
-	//	//socket might need shutdown
-	//	closesocket(serverSocket_);
-	//    WSACleanup();
-	//}
+	for (oit = Camera::GetTrackableObjects().begin(); oit != 
+		Camera::GetTrackableObjects().end(); oit++)
+	{
+		delete (*oit);
+		Camera::GetTrackableObjects().erase(oit);
+	}
+
+	if (connectSocket_ != NULL)
+	{
+		//socket might need shutdown
+		closesocket(connectSocket_);
+	    WSACleanup();
+	}
+
+	if (serverSocket_ != NULL)
+	{
+		//socket might need shutdown
+		closesocket(serverSocket_);
+	    WSACleanup();
+	}
 }
 
 void Controller::Update()
@@ -400,7 +410,7 @@ void Controller::Update()
 
 	timer_ += interval;
 
-	/*if (timer_ > POLL_INTERVAL)
+	if (timer_ > POLL_INTERVAL)
 	{
 		vector<Robot*>::iterator it;
 
@@ -421,9 +431,6 @@ void Controller::Update()
 						atoi(tokens[3].c_str()),
 						atoi(tokens[4].c_str()),
 						atoi(tokens[5].c_str()));
-
-					cout << "X: " << (*it)->GetLocationX() << endl;
-					cout << "Y: " << (*it)->GetLocationY() << endl;
 				}
 				catch (Nxt_exception& e)
 				{
@@ -441,19 +448,21 @@ void Controller::Update()
 
 			robotUpdate* update = new robotUpdate[robots_.size()];
 
-			for (int i = 0; i < robots_.size(); i++)
+			int i = 0;
+
+			for (it = robots_.begin(); it != robots_.end(); it++)
 			{
-				update[i].RID = robots_[i]->GetID();
-				update[i].x = robots_[i]->GetLocationX();
-				update[i].y = robots_[i]->GetLocationY();
+				update[i].RID = (*it)->GetID();
+				update[i].x = (*it)->GetLocationX();
+				update[i].y = (*it)->GetLocationY();
 				update[i].listSize = 
-					robots_[i]->GetCamera()->GetVisibleObjects().size();
+					(*it)->GetCamera()->GetVisibleObjects().size();
 
 				int* objects = new int[update[i].listSize];
 				for (int i = 0; i < update[i].listSize; i++)
 				{
 					objects[i] = 
-						robots_[i]->GetCamera()->GetVisibleObjects()[i]->GetID();
+						(*it)->GetCamera()->GetVisibleObjects()[i]->GetID();
 				}
 				update[i].objects = objects;
 
@@ -461,9 +470,11 @@ void Controller::Update()
 				for (int i = 0; i < update[i].listSize; i++)
 				{
 					qualities[i] = 
-						robots_[i]->GetCamera()->GetVisibleObjects()[i]->GetQuality();
+						(*it)->GetCamera()->GetVisibleObjects()[i]->GetQuality();
 				}
 				update[i].qualities = qualities;
+
+				i++;
 			}
 
 			write_data(P_ROBOT_UPDATE, update, robots_.size(), &sendArray);
@@ -484,7 +495,7 @@ void Controller::Update()
 		}
 
 		timer_ = 0;
-	}*/
+	}
 }
 
 Path* Controller::genPath(Robot& robot)
