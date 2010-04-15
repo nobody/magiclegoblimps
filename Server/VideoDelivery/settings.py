@@ -6,7 +6,8 @@ from getip import getip
 
 # General settings
 DEBUG = True
-LOGFILE = 'vidserver.log'
+LOGFILE = 'logs/vidserver.log'
+TRANSCRIPT_FILE = 'logs/transcript.log'
 ROOT_DIR = [
         '/home/jordan/mlb/magiclegoblimps/Server/VideoDelivery',
         '/Users/jordanbach/Desktop/Spring2010/csproject/magiclegoblimps/Server/VideoDelivery']

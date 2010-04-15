@@ -9,3 +9,6 @@ def log(message):
     with open(settings.LOGFILE, 'a') as f:
         f.write(m)
 
+def transcribe(text):
+    with open(settings.TRANSCRIPT_FILE, 'a') as f:
+        f.write(text)

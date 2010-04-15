@@ -2,8 +2,10 @@
 This module handles the details of communicating with the QoS server.
 """
 
+import settings
 from datetime import datetime
 from VidFeed import VidFeed
+from logger import transcribe
 
 def parse(in_lines):
     """
@@ -11,6 +13,12 @@ def parse(in_lines):
     corresponding to the server input. This function returns a 2-tuple
     (timestamp, VidFeed list).
     """
+    if settings.DEBUG:
+        s = '\n>>> From QoS Server\n\n'
+        for ln in in_lines:
+            s += ln
+        transcribe(s)
+
     object_mode = True
     timestamp = in_lines[0] #TODO: parse into datetime object
     objects = []
@@ -77,4 +85,7 @@ def prepare(vfeeds):
     s = str(datetime.today()) + '\n'
     for vf in vfeeds:
         s += vf.feed_url + ';' + vf.stream_url + ';\n'
+    if settings.DEBUG:
+        s = '\n>>> To QoS Server\n\n' + s
+        transcribe(s)
     return s.encode()
