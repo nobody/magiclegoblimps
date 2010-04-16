@@ -110,6 +110,10 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
 
     command cmd;
     Robot* subject;
+
+    //check to make sure that the input is what we want
+    if(s.find('$', 0) == std::string::npos)
+        return;
     
     //parse the command id
     std::string token = s.substr(0, s.find('$', 0));
