@@ -41,7 +41,7 @@ std::map<Robot*, int>* Assignment::calcAssignments() {
     double* qual = new double[numRobots]; //The quality value for robot N
     
     for(int i = 0; i < numRobots; i++){ // Initialize quality vector
-        qual[i] = 0;
+        qual[i] = -1;
     }
     
     // objAss stores the mapping of which robot is assigned to each object.
@@ -51,8 +51,36 @@ std::map<Robot*, int>* Assignment::calcAssignments() {
     for(int i = 0; i < numObjects; i++){  //The robot N that is viewing object i
         objAss[i] = -1;    
     }
-std::cout <<"NumObjects: " <<numObjects <<"\n";
+  std::cout <<"NumObjects: " <<numObjects <<"\n";
+while(true){
+//Find the object with highest demand that has not yet been assigned.
+	int maxObject = -1;
+	for(int j = 0; j < numObjects; j++){
+		if((maxObject==-1|| demand[j] > demand[maxObject]) && objAss[j] == -1){
+			maxObject = j;
+		}
+	}
+//Find the robot that best services this demand that has not yet been assigned
+	int maxRobot = -1;
+	double tQos = -1;
+	for(int j = 0; j < numRobots; j++){
+		double t = quality -> calcQos(objects[maxObject],robots[j]);
+		if(t>tQos && robotAssignments[j]==-1){
+			tQos = t;
+			maxRobot = j;
+		}
+	}
+//Store the assignment
+	robotAssignments[maxRobot] = maxObject;
+	objAss[maxObject] = maxRobot;
 
+//Continue until done
+	if(isDone()==-1){
+		break;
+	}
+}
+	
+/*
  while(next != -1) { //until all robots have assignments
     
     int maxIndex = -1;
@@ -62,19 +90,19 @@ std::cout <<"NumObjects: " <<numObjects <<"\n";
         if(objAss[i] != -1){ //If the object is already viewed by something
             std::cout <<"2" <<"\n";
             t = quality->calcQos(objects[i],robots[next]);
-            t = t - qual[objAss[i]];
+            t = t - qual[objAss[i]]-.0001;
             std::cout <<"3" <<"\n";
             
         }else{ //If the object is not already viewed
             t = quality->calcQos(objects[i],robots[next]);
         }
-        
-        if(t > qual[next]){
+        std::cout << t << "\n";
+        if(t > qual[next] || qual[next]==-1){
             maxIndex = i;   // The current best object to view
             qual[next] = t; // The current best quality robot 'next' can contribute is t.
         }
     }
-
+	std::cout << maxIndex << "\n";
     //
     // At this point we have a maximum assignment for a the currently considered robot
     // If there is no conflict (no robot is currently looking at this object) assign it.
@@ -83,7 +111,7 @@ std::cout <<"NumObjects: " <<numObjects <<"\n";
     if(objAss[maxIndex]!= -1){ //The object we just chose is assigned already
            
         robotAssignments[objAss[maxIndex]] = -1; // Unassign current robot assigned to object
-        qual[objAss[maxIndex]] = 0; // Reset its quality contribution
+        qual[objAss[maxIndex]] = -1; // Reset its quality contribution
     }
 
     objAss[maxIndex] = next; // current robot is now assigned to object of interest
@@ -92,8 +120,15 @@ std::cout <<"NumObjects: " <<numObjects <<"\n";
     std::cout << "Robot " <<next <<" is now assigned to object " <<maxIndex <<"\n";
         
     next = isDone(); //Find the next unassigned robot
+	break;
  }
+*/
 
+/*  ASSIGNMENT METHOD: Ordered Assignment
+for(int i = 0; i < numRobots; i++){
+	robotAssignments[i] = i % numObjects;
+}
+*/
  //
  // After all assignments have been completed, write assignment map and return it.
  // Set 'viewed from' field of objects for next round of QoS
@@ -109,6 +144,7 @@ std::cout <<"NumObjects: " <<numObjects <<"\n";
  return ret;
     
 }
+
 // Check for any remaining unassignmed robots, return index
 // of first unassigned robot if there is one, -1 if there are none.
 int Assignment::isDone(){
