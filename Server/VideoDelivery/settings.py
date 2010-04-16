@@ -10,7 +10,7 @@ LOGFILE = 'logs/vidserver.log'
 TRANSCRIPT_FILE = 'logs/transcript.log'
 ROOT_DIR = [
         '/home/jordan/mlb/magiclegoblimps/Server/VideoDelivery',
-        '/Users/jordanbach/Desktop/Spring2010/csproject/magiclegoblimps/Server/VideoDelivery']
+        '/Users/jordanbach/Desktop/Spring2010/csproject/magiclegoblimps/Server/VideoDelivery', '/home/duck/Desktop/school/magiclegoblimps/Server/VideoDelivery']
 LIVE_CSV_FILE = '/var/www/mlb/live-feeds.csv'
 ARCHIVE_CSV_FILE = '/var/www/mlb/archive-feeds.csv'
 
