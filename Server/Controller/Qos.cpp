@@ -26,16 +26,13 @@ Qos::~Qos() {
 }
 
 double Qos::calcQos(){
-    
-	printf("[QoS]: Calc QOS called");
+	std::cout <<"[QS] Calc overall QoS" <<"\n";
 	double ret = 0;
 	int i = 0;
 	for(i = 0; i < numObjects; i++){ 
 		ret += demand[i]*calcQos(objects[i], objects[i]->viewedFrom );
-        
-        std::cout <<"[QS] Calc overall QoS" <<"\n";
 	}
-    std::cout <<"System Qos: " << ret <<"\n";
+    	std::cout <<"[QS] System Qos: " << ret <<"\n";
 	return ret;
 	
 }
@@ -46,7 +43,7 @@ double Qos::calcQos(Object* o, Robot* r){
 	double q = (r ? dist(r->pos, o->pos) * Qos::CAM_VALUES[r->getCamera()] : 0);
     //std::cout <<"[QS] Robot: " <<r->getRID() <<" Object: " <<o->getOID() <<" :: QoS: " <<q <<"\n"; 
 	//return (r ? dist(r->pos, o->pos) * Qos::CAM_VALUES[r->getCamera()] : 0);
-	std::cout << "[QS] qos calculated as " << q;
+	std::cout << "[QS] qos calculated as " << q << "\n";
     return q;
 
 }
