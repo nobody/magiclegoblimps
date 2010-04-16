@@ -247,9 +247,12 @@ void Controller::ClientThread(void* params)
 				{
 					cout << "Assigning Robot " << assign[i].RID << 
 						" to Object " << assign[i].OID << endl;
+
+					//can't call non-static from in a static
+					//need to sort this out
 					/*
 					GetRobot(assign[i].RID)->ExecuteCommand("target " + 
-						assign[i].OID);
+						assign[i].OID + " " + assign[i].x + " " + assign[i].y);
 					*/
 				}
 
@@ -486,7 +489,7 @@ void Controller::Update()
 				}
 				update[i].objects = objects;
 
-				int* qualities = new int[update[1].listSize];
+				float* qualities = new float[update[i].listSize];
 				for (int i = 0; i < update[i].listSize; i++)
 				{
 					qualities[i] = 
@@ -494,6 +497,14 @@ void Controller::Update()
 							(*it)->GetCamera()->GetImageWidth());
 				}
 				update[i].qualities = qualities;
+
+				int* xs = new int[update[i].listSize];
+				int* ys = new int[update[i].listSize];
+				for (int i = 0; i < update[i].listSize; i++)
+				{
+					xs[i] = (*it)->GetObjectLocation(objects[i])->getX();
+					ys[i] = (*it)->GetObjectLocation(objects[i])->getY();
+				}
 
 				i++;
 			}

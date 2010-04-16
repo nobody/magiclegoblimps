@@ -25,6 +25,22 @@
 #define P_CISCO 2
 #define P_BROKEN 3
 
+//commands
+#define P_CMD_FWD 1
+#define P_CMD_LFT  2
+#define P_CMD_RGHT 3
+#define P_CMD_CAMROT 4
+#define P_CMD_DEL_OBJ 5
+#define P_CMD_RLS_RBT 6
+
+#define P_CMD_WEST 100
+#define P_CMD_MVTO 200
+
+//macros
+#define P_HIGH(x) (x >> 16) & 0x0000ffff
+#define P_LOW(x) x & 0x0000ffff
+#define P_COORD(x, y) ((x << 16) & 0xffff0000) | ( y & 0x0000ffff)
+
 //some error codes
 #define P_OK 0
 #define P_NULL_PTR -1
@@ -55,10 +71,14 @@ struct robotUpdate{
     int y;
     int listSize;
     int* objects;
-    int* qualities;
+    float* qualities;
+    int* xs;
+    int* ys;
     ~robotUpdate(){
         delete[] objects;
 	delete[] qualities;
+	delete[] xs;
+	delete[] ys;
     }
 };
 struct object{
@@ -76,7 +96,7 @@ struct byteArray{
     char* array;
     int size;
     ~byteArray(){
-	delete array;
+        delete[] array;
     }
 };
 struct readReturn{
@@ -88,6 +108,8 @@ struct readReturn{
 struct assignment{
     int RID;
     int OID;
+    int x;
+    int y;
 };
 
 struct command{

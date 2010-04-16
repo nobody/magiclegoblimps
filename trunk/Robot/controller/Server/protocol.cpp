@@ -5,6 +5,7 @@
  * Revision:       $Revision$
  */
 #include"protocol.h"
+#include <stdio.h>
 
  int write_data(int type, void* data_, short number, byteArray* byte_ptr){
     if(!data_ | !byte_ptr)
@@ -20,10 +21,16 @@
             {
                 robotInit* data = (robotInit*)data_;
                 for(int i = 0; i < number; ++i){
-                    short str_len = data[i].VideoURL->size() + 1;
-                    const char* url = data[i].VideoURL->c_str();
+                    short str_len;
+                    const char* url = NULL;
+                    if (data[i].VideoURL) {
+                        str_len = data[i].VideoURL->size() + 1;
+                        url = data[i].VideoURL->c_str();
+                    } else {
+                        str_len = 0;
+                        url = NULL;
+                    }
                     short size = sizeof(int)*4 + str_len + sizeof(short)*2;
-                    std::cout << std::hex << size << std::endl;
                     structs[i] = new char[size];
 
                     //put the size on the top of the array
@@ -31,7 +38,6 @@
                     for(int j = 0; j < 2; ++j){
                         structs[i][j] = ref[j];
                     }
-                    std::cout << std::hex << *(short*)structs[i] << std::endl;
 
                     //push rid on the array
                     ref = (char*)&(data[i].RID);
@@ -51,6 +57,7 @@
                         structs[i][j] = ref[j-10];
                     }
 
+                    //push cameraType
                     ref = (char*)&(data[i].cameraType);
                     for(int j = 14; j < 18; ++j){
                         structs[i][j] = ref[j-14];
@@ -78,7 +85,7 @@
             {
                 robotUpdate* data = (robotUpdate*)data_;
                 for (int i = 0; i < number; ++i){
-                    short size = sizeof(int) * 4 + sizeof(short) + data[i].listSize * 2 * sizeof(int);
+                    short size = sizeof(int) * 4 + sizeof(short) + data[i].listSize * 4 * sizeof(int);
                     structs[i] = new char[size];
 
                     //push size ontop of the array
@@ -109,15 +116,31 @@
                     for(int j = 14; j < 18; ++j){
                         structs[i][j] = ref[j - 14];
                     }
-
+                    int startIndex = 18;
                     ref = (char*)(data[i].objects);
-                    for(int j = 18; j <18 + data[i].listSize * (int)sizeof(int); ++j){
-                        structs[i][j] = ref[j-18];
+                    for(int j = startIndex; j < (int) ( startIndex + data[i].listSize * sizeof(int) ); ++j){
+                        structs[i][j] = ref[j-startIndex];
                     }
 
+                    startIndex += data[i].listSize * sizeof(int);
+
                     ref = (char*)(data[i].qualities);
-                    for(int j = 18 + data[i].listSize * (int)sizeof(int); j < 18 +(2 * (int)sizeof(int) * data[i].listSize); ++j){
-                        structs[i][j] = ref[j - 18 - data[i].listSize * sizeof(int)];
+                    for(int j = startIndex; j < (int) ( startIndex + data[i].listSize * sizeof(int) ); ++j){
+                        structs[i][j] = ref[j - startIndex];
+                    }
+
+                    startIndex += data[i].listSize * sizeof(int);
+
+                    ref = (char*)(data[i].xs);
+                    for(int j = startIndex; j < (int) ( startIndex + data[i].listSize * sizeof(int) ); ++j){
+                        structs[i][j] = ref[j - startIndex];
+                    }
+
+                    startIndex += data[i].listSize * sizeof(int);
+
+                    ref = (char*)(data[i].ys);
+                    for(int j = startIndex; j < (int) ( startIndex + data[i].listSize * sizeof(int) ); ++j){
+                        structs[i][j] = ref[j - startIndex];
                     }
 
                     sizes[i] = size;
@@ -130,9 +153,16 @@
             {
                 object* data = (object*)data_;
                 for (int i = 0; i < number; ++i) {
-                    int str_len = data[i].name->size() + 1;
-                    const char* name = data[i].name->c_str();
-                    int size = sizeof(int) * 4 + str_len + data[i].color_size + 1;
+                    int str_len;
+                    const char* name;
+                    if (data[i].name) {
+                        str_len = data[i].name->size() + 1;
+                        name = data[i].name->c_str();
+                    } else {
+                        str_len = 0;
+                        name = NULL;
+                    }
+                    int size = sizeof(int) * 4 + str_len + data[i].color_size;
 
                     structs[i] = new char[size];
 
@@ -172,10 +202,10 @@
                     idx += sizeof(int);
 
                     // push color
-                    for (int j = idx; j < (idx + data[i].color_size + 1); ++j) {
+                    for (int j = idx; j < (idx + data[i].color_size); ++j) {
                         structs[i][j] = data[i].color[j - idx];
                     }
-                    idx += data[i].color_size + 1;
+                    idx += data[i].color_size;
 
                     // add the length of this array to the total length and store it
                     sizes[i] = size;
@@ -183,10 +213,11 @@
                 }
                 break;
             }
-            case P_ASSIGNMENT:
+
+        case P_ASSIGNMENT:
             {
                 assignment* data = (assignment*)data_;  
-                short size = 2*sizeof(int) + sizeof(short);
+                short size = 4*sizeof(int) + sizeof(short);
                 for(int i = 0; i < number; ++i){
                     structs[i] = new char[size];
 
@@ -208,14 +239,25 @@
                         structs[i][j] = ref[j-6];
                     }
                     
+                    //push x
+                    ref = (char*)&(data[i].x);
+                    for(int j = 10; j <14; ++j){
+                        structs[i][j] = ref[j-10];
+                    }
+                    
+                    //push y
+                    ref = (char*)&(data[i].y);
+                    for(int j = 14; j <18; ++j){
+                        structs[i][j] = ref[j-14];
+                    }
+                    
                     sizes[i] = size;
                     overall_size += size;
                 }
-
             }
             break;
 
-            case P_COMMAND:
+        case P_COMMAND:
             {
                 command* data = (command*)data_;
                 short size = 3*sizeof(int);
@@ -235,7 +277,7 @@
                         structs[i][j] = ref[j-2];
                     }
 
-                    //push command
+                    //push.cmd
                     ref = (char*)&(data[i].cmd);
                     for(int j = 6; j <10; ++j){
                         structs[i][j] = ref[j-6];
@@ -251,8 +293,8 @@
                 }
             }
             break;
-            default:
-                return P_INVD_TYPE;
+        default:
+            return P_INVD_TYPE;
 
     }
 
@@ -268,13 +310,15 @@
     for(int i = 1; i < 5; ++i){
         array[i] = ref[i-1];
     }
+    
+    printf("byte#2: %02X length:%d \n", array[1], length);
 
     //push number of elements;
     ref = (char*)&number;
     for(int i = 5; i < 7; ++i){
         array[i] = ref[i-5];
     }
-    
+
     //push each array onto the array
     int position = 7;
     for(int i = 0; i < number; ++i){
@@ -304,6 +348,7 @@ int readRobotInit(void* array, robotInit* &robots) {
     char* current = arr+5;
     char* ref;
 
+    std::cout << "overall_size: " << *(int*)(current-4) << "\n";
     // overall size
     short overall_size;
     ref = (char*)&overall_size;
@@ -317,7 +362,7 @@ int readRobotInit(void* array, robotInit* &robots) {
         int rid;
         int x;
         int y;
-        int camera;
+        int cameraType;
         short str_len;
         char* url;
 
@@ -345,7 +390,8 @@ int readRobotInit(void* array, robotInit* &robots) {
             ref[j] = current[0]; current++;
         }
 
-        ref = (char*)&camera;
+        // retrieve cameraType
+        ref = (char*)&cameraType;
         for (int j = 0; j < (int)sizeof(int); ++j) {
             ref[j] = current[0]; current++;
         }
@@ -366,7 +412,7 @@ int readRobotInit(void* array, robotInit* &robots) {
         robots[i].RID = rid;
         robots[i].x = x;
         robots[i].y = y;
-        robots[i].cameraType = camera;
+        robots[i].cameraType = cameraType;
         robots[i].VideoURL = new std::string(url);
 
         delete[] url;
@@ -395,7 +441,9 @@ int readRobotUpdate(void* array, robotUpdate* &robots){
         int y;
         int listSize;
         int* list;
-        int* qos;
+        float* qos;
+        int* xs;
+        int* ys;
         
         // retreive size
         ref = (char*)&size;
@@ -427,7 +475,9 @@ int readRobotUpdate(void* array, robotUpdate* &robots){
         }
 
         list = new int[listSize];
-        qos = new int[listSize];
+        qos = new float[listSize];
+        xs = new int[listSize];
+        ys = new int[listSize];
         ref = (char*)list;
         for(int j = 0; j < listSize*4; ++j){
             ref[j] = current[0]; current++;
@@ -438,6 +488,16 @@ int readRobotUpdate(void* array, robotUpdate* &robots){
             ref[j] = current[0]; current++;
         }
 
+        ref = (char*)(xs);
+        for(int j = 0; j < listSize * (int)sizeof(int); ++j){
+            ref[j] = current[0]; ++current;
+        }
+
+        ref = (char*)(ys);
+        for(int j = 0; j < listSize * (int)sizeof(int); ++j){
+            ref[j] = current[0]; ++current;
+        }
+
         // build the robotInit struct
         robots[i].RID = rid;
         robots[i].x = x;
@@ -445,6 +505,8 @@ int readRobotUpdate(void* array, robotUpdate* &robots){
         robots[i].listSize = listSize;
         robots[i].objects = list;
         robots[i].qualities = qos;
+        robots[i].xs = xs;
+        robots[i].ys = ys;
     }
 
     return overall_size;
@@ -538,6 +600,8 @@ int readAssignment(void* array, assignment* &ass){
         short size;
         int rid;
         int oid;
+        int x;
+        int y;
         
         // retreive size
         ref = (char*)&size;
@@ -550,8 +614,20 @@ int readAssignment(void* array, assignment* &ass){
             ref[j] = current[0]; current++;
         }
 
-        // retrieve x
+        // retrieve OID
         ref = (char*)&oid;
+        for (int j = 0; j < (int)sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        // retrieve x
+        ref = (char*)&x;
+        for (int j = 0; j < (int)sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        // retrieve y
+        ref = (char*)&y;
         for (int j = 0; j < (int)sizeof(int); ++j) {
             ref[j] = current[0]; current++;
         }
@@ -559,11 +635,13 @@ int readAssignment(void* array, assignment* &ass){
         //initallize struct
         ass[i].RID = rid;
         ass[i].OID = oid;
+        ass[i].x   = x;
+        ass[i].y   = y;
     }
     return overall_size;
 }
 
-int readCommand(void* array, command* &com){
+int readCommand(void* array, command* com){
 
     char* arr = (char*)array;
     char* current = arr+5;
@@ -581,7 +659,7 @@ int readCommand(void* array, command* &com){
     for (int i = 0; i < overall_size; ++i) {
         short size;
         int rid;
-        int command;
+        int cmd;
         int args;
         
         // retreive size
@@ -595,8 +673,8 @@ int readCommand(void* array, command* &com){
             ref[j] = current[0]; current++;
         }
 
-        // retrieve command
-        ref = (char*)&command;
+        // retrieve.cmd
+        ref = (char*)&cmd;
         for (int j = 0; j < (int)sizeof(int); ++j) {
             ref[j] = current[0]; current++;
         }
@@ -609,7 +687,7 @@ int readCommand(void* array, command* &com){
 
         //initallize struct
         com[i].RID = rid;
-        com[i].cmd = command;
+        com[i].cmd = cmd;
         com[i].arg = args;
     }
     return overall_size;

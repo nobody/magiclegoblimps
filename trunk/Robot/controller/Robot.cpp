@@ -80,6 +80,75 @@ void Robot::Disconnect()
 	cout << "Robot " << id_ << " is offline." << endl;
 }
 
+GridLoc* Robot::GetObjectLocation(int id)
+{
+	GridLoc* objLoc = new GridLoc();
+	int center = 0;
+
+	vector<TrackingObject*>::iterator it;
+
+	for (it = camera_->GetVisibleObjects().begin(); 
+		it != camera_->GetVisibleObjects().end(); it++)
+	{
+		if ((*it)->GetID() == id)
+			center = (*it)->CenterDistanceToDegrees(camera_->GetImageWidth(), 
+				camera_->GetDLinkCam());
+	}
+
+	int objectDirection = cameraDirection_ + center;
+
+	if (objectDirection >= 0 && objectDirection < 90)
+	{
+		objLoc->setX(loc->getX());
+		objLoc->setY(loc->getY());
+	}
+	else if (objectDirection >= 90 && objectDirection < 180)
+	{
+		objLoc->setX(loc->getX());
+		objLoc->setY(loc->getY() - 1);
+	}
+	else if (objectDirection >= 180 && objectDirection < 270)
+	{
+		objLoc->setX(loc->getX() - 1);
+		objLoc->setY(loc->getY() - 1);
+	}
+	else if (objectDirection >= 270 && objectDirection < 360)
+	{
+		objLoc->setX(loc->getX() - 1);
+		objLoc->setY(loc->getY());
+	}
+
+	return objLoc;
+}
+
+GridLoc* Robot::GetObjectLocationSimple()
+{
+	GridLoc* objLoc = new GridLoc();
+
+	if (cameraDirection_ >= 0 && cameraDirection_ < 90)
+	{
+		objLoc->setX(loc->getX());
+		objLoc->setY(loc->getY());
+	}
+	else if (cameraDirection_ >= 90 && cameraDirection_ < 180)
+	{
+		objLoc->setX(loc->getX());
+		objLoc->setY(loc->getY() - 1);
+	}
+	else if (cameraDirection_ >= 180 && cameraDirection_ < 270)
+	{
+		objLoc->setX(loc->getX() - 1);
+		objLoc->setY(loc->getY() - 1);
+	}
+	else if (cameraDirection_ >= 270 && cameraDirection_ < 360)
+	{
+		objLoc->setX(loc->getX() - 1);
+		objLoc->setY(loc->getY());
+	}
+
+	return objLoc;
+}
+
 void Robot::ExecuteCommand(string command)
 {
 	vector<string> tokens;
@@ -90,7 +159,12 @@ void Robot::ExecuteCommand(string command)
 	
 	if (tokens[0].compare("target") == 0)
 	{
-		camera_->SetTarget(atoi(tokens[1].c_str()));
+		//do what you need to with these
+		int id = atoi(tokens[1].c_str());
+		int startX = atoi(tokens[2].c_str());
+		int startY = atoi(tokens[3].c_str());
+
+		camera_->SetTarget(id);
 	}
 	else
 	{
