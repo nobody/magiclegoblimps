@@ -121,245 +121,242 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
     Robot* subject;
 
     //check to make sure that the input is what we want
-    if(s.find('$', 0) == std::string::npos)
-        return;
-    
-    //parse the command id
-    std::string token = s.substr(0, s.find('$', 0));
-    s =  s.substr( s.find('$', 0), std::string::npos);
-
-    int switchvar = atoi(token.c_str());
-    bool isUsed = false;
-    //switch on the command
-    switch(switchvar){
-        case P_CMD_FWD:
-        {
-            
-            cmd.cmd = P_CMD_FWD;
-            
-            token = s.substr(0, s.find('$', 0));
-            s = s.substr(s.find('$', 0), std::string::npos);
-
-            int robotid = atoi(token.c_str());
-
-            robots->readLock();
-            Vector_ts<Robot*>::iterator it;
-            Vector_ts<Robot*>::iterator used_it;
-
-            for(it = robots->begin(); it != robots->end(); ++it){
-                (*it)->lock();
-                if((*it)->getGlobalID() == robotid){
-                    subject = (*it);
-                    break;
-                }
-                (*it)->unlock();
-            }
-
-
-            inUse->lock();
-                
-            for(used_it = inUse->begin(); used_it != inUse->end(); ++used_it){
-                if((*used_it) == subject)
-                     isUsed = true;
-            }
-
-
-            if(!isUsed)
-                inUse->push_back(subject);
-            inUse->unlock();
-
-            cmd.RID = subject->getRID();
-            robotControl->sendCommand(&cmd, subject->getEndpoint());
-            (*it)->unlock();
-        }
-        break;
-
-        case P_CMD_LFT:
-        {
-            cmd.cmd = P_CMD_LFT;
-            
-            token = s.substr(0, s.find('$', 0));
-            s = s.substr(s.find('$', 0), std::string::npos);
-
-            int robotid = atoi(token.c_str());
-
-            robots->readLock();
-            Vector_ts<Robot*>::iterator it;
-            Vector_ts<Robot*>::iterator used_it;
-
-            for(it = robots->begin(); it != robots->end(); ++it){
-                (*it)->lock();
-                if((*it)->getGlobalID() == robotid){
-                    subject = (*it);
-                    break;
-                }
-                (*it)->unlock();
-            }
-
-
-            inUse->lock();
-                
-            for(used_it = inUse->begin(); used_it != inUse->end(); ++used_it){
-                if((*used_it) == subject)
-                     isUsed = true;
-            }
-
-
-            if(!isUsed)
-                inUse->push_back(subject);
-            inUse->unlock();
-            
-            cmd.RID = subject->getRID();
-            robotControl->sendCommand(&cmd, subject->getEndpoint());
-            (*it)->unlock();
-        }
-        break;
-
-        case P_CMD_RGHT:
-        {
-            cmd.cmd = P_CMD_LFT;
-            
-            token = s.substr(0, s.find('$', 0));
-            s = s.substr(s.find('$', 0), std::string::npos);
-
-            int robotid = atoi(token.c_str());
-
-            robots->readLock();
-            Vector_ts<Robot*>::iterator it;
-            Vector_ts<Robot*>::iterator used_it;
-
-
-            for(it = robots->begin(); it != robots->end(); ++it){
-                (*it)->lock();
-                if((*it)->getGlobalID() == robotid){
-                    subject = (*it);
-                    break;
-                }
-                (*it)->unlock();
-            }
-
-            inUse->lock();
-                
-            for(used_it = inUse->begin(); used_it != inUse->end(); ++used_it){
-                if((*used_it) == subject)
-                     isUsed = true;
-            }
-
-
-            if(!isUsed)
-                inUse->push_back(subject);
-            inUse->unlock();
-            
-            cmd.RID = subject->getRID();
-            robotControl->sendCommand(&cmd, subject->getEndpoint());
-            (*it)->unlock();
-        }
-        break;
-
-        case P_CMD_WEST:
-
-        break;
-        case P_CMD_MVTO:
-
-        break;
-        case P_CMD_CAMROT:
-        {
-            cmd.cmd = P_CMD_LFT;
-            
-            token = s.substr(0, s.find('$', 0));
-            s = s.substr(s.find('$', 0), std::string::npos);
-
-            int robotid = atoi(token.c_str());
-
-            robots->readLock();
-            Vector_ts<Robot*>::iterator it;
-            Vector_ts<Robot*>::iterator used_it;
-
-            for(it = robots->begin(); it != robots->end(); ++it){
-                (*it)->lock();
-                if((*it)->getGlobalID() == robotid){
-                    subject = (*it);
-                    break;
-                }
-                (*it)->unlock();
-            }
-            
-
-            inUse->lock();
-                
-            for(used_it = inUse->begin(); used_it != inUse->end(); ++used_it){
-                if((*used_it) == subject)
-                     isUsed = true;
-            }
-
-
-            if(!isUsed)
-                inUse->push_back(subject);
-            inUse->unlock();
-
-
-            cmd.RID = subject->getRID();
-
-            token = s.substr(0, s.find('$', 0));
-            s = s.substr(s.find('$', 0), std::string::npos);
-
-            cmd.arg = atoi(token.c_str());
-
-
-            robotControl->sendCommand(&cmd, subject->getEndpoint());
-            (*it)->unlock();
-        }
-        break;
-        case P_CMD_RLS_RBT:
-        {
+    if(s.find('$', 0) != std::string::npos){
         
-            token = s.substr(0, s.find('$', 0));
-            s = s.substr(s.find('$', 0), std::string::npos);
+        //parse the command id
+        std::string token = s.substr(0, s.find('$', 0));
+        s =  s.substr( s.find('$', 0), std::string::npos);
 
-            int robotid = atoi(token.c_str());
+        robots->readLock();
+        int switchvar = atoi(token.c_str());
+        bool isUsed = false;
+        //switch on the command
+        switch(switchvar){
+            case P_CMD_FWD:
+            {
+                
+                cmd.cmd = P_CMD_FWD;
+                
+                token = s.substr(0, s.find('$', 0));
+                s = s.substr(s.find('$', 0), std::string::npos);
 
-            Vector_ts<Robot*>::iterator it;
+                int robotid = atoi(token.c_str());
 
-            inUse->lock();
-            for(it = inUse->begin(); it != inUse->end(); ++it){
-                if((*it)->getGlobalID() == robotid){    
-                    inUse->erase(it);
-                    break;
+                Vector_ts<Robot*>::iterator it;
+                Vector_ts<Robot*>::iterator used_it;
+
+                for(it = robots->begin(); it != robots->end(); ++it){
+                    (*it)->lock();
+                    if((*it)->getGlobalID() == robotid){
+                        subject = (*it);
+                        break;
+                    }
+                    (*it)->unlock();
                 }
-            }
-            inUse->unlock();
 
-        }
-        break;
 
-        case P_CMD_DEL_OBJ:
-        {
-            token = s.substr(0, s.find('$', 0));
-            s = s.substr(s.find('$', 0), std::string::npos);
-
-            int objID = atoi(token.c_str());
-
-            Vector_ts<Object*>::iterator it;
-
-            objects->lock();
-
-            for(it = objects->begin(); it != objects->end(); ++it){
-                if((*it)->getOID() == objID){
-                    objects->erase(it);
-                    break;
+                inUse->lock();
+                    
+                for(used_it = inUse->begin(); used_it != inUse->end(); ++used_it){
+                    if((*used_it) == subject)
+                         isUsed = true;
                 }
+
+
+                if(!isUsed)
+                    inUse->push_back(subject);
+                inUse->unlock();
+
+                cmd.RID = subject->getRID();
+                robotControl->sendCommand(&cmd, subject->getEndpoint());
+                (*it)->unlock();
             }
+            break;
 
-            objects->unlock();
+            case P_CMD_LFT:
+            {
+                cmd.cmd = P_CMD_LFT;
+                
+                token = s.substr(0, s.find('$', 0));
+                s = s.substr(s.find('$', 0), std::string::npos);
 
+                int robotid = atoi(token.c_str());
+
+                Vector_ts<Robot*>::iterator it;
+                Vector_ts<Robot*>::iterator used_it;
+
+                for(it = robots->begin(); it != robots->end(); ++it){
+                    (*it)->lock();
+                    if((*it)->getGlobalID() == robotid){
+                        subject = (*it);
+                        break;
+                    }
+                    (*it)->unlock();
+                }
+
+
+                inUse->lock();
+                    
+                for(used_it = inUse->begin(); used_it != inUse->end(); ++used_it){
+                    if((*used_it) == subject)
+                         isUsed = true;
+                }
+
+
+                if(!isUsed)
+                    inUse->push_back(subject);
+                inUse->unlock();
+                
+                cmd.RID = subject->getRID();
+                robotControl->sendCommand(&cmd, subject->getEndpoint());
+                (*it)->unlock();
+            }
+            break;
+
+            case P_CMD_RGHT:
+            {
+                cmd.cmd = P_CMD_LFT;
+                
+                token = s.substr(0, s.find('$', 0));
+                s = s.substr(s.find('$', 0), std::string::npos);
+
+                int robotid = atoi(token.c_str());
+
+                Vector_ts<Robot*>::iterator it;
+                Vector_ts<Robot*>::iterator used_it;
+
+
+                for(it = robots->begin(); it != robots->end(); ++it){
+                    (*it)->lock();
+                    if((*it)->getGlobalID() == robotid){
+                        subject = (*it);
+                        break;
+                    }
+                    (*it)->unlock();
+                }
+
+                inUse->lock();
+                    
+                for(used_it = inUse->begin(); used_it != inUse->end(); ++used_it){
+                    if((*used_it) == subject)
+                         isUsed = true;
+                }
+
+
+                if(!isUsed)
+                    inUse->push_back(subject);
+                inUse->unlock();
+                
+                cmd.RID = subject->getRID();
+                robotControl->sendCommand(&cmd, subject->getEndpoint());
+                (*it)->unlock();
+            }
+            break;
+
+            case P_CMD_WEST:
+
+            break;
+            case P_CMD_MVTO:
+
+            break;
+            case P_CMD_CAMROT:
+            {
+                cmd.cmd = P_CMD_LFT;
+                
+                token = s.substr(0, s.find('$', 0));
+                s = s.substr(s.find('$', 0), std::string::npos);
+
+                int robotid = atoi(token.c_str());
+
+                Vector_ts<Robot*>::iterator it;
+                Vector_ts<Robot*>::iterator used_it;
+
+                for(it = robots->begin(); it != robots->end(); ++it){
+                    (*it)->lock();
+                    if((*it)->getGlobalID() == robotid){
+                        subject = (*it);
+                        break;
+                    }
+                    (*it)->unlock();
+                }
+                
+
+                inUse->lock();
+                    
+                for(used_it = inUse->begin(); used_it != inUse->end(); ++used_it){
+                    if((*used_it) == subject)
+                         isUsed = true;
+                }
+
+
+                if(!isUsed)
+                    inUse->push_back(subject);
+                inUse->unlock();
+
+
+                cmd.RID = subject->getRID();
+
+                token = s.substr(0, s.find('$', 0));
+                s = s.substr(s.find('$', 0), std::string::npos);
+
+                cmd.arg = atoi(token.c_str());
+
+
+                robotControl->sendCommand(&cmd, subject->getEndpoint());
+                (*it)->unlock();
+            }
+            break;
+            case P_CMD_RLS_RBT:
+            {
+            
+                token = s.substr(0, s.find('$', 0));
+                s = s.substr(s.find('$', 0), std::string::npos);
+
+                int robotid = atoi(token.c_str());
+
+                Vector_ts<Robot*>::iterator it;
+
+                inUse->lock();
+                for(it = inUse->begin(); it != inUse->end(); ++it){
+                    if((*it)->getGlobalID() == robotid){    
+                        inUse->erase(it);
+                        break;
+                    }
+                }
+                inUse->unlock();
+
+            }
+            break;
+
+            case P_CMD_DEL_OBJ:
+            {
+                token = s.substr(0, s.find('$', 0));
+                s = s.substr(s.find('$', 0), std::string::npos);
+
+                int objID = atoi(token.c_str());
+
+                Vector_ts<Object*>::iterator it;
+
+                objects->lock();
+
+                for(it = objects->begin(); it != objects->end(); ++it){
+                    if((*it)->getOID() == objID){
+                        objects->erase(it);
+                        break;
+                    }
+                }
+
+                objects->unlock();
+
+            }
+            break;
+            
+            default:
+            break;
         }
-        break;
-        
-        default:
-        break;
+
+        robots->readUnlock();
     }
-
-    robots->readUnlock();
     
     boost::asio::async_read_until(sock, read_message_.buffer(), '\n', 
         boost::bind(&AdminHandler::session::read_handler, this, 

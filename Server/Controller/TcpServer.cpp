@@ -28,7 +28,7 @@ void TcpServer::shutdown(){
     running = false;
     if (connHandler_)
         connHandler_->shutdown();
-    //acceptor_.cancel();
+    acceptor_.cancel();
     acceptor_.close();
 
 }
@@ -78,12 +78,12 @@ TcpServer::TcpConnection::pointer TcpServer::TcpConnection::create(boost::asio::
 //locks the socket and returns the pointer
 tcp::socket& TcpServer::TcpConnection::socket()
 {
-    socketMutex.lock();
+    //socketMutex.lock();
     return socket_;
 }
 //releases the socket mutex
 void TcpServer::TcpConnection::releaseSocket(){
-    socketMutex.unlock();
+    //socketMutex.unlock();
 }
 
 //stops the connection and closes the socket
