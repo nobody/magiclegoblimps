@@ -88,10 +88,12 @@ void TcpServer::TcpConnection::releaseSocket(){
 
 //stops the connection and closes the socket
 void TcpServer::TcpConnection::stop(){
-    socketMutex.lock();
-    socket_.close();
-    socketMutex.unlock();
-
+    if(!closed){
+        socketMutex.lock();
+        socket_.close();
+        socketMutex.unlock();
+        closed = true;
+    }
     //other clean up stuff here
 
 }
@@ -111,7 +113,7 @@ void TcpServer::TcpConnection::start()
 }
 
 TcpServer::TcpConnection::TcpConnection(boost::asio::io_service& io_service)
-: socket_(io_service)
+: socket_(io_service), closed(false)
 {
 }
 
@@ -119,6 +121,19 @@ TcpServer::TcpConnection::~TcpConnection()
 {
     socketMutex.lock();
     socketMutex.unlock();
+}
+
+void TcpServer::TcpConnection::readLock(){
+    readMutex.lock();
+}
+void TcpServer::TcpConnection::writeLock(){
+    writeMutex.lock();
+}
+void TcpServer::TcpConnection::readUnlock(){
+    readMutex.unlock();
+}
+void TcpServer::TcpConnection::writeUnlock(){
+    writeMutex.unlock();
 }
 
 void TcpServer::TcpConnection::handle_write(const boost::system::error_code& /*error*/,

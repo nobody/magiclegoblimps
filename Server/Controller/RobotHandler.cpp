@@ -42,8 +42,9 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
     tcp_connection->releaseSocket();
 
     //need to get the robots from the controller that just connected
+    connections[connEP]->readLock();
 	size_t count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(5), error);
-	connections[connEP]->releaseSocket();
+	connections[connEP]->readUnlock();
 
 	std::cout<<"[RH] data read(" << count << "), socket released\n";
 
@@ -85,8 +86,9 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 
 	//if there are bytes remainging to be read read them
 	if(remaining > 0){
+        connections[connEP]->readLock();
 		count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining), error);
-		connections[connEP]->releaseSocket();
+		connections[connEP]->readUnlock();
 
 
 		//catch errors to tell when the connection closes;
@@ -117,6 +119,7 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 	//consume the stuff in the buffer, we're done with it now;
 	//wasn't quite sure how to deal with the size_t issue...
 	inputBuffer.consume(total);
+    count -= total;
 
 	//convert the char array to a 
 	readReturn* message = new readReturn;
@@ -205,10 +208,11 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
         printf("\n");
         
         //hopefully the number of bytes is always a positive number
+        connections[connEP]->writeLock();
         boost::asio::write(connections[connEP]->socket(),  boost::asio::buffer(byte_ptr->array, byte_ptr->size),
             boost::asio::transfer_at_least(byte_ptr->size), error);
 
-        connections[connEP]->releaseSocket();
+        connections[connEP]->writeUnlock();
         delete byte_ptr;
     }else{
         objects->readUnlock();
@@ -240,10 +244,15 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		//should check the buffer size so that i know how much
 		//is in there before it gets to a ridiculous size
 
-		count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(5), error);
-		connections[connEP]->releaseSocket();
+        if(count < 5){
 
-		std::cout<<"[RH] data read, socket released\n";
+            connections[connEP]->readLock();
+            count += boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(5), error);
+            connections[connEP]->readUnlock();
+
+            std::cout<<"[RH] data read, socket released\n";
+
+        }
 
 		//catch errors to tell when the connection closes;
 		if(error == boost::asio::error::eof){
@@ -276,13 +285,14 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		}
 		
 		//compute the total and the bytes remaing to be pulled from the socket
-		int total = *((int*)(arr+1));
-		int remaining = total - count;
+		size_t total = (size_t)(*((int*)(arr+1)));
+		size_t remaining = total - count;
 
 		//if there are bytes remainging to be read read them
-		if(remaining > 0){
-			count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining), error);
-			connections[connEP]->releaseSocket();
+		if(remaining > 0 && count < remaining){
+            connections[connEP]->readLock();
+			count += boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining - count), error);
+			connections[connEP]->readUnlock();
 
 
 			//catch errors to tell when the connection closes;
@@ -305,14 +315,17 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		arr = new char[total];
 		data = inputBuffer.data();
 		iter = boost::asio::buffers_begin(data);
-		for(int i = 0; i < total; ++i){
+		for(size_t i = 0; i < total; ++i){
 			arr[i] = *iter;
 			iter++;
 		}
 
 		//consume the stuff in the buffer, we're done with it now;
 		//wasn't quite sure how to deal with the size_t issue...
-		inputBuffer.consume((size_t)total);
+		inputBuffer.consume(total);
+        count -= total;
+
+
 
 		//convert the char array to a 
 		std::cout<<"[RH] converting message to structs"<<std::endl;
@@ -539,12 +552,13 @@ void RobotHandler::sendAssignments(std::map<Robot*, int>* assignments){
 			//then somthing broke and it should be dealt with
 		}
 		boost::system::error_code error;
+        connections[(*connIter).first]->writeLock();
 		boost::asio::write(connections[(*connIter).first]->socket(), boost::asio::buffer(data.array, data.size),
 			boost::asio::transfer_at_least(data.size), error);
 
-		connections[(*connIter).first]->releaseSocket();
+		connections[(*connIter).first]->writeUnlock();
 
-		//still don't know what errors i should look for on a read
+		//still don't know what errors i should look for on a write
 
 		current += numForConn;
 
@@ -560,26 +574,54 @@ void RobotHandler::sendCommand(command* comm, boost::asio::ip::tcp::endpoint con
 	boost::system::error_code error;
 	write_data(P_COMMAND, comm, 1, data);
 	
+    connections[conn]->writeLock();
 	boost::asio::write(connections[conn]->socket(), boost::asio::buffer(data->array, data->size),
 		boost::asio::transfer_at_least(data->size), error);
 
-	connections[conn]->releaseSocket();
+	connections[conn]->writeUnlock();
 
 }
 
 void RobotHandler::shutdown(){
         running = false;
-            
+        
+        int counter = 0;
+
         handlerMutex.lock();
         std::cout << "[RH] got handlerMutex 1\n";
-        while(handlers){
+        while(handlers && counter < 10){
             handlerMutex.unlock();
+            ++counter;
             std::cout << "[RH] unlocked handlerMutex 2\n";
             boost::this_thread::sleep(boost::posix_time::seconds(1));
             std::cout << "[RH] still waiting for handlers to go away\n";
             handlerMutex.lock();
             std::cout << "[RH] got handlerMutex 3\n";
         }
+
+        if(counter >= 10){
+            handlerMutex.unlock();
+            conn_map::iterator mapIter;
+            for(mapIter = connections.begin(); mapIter != connections.end(); ++mapIter){
+                (*mapIter).second->stop();
+            }
+            
+            counter = 0;
+            handlerMutex.lock();
+
+            while(handlers && counter < 10){
+                std::cout<<"[RH] the damn handlers aren't dead yet...\n";
+                handlerMutex.unlock();
+                ++counter;
+                boost::this_thread::sleep(boost::posix_time::seconds(1));
+                handlerMutex.lock();
+            }
+
+            if(handlers)
+                std::cout<<"[RH] let them die then >:( \n";
+
+        }
+
         handlerMutex.unlock();
         std::cout << "[RH] unlocked handlerMutex 4\n";
 

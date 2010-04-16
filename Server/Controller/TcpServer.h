@@ -36,15 +36,23 @@ class TcpServer {
 
                 void releaseSocket();
 
+                void readLock();
+                void readUnlock();
+                void writeLock();
+                void writeUnlock();
+
                 ~TcpConnection();
             private:
                 boost::mutex socketMutex;
+                boost::mutex readMutex;
+                boost::mutex writeMutex;
                 TcpConnection(boost::asio::io_service& io_service);
 
                 void handle_write(const boost::system::error_code& /*error*/, size_t /*bytes_transferred*/);
 
                 tcp::socket socket_;
                 std::string message_;
+                bool closed;
         };
         
         class ConnHandler {
