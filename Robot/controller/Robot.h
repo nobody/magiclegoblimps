@@ -37,6 +37,10 @@ public:
 	bool GetNXTConnected() { return nxtConnected_; }
 	bool GetRobotOnline() { return robotOnline_; }
 
+	//should pick which one of these works well enough
+	GridLoc* GetObjectLocation(int id);
+	GridLoc* GetObjectLocationSimple();
+
 	void centerCameraOnTarget(int deg);
 	void setDestination(GridLoc* newD);
 	void setNextLoc(GridLoc* newNextLoc);
@@ -67,9 +71,6 @@ private:
 	GridLoc* loc;
 	GridLoc* nextLoc;
 	GridLoc* dest;
-
-	float locationX_;
-	float locationY_;
 
 	RobotHeading robotHeading_;
 	int cameraDirection_;
