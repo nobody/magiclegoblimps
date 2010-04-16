@@ -32,6 +32,7 @@ int main(int argc, const char **argv) {
     c.qosThread->join();
     worker.join();
 
+    std::cout << "[main] goodbye\n";
 }
 
 
