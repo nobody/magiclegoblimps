@@ -490,7 +490,8 @@ void Controller::Update()
 				for (int i = 0; i < update[i].listSize; i++)
 				{
 					qualities[i] = 
-						(*it)->GetCamera()->GetVisibleObjects()[i]->GetQuality();
+						(*it)->GetCamera()->GetVisibleObjects()[i]->GetQuality(
+							(*it)->GetCamera()->GetImageWidth());
 				}
 				update[i].qualities = qualities;
 

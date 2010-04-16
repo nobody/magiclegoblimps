@@ -42,7 +42,7 @@ public:
 	}
 
 	float GetCenteredPercentage(int width);
-	float GetQuality();
+	float GetQuality(int width);
 	float GetSizePercentage();
 
 	int CenterDistanceToDegrees(int width, bool cam);

@@ -1,7 +1,6 @@
 #include "Camera.h"
 
 //static member variables must be redeclared in source
-int Camera::nextObject_ = -1;
 vector<TrackingObject*> Camera::trackableObjects_;
 
 Camera::Camera(string ip, bool dLinkCam)
@@ -148,6 +147,11 @@ CvScalar hsv2rgb(float hue)
 	return cvScalar(rgb[2], rgb[1], rgb[0], 0);
 }
 
+int Camera::GetImageWidth()
+{
+	return image->width;
+}
+
 void Camera::StartDisplay()
 {
 	displayWindowName_ = "RobotView " + ip_;
@@ -202,7 +206,7 @@ void Camera::DisplayFrame()
 			histCreated = false;
 		}
 
-		//displays the centered/distance information
+		//displays the centered/distance/quality information
 		if (inKey_ == 'c')
 		{
 			vector<TrackingObject*>::iterator it;
@@ -225,6 +229,9 @@ void Camera::DisplayFrame()
 
 				cout << (*it)->GetID() << " is size " <<
 					(*it)->GetSizePercentage() << "%" << endl;
+
+				cout << (*it)->GetID() << " has quality " <<
+					(*it)->GetQuality(image->width) << endl;
 			}
 		}
 
@@ -417,9 +424,20 @@ void Camera::Update()
 
 int Camera::GetNextAvailableID()
 {
-	//this needs to be better
-	nextObject_++;
-	return nextObject_;
+	int id = 0;
+
+	vector<TrackingObject*>::iterator it;
+
+	for (it = trackableObjects_.begin(); it != trackableObjects_.end(); it++)
+	{
+		if ((*it)->GetID() == id)
+		{
+			id++;
+			it = trackableObjects_.begin();
+		}
+	}
+
+	return id;
 }
 
 void Camera::Scan()
