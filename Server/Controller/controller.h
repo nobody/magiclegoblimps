@@ -38,6 +38,8 @@ class controller {
         static int writeRobots(Vector_ts<Robot*>*);
         static int writeObjects(Vector_ts<Object*>*);
 
+        boost::thread* qosThread;
+
     private:
         
         void controllerThread();

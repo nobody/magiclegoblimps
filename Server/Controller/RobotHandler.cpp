@@ -460,6 +460,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 	}
 	//clean up stuff from connection
 	cleanupConn(connEP);
+    std::cout << "[RH] thread exiting\n";
 }
 
 
@@ -570,12 +571,17 @@ void RobotHandler::shutdown(){
         running = false;
             
         handlerMutex.lock();
+        std::cout << "[RH] got handlerMutex 1\n";
         while(handlers){
             handlerMutex.unlock();
+            std::cout << "[RH] unlocked handlerMutex 2\n";
             boost::this_thread::sleep(boost::posix_time::seconds(1));
+            std::cout << "[RH] still waiting for handlers to go away\n";
             handlerMutex.lock();
+            std::cout << "[RH] got handlerMutex 3\n";
         }
         handlerMutex.unlock();
+        std::cout << "[RH] unlocked handlerMutex 4\n";
 
         //do any thing else;
 }

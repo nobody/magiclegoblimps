@@ -21,10 +21,12 @@
 #include "protocol.h"
 #include "RobotHandler.h"
 
+class controller;
+
 class AdminHandler : public TcpServer::ConnHandler {
     public:
         AdminHandler();
-        AdminHandler(RobotHandler* robotControl_, Vector_ts<Robot*>* robots_, Vector_ts<Robot*>* inUse_, Vector_ts<Object*>* objects_);
+        AdminHandler(RobotHandler* robotControl_, Vector_ts<Robot*>* robots_, Vector_ts<Robot*>* inUse_, Vector_ts<Object*>* objects_, controller* cont_);
         virtual ~AdminHandler();
 
         typedef std::map<boost::asio::ip::tcp::endpoint, TcpServer::TcpConnection::pointer> conn_map;
@@ -34,18 +36,19 @@ class AdminHandler : public TcpServer::ConnHandler {
 
     private:
         //void threaded_on_connect(int connIndex);
-        void threaded_on_connect(boost::asio::ip::tcp::endpoint);
+        void threaded_on_connect(TcpServer::TcpConnection::pointer);
 
-        static conn_map connections;
+        //static conn_map connections;
 
         RobotHandler* robotControl;
         Vector_ts<Robot*>* robots;
         Vector_ts<Robot*>* inUse;
         Vector_ts<Object*>* objects;
+        controller* cont;
 
         class session {
             public:
-                session(TcpServer::TcpConnection::pointer, Vector_ts<Robot*>*, Vector_ts<Robot*>*, RobotHandler*, Vector_ts<Object*>* );
+                session(TcpServer::TcpConnection::pointer, Vector_ts<Robot*>*, Vector_ts<Robot*>*, RobotHandler*, Vector_ts<Object*>* , controller* );
                 ~session();
 
                 void start();
@@ -56,6 +59,7 @@ class AdminHandler : public TcpServer::ConnHandler {
                 Vector_ts<Robot*>* inUse;
                 Vector_ts<Object*>* objects;
                 RobotHandler* robotControl;
+                controller* cont;
                 message read_message_;
 
                 void write_handler(const boost::system::error_code& error,  std::size_t bytes_transferred);

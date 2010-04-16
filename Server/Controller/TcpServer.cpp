@@ -26,7 +26,11 @@ TcpServer::~TcpServer() {
 //handler to close any current connections
 void TcpServer::shutdown(){
     running = false;
-    connHandler_->shutdown();
+    if (connHandler_)
+        connHandler_->shutdown();
+    //acceptor_.cancel();
+    acceptor_.close();
+
 }
 
 //creates a connection and starts an async listen
@@ -47,6 +51,8 @@ void TcpServer::handle_accept(TcpServer::TcpConnection::pointer conn, const boos
     std::cout << "Handling a new connection\n";
     if(!running){
         //destroy the connection object
+        conn->stop();
+        std::cout << "[TcpServer] not running, so immediately returning on handle_accept()\n";
         return;
     }
     if (!error){
@@ -107,6 +113,12 @@ void TcpServer::TcpConnection::start()
 TcpServer::TcpConnection::TcpConnection(boost::asio::io_service& io_service)
 : socket_(io_service)
 {
+}
+
+TcpServer::TcpConnection::~TcpConnection()
+{
+    socketMutex.lock();
+    socketMutex.unlock();
 }
 
 void TcpServer::TcpConnection::handle_write(const boost::system::error_code& /*error*/,

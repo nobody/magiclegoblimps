@@ -49,10 +49,10 @@ controller::controller(boost::asio::io_service& io_service)
     robo = new RobotHandler(robots, objs, vids, db);
     roboSrv = new TcpServer(io_service, 9999, robo);
 
-    admin = new AdminHandler(robo, robots, used_robots, objs);
+    admin = new AdminHandler(robo, robots, used_robots, objs, this);
     adminSrv = new TcpServer(io_service, 10000, admin);
 
-    boost::thread qosThread(&controller::controllerThread, this);
+    qosThread = new boost::thread(&controller::controllerThread, this);
 }
 
 controller::~controller() {
@@ -72,6 +72,8 @@ controller::~controller() {
 
     delete objs;
     delete used_robots;
+
+    delete qosThread;
 }
 
 int controller::writeObjects(Vector_ts<Object*>* objects) {
@@ -156,11 +158,14 @@ void controller::controllerThread(){
         boost::asio::deadline_timer timer(io_, boost::posix_time::seconds(C_QOS_INTV));
         timer.wait();
     }
+    std::cout << "[controller] controllerThread exiting...\n";
 }
 void controller::shutdown(){
     adminSrv->shutdown();
     roboSrv->shutdown();
     vidsSrv->shutdown();
+    std::cout << "[controller] completed shutdown() call\n";
+    running = false;
 }
 
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

@@ -8,14 +8,15 @@
 
 
 #include "AdminHandler.h"
+#include "controller.h"
 
-AdminHandler::conn_map AdminHandler::connections;
+//AdminHandler::conn_map AdminHandler::connections;
 
 AdminHandler::AdminHandler(){
 }
 
-AdminHandler::AdminHandler(RobotHandler* robotControl_, Vector_ts<Robot*>* robots_, Vector_ts<Robot*>* inUse_, Vector_ts<Object*>* objects_): 
-robotControl(robotControl_), robots(robots_), inUse(inUse_), objects(objects_)
+AdminHandler::AdminHandler(RobotHandler* robotControl_, Vector_ts<Robot*>* robots_, Vector_ts<Robot*>* inUse_, Vector_ts<Object*>* objects_, controller* cont_)
+    : robotControl(robotControl_), robots(robots_), inUse(inUse_), objects(objects_), cont(cont_)
 {
 }
 
@@ -27,25 +28,26 @@ void AdminHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection) {
     
     tcp_connection->releaseSocket();
 
-    connections[endpoint] = tcp_connection;
-    boost::thread connThread(&AdminHandler::threaded_on_connect, this, endpoint);
+    //connections[endpoint] = tcp_connection;
+    boost::thread connThread(&AdminHandler::threaded_on_connect, this, tcp_connection);
 }
 
-void AdminHandler::threaded_on_connect(boost::asio::ip::tcp::endpoint conn){
+void AdminHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_connection){
 
 
-    TcpServer::TcpConnection::pointer tcp_connection(connections[conn]);
+    //TcpServer::TcpConnection::pointer tcp_connection(connections[conn]);
     //tcp::socket &sock = tcp_connection->socket();
 
-    boost::shared_ptr<session> sess(new session(tcp_connection, robots, inUse,  robotControl, objects));
+    boost::shared_ptr<session> sess(new session(tcp_connection, robots, inUse,  robotControl, objects, cont));
     sessions.push_back(sess);
     sess->start();
 
 
+    std::cout << "[AH] thread exiting\n";
 }
 
-AdminHandler::session::session(TcpServer::TcpConnection::pointer tcp_, Vector_ts<Robot*>* robots_, Vector_ts<Robot*>* inUse_,RobotHandler* robotHandler, Vector_ts<Object*>* objects_) 
-    : conn_(tcp_), robots(robots_), inUse(inUse_), objects(objects_), robotControl(robotHandler)
+AdminHandler::session::session(TcpServer::TcpConnection::pointer tcp_, Vector_ts<Robot*>* robots_, Vector_ts<Robot*>* inUse_,RobotHandler* robotHandler, Vector_ts<Object*>* objects_, controller* cont_) 
+    : conn_(tcp_), robots(robots_), inUse(inUse_), objects(objects_), robotControl(robotHandler), cont(cont_)
 {
 }
 
@@ -91,10 +93,15 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
         conn_->releaseSocket();
         close();
         return;
-    } else if (error == boost::asio::error::operation_aborted)
+    } else if (error == boost::asio::error::operation_aborted) {
+        conn_->releaseSocket();
+        close();
         return;
-    else if (error)
+    } else if (error) {
+        conn_->releaseSocket();
+        close();
         throw boost::system::system_error(error);
+    }
 
     std::string s(read_message_.data(bytes_transferred));
     read_message_.consume(bytes_transferred);
@@ -103,9 +110,11 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
     std::cout.flush();
 
     if(!s.compare(std::string("shutdown\n"))){
+        // we need to shutdown the system.
+        conn_->releaseSocket();
+        cont->shutdown();
         
         return;
-
     }
 
     command cmd;

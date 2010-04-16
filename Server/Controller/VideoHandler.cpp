@@ -75,6 +75,7 @@ void VideoHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_con
 
     conn_->releaseSocket();
     write(msg);
+    std::cout << "[VH] thread exiting\n";
 }
 
 void VideoHandler::read_handler(const boost::system::error_code& error,  std::size_t bytes_transferred) {
