@@ -53,16 +53,25 @@ std::map<Robot*, int>* Assignment::calcAssignments() {
     }
   std::cout <<"NumObjects: " <<numObjects <<"\n";
 while(true){
-//Find the object with highest demand that has not yet been assigned.
+//Find the object with highest demand that has not yet been assigned.  If all 
 	int maxObject = -1;
-	for(int j = 0; j < numObjects; j++){
-		if((maxObject==-1|| demand[j] > demand[maxObject]) && objAss[j] == -1){
+	for(int j = 0; j < numObjects; ++j){
+		std::cout << "[AS]: DEBUG: " << j << " " << numObjects << " " << maxObject << " " << demand[j] << " " << objAss[j];
+		if(maxObject == -1 && objAss[j]==-1){
+			maxObject = j;
+		}
+		else if(demand[j] > demand[maxObject] && objAss[j] == -1){
 			maxObject = j;
 		}
 	}
+	if(maxObject == -1){//No object is not being looked at
+		break;
+	}
+	std::cout << "[AS]: Assigning robot for object " << maxObject << "\n";
 //Find the robot that best services this demand that has not yet been assigned
 	int maxRobot = -1;
 	double tQos = -1;
+
 	for(int j = 0; j < numRobots; j++){
 		double t = quality -> calcQos(objects[maxObject],robots[j]);
 		if(t>tQos && robotAssignments[j]==-1){
@@ -135,7 +144,10 @@ for(int i = 0; i < numRobots; i++){
  //
  std::map<Robot* , int>* ret = new std::map<Robot* , int>();
  for(int i = 0; i < numRobots; i++){
- 	ret->insert(std::pair<Robot*, int>(robots[i],objects[robotAssignments[i]]->getOID()));
+	if(robotAssignments[i]!=-1)
+ 		ret->insert(std::pair<Robot*, int>(robots[i],objects[robotAssignments[i]]->getOID()));
+	else
+		ret->insert(std::pair<Robot*, int>(robots[i],-1));
  }
 
  delete[] qual;
