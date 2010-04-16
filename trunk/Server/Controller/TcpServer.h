@@ -36,6 +36,7 @@ class TcpServer {
 
                 void releaseSocket();
 
+                ~TcpConnection();
             private:
                 boost::mutex socketMutex;
                 TcpConnection(boost::asio::io_service& io_service);

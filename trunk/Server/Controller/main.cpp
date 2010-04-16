@@ -13,8 +13,9 @@
 #include "controller.h"
 
 void work(boost::asio::io_service &io_){              
-        std::cout << "Worker thread calling io_.run()\n";
-            io_.run();
+        std::cout << "[main] Worker thread calling io_.run()\n";
+        io_.run();
+        std::cout << "[main] worker thread exiting\n";
 }
 
 
@@ -28,6 +29,7 @@ int main(int argc, const char **argv) {
 //    c.testdb();
 
     io.run();
+    c.qosThread->join();
     worker.join();
 
 }
