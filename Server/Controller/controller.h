@@ -32,7 +32,6 @@ class controller {
     public:
         controller(boost::asio::io_service&);
         virtual ~controller();
-        int testdb();
         void shutdown();
 
         static int writeRobots(Vector_ts<Robot*>*);
@@ -43,6 +42,7 @@ class controller {
     private:
         
         void controllerThread();
+        int doQOS(demand_t*);
         
         bool running;
         boost::asio::io_service& io_;

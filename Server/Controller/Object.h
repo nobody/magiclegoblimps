@@ -23,6 +23,7 @@ class Object {
         {
             pos = Point(0,0);
             color_ = new char[colorsize];
+            viewedFrom = NULL;
             while(colorsize){
                 colorsize--;
                 color_[colorsize] = color[colorsize];
