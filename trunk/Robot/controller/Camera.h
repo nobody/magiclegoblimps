@@ -51,6 +51,8 @@ public:
 
 	bool GetLocalDisplay() { return localDisplay_; }
 
+	int GetImageWidth();
+
 	void StartDisplay();
 	void DisplayFrame();
 	void StopDisplay();
@@ -76,8 +78,6 @@ private:
 	static const int MAX_SIZE = 400;
 	static const int CENTERED_EPSILON = 15;
 	
-	static int nextObject_;
-
 	float scanInterval_;
 	float lockTime_;
 
@@ -94,6 +94,7 @@ private:
 	string pass_;
 	string camUrl_;
 
+	//aren't currently used in code, but should replace local versions
 	CvCapture* capture_;
 	IplImage* image_;
 

@@ -20,13 +20,30 @@ float TrackingObject::GetCenteredPercentage(int width)
 	return dist / width * 200;
 }
 
-float TrackingObject::GetQuality()
+float TrackingObject::GetQuality(int width)
 {
-	//return quality metric
-	//some combination of size and distance from center
-	//should be between 0 - 1
+	int size = GetSizePercentage();
+	int centered = GetCenteredPercentage(width);
 
-	return 0;
+	if (centered > 0)
+	{
+		centered - 100;
+		centered = -centered;
+	}
+	else if (centered < 0)
+	{
+		centered + 100;
+	}
+
+	if (size > 100)
+	{
+		size = 200 - size;
+	}
+
+	if (size < 0)
+		size = 0;
+
+	return (centered + size) / 200;
 }
 
 float TrackingObject::GetSizePercentage()
