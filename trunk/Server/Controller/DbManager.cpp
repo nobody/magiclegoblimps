@@ -99,9 +99,13 @@ bool DbManager::normalize(demand_t*& d ) {
 }
 
 bool DbManager::getRequests( demand_t*& m ) {
-    if (old != NULL)
+    if (old != NULL) {
         delete old;
-    old = m;
+        old = NULL;
+    }
+    if (m != NULL) {
+        old = m;
+    }
 
     m = new demand_t;
     

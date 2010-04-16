@@ -85,24 +85,27 @@ int controller::writeObjects(Vector_ts<Object*>* objects) {
     return ret;
 }
 
-int controller::testdb() {
-    //db->printRequests();
-    std::cout << "\n-----------------------------\n";
-
-    std::map<int, double > *demand;
-    db->getRequests(demand);
-    db->normalize(demand);
-
-    demand_t::iterator iter;
-    for (iter = demand->begin(); iter != demand->end(); ++iter) {
-        std::cout << "Demand for " << iter->first << ": " << iter->second << "\n";
-    }
+int controller::doQOS(demand_t* demand) {
 
     objs->readLock();
     robots->readLock();
-    Robot** r = new Robot*[robots->size()];
-    Object** o = new Object*[objs->size()];
-    double* dem = new double[objs->size()];
+    Robot** r;
+    if (robots->size() > 0) {
+        r = new Robot*[robots->size()];
+    } else {
+        r = NULL;
+    }
+
+    Object** o;
+    double* dem;
+    if (objs->size() > 0) {
+        o = new Object*[objs->size()];
+        dem = new double[objs->size()];
+    } else {
+        o = NULL;
+        dem = NULL;
+    } 
+
 
     for (int i = 0; i < robots->size(); ++i) {
         r[i] = robots->at(i);
@@ -112,12 +115,13 @@ int controller::testdb() {
     for (int i = 0; i < objs->size(); ++i) {
         o[i] = objs->at(i);;
         o[i]->lock();
-        dem[i] =(*demand->find(i)).second;
+        dem[i] =(*demand)[i];
     }
 
     Qos q(r, robots->size(), o, objs->size(), dem);
     Assignment ass(r, robots->size(), o, objs->size(), dem, &q);
-
+    
+    std::cout <<"Start QoS" <<'\n';
     //Display the Qos at start
     q.calcQos();
     ass.calcAssignments();
@@ -137,8 +141,6 @@ int controller::testdb() {
     delete[] dem;
 
 
-    delete demand;
-
     robots->readUnlock();
     objs->readUnlock();
 
@@ -154,6 +156,8 @@ void controller::controllerThread(){
         db->normalize(demand);
 
         db->updateCameras(robots);
+
+        doQOS(demand);
 
         boost::asio::deadline_timer timer(io_, boost::posix_time::seconds(C_QOS_INTV));
         timer.wait();

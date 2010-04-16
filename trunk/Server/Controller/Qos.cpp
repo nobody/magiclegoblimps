@@ -26,11 +26,14 @@ Qos::~Qos() {
 }
 
 double Qos::calcQos(){
+    
 
 	double ret = 0;
 	int i = 0;
-	for(i = 0; i < numObjects; i++){
+	for(i = 0; i < numObjects; i++){ 
 		ret += demand[i]*calcQos(objects[i], objects[i]->viewedFrom );
+        
+        std::cout <<"[QS] Calc overall QoS" <<"\n";
 	}
     std::cout <<"System Qos: " << ret <<"\n";
 	return ret;
@@ -39,7 +42,11 @@ double Qos::calcQos(){
 
 //Calculate the Qos metric between an object and a robot
 double Qos::calcQos(Object* o, Robot* r){
-	return (r ? dist(r->pos, o->pos) * Qos::CAM_VALUES[r->getCamera()] : 0);
+    
+	double q = (r ? dist(r->pos, o->pos) * Qos::CAM_VALUES[r->getCamera()] : 0);
+    std::cout <<"[QS] Robot: " <<r->getRID() <<" Object: " <<o->getOID() <<" :: QoS: " <<q <<"\n"; 
+	//return (r ? dist(r->pos, o->pos) * Qos::CAM_VALUES[r->getCamera()] : 0);
+    return q;
 
 }
 
