@@ -93,6 +93,8 @@ int DataFile::write(void* data)
                     o[i].name = new std::string((*it)->getName());
                     o[i].color_size = (*it)->getColorsize();
                     o[i].color = (*it)->getColor();
+                    o[i].box_size = (*it)->getBoxsize();
+                    o[i].box = (*it)->getBox();
                     (*it)->unlock();
 
                     ++i;
@@ -208,8 +210,9 @@ void* DataFile::read()
                 object* array = (object*)readRet->array;
 
                 for (int i = 0; i < readRet->size; ++i) {
-                    Object* o = new Object(array[i].OID, *array[i].name, array[i].color, array[i].color_size);
+                    Object* o = new Object(array[i].OID, *array[i].name, array[i].color, array[i].color_size, array[i].box, array[i].box_size);
                     delete[] array[i].color;
+                    delete[] array[i].box;
 
                     objects->push_back(o);
 

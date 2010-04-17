@@ -143,6 +143,9 @@ int main() {
     objs[0].name = new std::string("Obj 6");
     objs[0].color_size = 10;
     objs[0].color = "1234567890";
+    objs[0].box_size = 1;
+    objs[0].color = new char[1];
+    objs[0].color[0] = 'x';
 
     byteArray objArr;
     if (write_data(P_OBJECT, objs, 1, &objArr)) {

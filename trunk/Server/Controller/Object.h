@@ -18,8 +18,8 @@ class Object {
         //Robot that is viewing this object
         Robot* viewedFrom;
 
-        Object(int id, std::string name, char* color, int colorsize)
-            : objID_(id), name_(name), colorsize_(colorsize)
+        Object(int id, std::string name, char* color, int colorsize, char* box, int boxsize)
+            : objID_(id), name_(name), colorsize_(colorsize), boxsize_(boxsize)
         {
             pos = Point(0,0);
             color_ = new char[colorsize];
@@ -27,6 +27,11 @@ class Object {
             while(colorsize){
                 colorsize--;
                 color_[colorsize] = color[colorsize];
+            }
+            box_= new char[boxsize];
+            while(boxsize){
+                boxsize--;
+                box_[boxsize] = box[boxsize];
             }
         }
     Point pos;
@@ -48,13 +53,22 @@ class Object {
             name_ = name;
         }
 
-        long getColorsize()
+        int getColorsize()
         {
             return colorsize_;
         }
         char* getColor()
         {
             return color_;
+        }
+
+        int getBoxsize()
+        {
+            return boxsize_;
+        }
+        char* getBox()
+        {
+            return box_;
         }
 
         void setColor(char* c, long size) {
@@ -66,7 +80,18 @@ class Object {
             if (color_)
                 delete[] color_;
             color_ = new char[size];
-            memcpy(color_,  c, size);
+            memcpy(color_, c, size);
+        }
+        void setBox(char* b, long size) {
+            if (size < 1) {
+                delete box_;
+                box_ = NULL;
+                return;
+            }
+            if (box_)
+                delete[] box_;
+            box_ = new char[size];
+            memcpy(box_, b, size);
         }
         inline bool operator<(Object& obj)const{
             return objID_ < obj.getOID();
@@ -85,6 +110,8 @@ class Object {
         std::string name_;
         char* color_;
         int colorsize_;
+        char* box_;
+        int boxsize_;
         boost::mutex mutex;
 
 };
