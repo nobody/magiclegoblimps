@@ -18,7 +18,8 @@ bool running = true;
 
 void LocalInput()
 {
-	//all of this needs serious error checking and cleaning up
+	//could probably use some more input validation
+	//maybe the functions should check their input internally
 
 	cout << "INPUT: ";
 
@@ -35,108 +36,134 @@ void LocalInput()
 		return;
 	
 	//if statements are ugly, but can't switch strings
-	//look into using a STL map instead
 
 	//quit
 	if (tokens[0].compare("quit") == 0)
 		running = false;
 
 	//connect ip
-	if (tokens[0].compare("connect") == 0)
+	else if (tokens[0].compare("connect") == 0)
 	{
-		string ip = tokens[1];
-		controller->ConnectToServer(ip);
+		if (tokens.size() == 2)
+		{
+			string ip = tokens[1];
+			controller->ConnectToServer(ip);
+		}
 	}
 
 	//serve
-	if (tokens[0].compare("serve") == 0)
+	else if (tokens[0].compare("serve") == 0)
 	{
 		controller->Serve();
 	}
 
 	//testserver command
-	if (tokens[0].compare("testserver") == 0)
+	else if (tokens[0].compare("testserver") == 0)
 	{
-		controller->TestServer(atoi(tokens[1].c_str()));
+		if (tokens.size() == 2)
+			controller->TestServer(atoi(tokens[1].c_str()));
 	}
 
 	//testrobot
-	if (tokens[0].compare("testrobot") == 0)
+	else if (tokens[0].compare("testrobot") == 0)
 	{
 		//lazy connection for repeat testing
 		Robot* robot = new Robot(6, "192.168.1.100", false);
-
 		robot->Connect();
-
 		controller->AddRobot(robot);
 	}
 
 	//addrobot port/id ip true/false
-	if (tokens[0].compare("addrobot") == 0)
+	else if (tokens[0].compare("addrobot") == 0)
 	{
-		int port = atoi(tokens[1].c_str());
-		string ip = tokens[2];
+		if (tokens.size() == 4)
+		{
+			int port = atoi(tokens[1].c_str());
+			string ip = tokens[2];
 
-		Robot* robot;
+			Robot* robot;
 
-		if (tokens[3].compare("true") == 0)
-			robot = new Robot(port, ip, true);
-		else if (tokens[3].compare("false") == 0)
-			robot = new Robot(port, ip, false);
-
-		robot->Connect();
-
-		controller->AddRobot(robot);
+			if (tokens[3].compare("true") == 0)
+			{
+				robot = new Robot(port, ip, true);
+				robot->Connect();
+				controller->AddRobot(robot);
+			}
+			else if (tokens[3].compare("false") == 0)
+			{
+				robot = new Robot(port, ip, false);
+				robot->Connect();
+				controller->AddRobot(robot);
+			}
+		}
 	}
 
 	//removerobot port/id
-	if (tokens[0].compare("removerobot") == 0)
+	else if (tokens[0].compare("removerobot") == 0)
 	{
-		int port = atoi(tokens[1].c_str());
+		if (tokens.size() == 2)
+		{
+			int port = atoi(tokens[1].c_str());
 
-		controller->RemoveRobot(port);
+			controller->RemoveRobot(port);
+		}
 	}
 
 	//display port/id
-	if (tokens[0].compare("display") == 0)
+	else if (tokens[0].compare("display") == 0)
 	{
-		controller->GetRobot(
-			atoi(tokens[1].c_str()))->GetCamera()->StartDisplay();
+		if (tokens.size() == 2)
+		{
+			if (controller->GetRobot(
+				atoi(tokens[1].c_str()))->GetCamConnected())
+			controller->GetRobot(
+				atoi(tokens[1].c_str()))->GetCamera()->StartDisplay();
+		}
 	}
 
 	//stopdisplay port/id
-	if (tokens[0].compare("stopdisplay") == 0)
+	else if (tokens[0].compare("stopdisplay") == 0)
 	{
-		controller->GetRobot(
-			atoi(tokens[1].c_str()))->GetCamera()->StopDisplay();
+		if (tokens.size() == 2)
+		{
+			if (controller->GetRobot(
+				atoi(tokens[1].c_str()))->GetCamConnected())
+			controller->GetRobot(
+				atoi(tokens[1].c_str()))->GetCamera()->StopDisplay();
+		}
 	}
 
 	//startprogram port/id name
-	if (tokens[0].compare("startprogram") == 0)
+	else if (tokens[0].compare("startprogram") == 0)
 	{
-		controller->GetRobot(atoi(tokens[1].c_str()))->GetNXT()->StartProgram(tokens[2]);
+		if (tokens.size() == 2)
+			controller->GetRobot(atoi(tokens[1].c_str()))->GetNXT()->StartProgram(tokens[2]);
 	}
 
 	//stopprograms port/id
-	if (tokens[0].compare("stopprograms") == 0)
+	else if (tokens[0].compare("stopprograms") == 0)
 	{
-		controller->GetRobot(atoi(tokens[1].c_str()))->GetNXT()->StopPrograms();
+		if (tokens.size() == 2)
+			controller->GetRobot(atoi(tokens[1].c_str()))->GetNXT()->StopPrograms();
 	}
 
 	//test port/id command
-	if (tokens[0].compare("test") == 0)
+	else if (tokens[0].compare("test") == 0)
 	{
-		string command = tokens[2];
+		if (tokens.size() == 3)
+		{
+			string command = tokens[2];
 
-		for (int i = 3; i < tokens.size(); i++)
-			command += " " + tokens[i];
+			for (int i = 3; i < tokens.size(); i++)
+				command += " " + tokens[i];
 
-		controller->GetRobot(
-			atoi(tokens[1].c_str()))->ExecuteCommand(command);
+			controller->GetRobot(
+				atoi(tokens[1].c_str()))->ExecuteCommand(command);
+		}
 	}
 
 	//testbox
-	if (tokens[0].compare("testbox") == 0)
+	else if (tokens[0].compare("testbox") == 0)
 	{
 		CvBox2D testBox;
 		testBox.angle = 30;
@@ -157,17 +184,26 @@ void LocalInput()
 		delete testArr;
 	}
 
-	//testhist
-	if (tokens[0].compare("testhist") == 0)
+	//testhist objectid
+	else if (tokens[0].compare("testhist") == 0)
 	{
-		char* testArr = TrackingObject::HistogramToArray(
-			Camera::GetTrackableObjects()[0]->GetHistogram());
+		if (tokens.size() == 2)
+		{
+			char* testArr = TrackingObject::HistogramToArray(
+				Camera::GetTrackableObjects()[atoi(tokens[1].c_str())]->GetHistogram());
 
-		CvHistogram* testHist = TrackingObject::ArrayToHistogram(testArr);
+			CvHistogram* testHist = TrackingObject::ArrayToHistogram(testArr);
 
-		Camera::GetTrackableObjects()[0]->SetHistogram(testHist);
+			Camera::GetTrackableObjects()[atoi(tokens[1].c_str())]->SetHistogram(testHist);
 
-		delete testArr;
+			delete testArr;
+		}
+	}
+
+	//default
+	else
+	{
+		cout << "Invalid Command" << endl;
 	}
 }
 
