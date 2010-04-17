@@ -838,3 +838,90 @@ vector<GridLoc*> Controller::getIllMoves()
 	}
 	return illMoves;
 }
+
+void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
+{
+	Robot* robot = GetRobot(robotID);
+	Camera* camera = robot->GetCamera();
+	
+	camera->SetTarget(objID);
+	
+	//TODO: camera thread/spinning
+	while (!(camera->GetTargetVisible()))
+	{
+		//TODO: SPIN CAMERA.
+            //This needs to happen continuously while the robot is moving through
+            //the spiral search. Maybe a separate thread?
+	}
+	
+	if (!(camera->GetTargetVisible()))
+	{
+		//send to last known location
+		robot->setDestination(lastKnownLoc);
+		genPath(robot);
+		
+		while () {
+			//wait until travel is complete
+		}
+	}
+	
+	if (!(camera->GetTargetVisible()))
+	{
+		SpiralSearch(robot, center); //TODO: need to set center coordinates for grid
+	}
+	else
+	{
+		robot->GetObjectLocation(objID);
+	}
+	
+}
+
+void Controller::SpiralSearch(Robot* robot, Camera& camera, GridLoc* loc)
+{
+	robot->setDestination(loc);
+	genPath(robot);
+	
+	int x = loc->getX();
+	int y = loc->getY();
+	
+	int xdir = 1; 
+	int ydir = 1;	
+	int xory = 1; //1 is x, -1 is y
+	
+	int countSpirals = 1;
+	int countSquares;
+	
+	while(!(camera->GetTargetVisible())) // && countOrbits < xMax*2
+	{
+		for (countSquares = 0; countSquares < 2; countSquares++) {
+			
+			if (xory == 1) {
+				x += xdir*countSpirals;
+				xdir *= -1;
+				loc->setX(x);
+				robot->setDestination(loc);
+				genPath(robot);
+				while () {
+					//wait for robot to catch up
+				}
+			}
+			else {
+				y += ydir*countSpirals;
+				ydir *= -1;
+				loc->setY(y);
+				robot->setDestination(loc);
+				genPath(robot);
+				while () {
+					//wait for robot to catch up
+				}
+			}
+			
+			xory *= -1; //change dir (left turn)
+			
+		}
+		
+		countSpirals++;
+	}
+	
+}
+
