@@ -58,14 +58,18 @@ int main() {
     char tmp4[] = "qwertyuiopasdf";
     char tmp5[] = "qwertyuiopasdf";
     char tmp6[] = "qwertyuiopasdf";
-    char tmp7[] = "qwertyuiopasdf";
-    Object* obj1 = new Object(1, "Object 1", tmp1, 13);
-    Object* obj2 = new Object(2, "Object 2", tmp2, 13);
-    Object* obj3 = new Object(3, "Object 3", tmp3, 13);
-    Object* obj4 = new Object(4, "Object 4", tmp4, 13);
-    Object* obj5 = new Object(5, "Object 5", tmp5, 13);
-    Object* obj6 = new Object(6, "Object 6", tmp6, 13);
-    Object* obj7 = new Object(15, "Object 15", tmp7, 13);
+    char box1[] = "a";
+    char box2[] = "b";
+    char box3[] = "c";
+    char box4[] = "d";
+    char box5[] = "e";
+    char box6[] = "f";
+    Object* obj1 = new Object(1, "Object 1", tmp1, 13, box1, 1);
+    Object* obj2 = new Object(2, "Object 2", tmp2, 13, box2, 1);
+    Object* obj3 = new Object(3, "Object 3", tmp3, 13, box3, 1);
+    Object* obj4 = new Object(4, "Object 4", tmp4, 13, box4, 1);
+    Object* obj5 = new Object(5, "Object 5", tmp5, 13, box5, 1);
+    Object* obj6 = new Object(6, "Object 6", tmp6, 13, box6, 1);
 
     objs->push_back(obj1);
     objs->push_back(obj2);
@@ -73,7 +77,6 @@ int main() {
     objs->push_back(obj4);
     objs->push_back(obj5);
     objs->push_back(obj6);
-    objs->push_back(obj7);
 
     dfo.write(objs);
 

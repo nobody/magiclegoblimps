@@ -88,6 +88,8 @@ struct object{
     std::string* name;
     int color_size;
     char* color;
+    int box_size;
+    char* box;
 
     ~object() {
         delete name;

@@ -447,7 +447,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                     if(!exists){
 
                         //create the new robot
-                        Object* temp = new Object(objs[i].OID, *(objs[i].name), objs[i].color, objs[i].color_size);
+                        Object* temp = new Object(objs[i].OID, *(objs[i].name), objs[i].color, objs[i].color_size, objs[i].box, objs[i].box_size);
                         objects->lock();
                         objects->push_back(temp);
                         objects->unlock();

@@ -162,7 +162,7 @@
                         str_len = 0;
                         name = NULL;
                     }
-                    int size = sizeof(int) * 4 + str_len + data[i].color_size;
+                    int size = sizeof(int) * 5 + str_len + data[i].color_size + data[i].box_size;
 
                     structs[i] = new char[size];
 
@@ -206,6 +206,19 @@
                         structs[i][j] = data[i].color[j - idx];
                     }
                     idx += data[i].color_size;
+
+                    // push box_size
+                    ref = (char*)&(data[i].box_size);
+                    for (int j = idx; j < (int)(idx + sizeof(int)); ++j) {
+                        structs[i][j] = ref[j - idx];
+                    }
+                    idx += sizeof(int);
+
+                    // push box
+                    for (int j = idx; j < (idx + data[i].box_size); ++j) {
+                        structs[i][j] = data[i].box[j - idx];
+                    }
+                    idx += data[i].box_size;
 
                     // add the length of this array to the total length and store it
                     sizes[i] = size;
@@ -532,6 +545,8 @@ int readObject(void* array, object* &objs) {
         char* name;
         char* color;
         int color_size;
+        char* box;
+        int box_size;
 
         
         // retreive size
@@ -571,11 +586,25 @@ int readObject(void* array, object* &objs) {
             color[j] = current[0]; current++;
         }
 
+        // retrieve box_size 
+        ref = (char*)&box_size;
+        for (int j = 0; j < (int)sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        // retrieve box
+        box = new char[box_size];
+        for (int j = 0; j < box_size; ++j) {
+            box[j] = current[0]; current++;
+        }
+
         // build the object struct
         objs[i].OID = oid;
         objs[i].name = new std::string(name);
         objs[i].color_size = color_size;
         objs[i].color = color;
+        objs[i].box_size = box_size;
+        objs[i].box = box;
 
         delete[] name;
     }
