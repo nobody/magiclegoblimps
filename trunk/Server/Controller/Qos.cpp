@@ -26,7 +26,6 @@ Qos::~Qos() {
 }
 
 double Qos::calcQos(){
-    std::cout <<"[QS] Calc overall QoS" <<"\n";
     double ret = 0;
     int i = 0;
     for(i = 0; i < numObjects; i++){ 
@@ -39,8 +38,14 @@ double Qos::calcQos(){
 
 //Calculate the Qos metric between an object and a robot
 double Qos::calcQos(Object* o, Robot* r){
-    
-    double q = (r ? dist(r->pos, o->pos) * Qos::CAM_VALUES[r->getCamera()] : 0);
+    if(o == NULL || r == NULL) {
+        return 0;
+    }
+
+    //Manually create points until/if we use point class
+    Point* rPoint = new Point(r->getXCord(), r->getYCord());
+    //Point oPoint 
+    double q = (r ? dist(*rPoint, o->pos) * Qos::CAM_VALUES[r->getCamera()] : 0);
     //std::cout <<"[QS] Robot: " <<r->getRID() <<" Object: " <<o->getOID() <<" :: QoS: " <<q <<"\n"; 
     //return (r ? dist(r->pos, o->pos) * Qos::CAM_VALUES[r->getCamera()] : 0);
     std::cout << "[QS] qos calculated as " << q << "\n";
@@ -51,6 +56,7 @@ double Qos::calcQos(Object* o, Robot* r){
 //Returns decimal on [0,1] representing difference from optimal
 double Qos::dist(Point p1, Point p2){
     double d = sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y));
+    std::cout <<"[QS] Dist (" <<p1.x <<", " <<p1.y <<"), (" <<p2.x <<", " <<p2.y <<") = " <<d <<"\n";
     if(d >= Qos::OPTIMAL_DIST){
         return Qos::OPTIMAL_DIST / (double)d; //Optimal / Actual if D > optimal
     }else{
