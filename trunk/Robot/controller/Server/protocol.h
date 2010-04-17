@@ -32,7 +32,9 @@
 #define P_CMD_CAMROT 4
 #define P_CMD_DEL_OBJ 5
 #define P_CMD_RLS_RBT 6
+#define P_CMD_SHUTDOWN 7
 
+//deprecated commands
 #define P_CMD_WEST 100
 #define P_CMD_MVTO 200
 
@@ -76,9 +78,9 @@ struct robotUpdate{
     int* ys;
     ~robotUpdate(){
         delete[] objects;
-	delete[] qualities;
-	delete[] xs;
-	delete[] ys;
+    delete[] qualities;
+    delete[] xs;
+    delete[] ys;
     }
 };
 struct object{
@@ -86,6 +88,8 @@ struct object{
     std::string* name;
     int color_size;
     char* color;
+    int box_size;
+    char* box;
 
     ~object() {
         delete name;
@@ -133,4 +137,4 @@ int readRobotUpdate(void* array, robotUpdate* &robots);
 
 #endif /* PROTOCOL_H_ */
 
-/*vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

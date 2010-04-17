@@ -51,6 +51,12 @@ void LocalInput()
 		}
 	}
 
+	//testconnect
+	else if (tokens[0].compare("testconnect") == 0)
+	{
+		controller->ConnectToServer("129.110.116.66");
+	}
+
 	//serve
 	else if (tokens[0].compare("serve") == 0)
 	{
@@ -172,8 +178,12 @@ void LocalInput()
 		testBox.size.height = 10;
 		testBox.size.width = 5;
 
-		char* testArr = TrackingObject::BoxToArray(testBox);
+		int size = 0;
+
+		char* testArr = TrackingObject::BoxToArray(testBox, &size);
 		CvBox2D newBox = TrackingObject::ArrayToBox(testArr);
+
+		cout << "Size: " << size << endl;
 
 		cout << newBox.angle << endl;
 		cout << newBox.center.x << endl;
@@ -189,10 +199,14 @@ void LocalInput()
 	{
 		if (tokens.size() == 2)
 		{
+			int size = 0;
+
 			char* testArr = TrackingObject::HistogramToArray(
-				Camera::GetTrackableObjects()[atoi(tokens[1].c_str())]->GetHistogram());
+				Camera::GetTrackableObjects()[atoi(tokens[1].c_str())]->GetHistogram(), &size);
 
 			CvHistogram* testHist = TrackingObject::ArrayToHistogram(testArr);
+
+			cout << "Size: " << size << endl;
 
 			Camera::GetTrackableObjects()[atoi(tokens[1].c_str())]->SetHistogram(testHist);
 
@@ -209,7 +223,7 @@ void LocalInput()
 
 int main(int argc, char* argv[])
 {
-	controller = new Controller();
+	controller = new Controller(5, 4);
 
 	cout << "ROBOT CONTROLLER" << endl;
 	cout << "----------------" << endl;

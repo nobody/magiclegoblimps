@@ -9,7 +9,9 @@ Controller::Controller()
 	timer_ = 0;
 	connectSocket_ = NULL;
 	serverSocket_ = NULL;
-	port_ = "7626";
+	port_ = "9999";
+	
+	lastObjectSize_ = 1;
 
 	connected_ = false;
 }
@@ -22,7 +24,9 @@ Controller::Controller(int xDim, int yDim)
 	timer_= 0;
 	connectSocket_ = NULL;
 	serverSocket_ = NULL;
-	port_ = "7626";
+	port_ = "9999";
+
+	lastObjectSize_ = 1;
 
 	connected_ = false;
 }
@@ -121,6 +125,14 @@ bool Controller::ConnectToServer(string ip)
 
 	write_data(P_ROBOT_INIT, init, (short)robots_.size(), &sendArray);
 
+	iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
+    if (iResult == SOCKET_ERROR) 
+	{
+        printf("send failed: %d\n", WSAGetLastError());
+        closesocket(connectSocket_);
+        WSACleanup();
+    }
+
 	delete[] init;
 	delete[] sendArray.array;
 
@@ -217,6 +229,8 @@ void Controller::ClientThread(void* params)
         iResult = recv(connectSocket_, recvBuf, recvBufLen, 0);
         if (iResult > 0)
 		{
+			cout << "RECEIVING" << endl;
+
 			readReturn* data = new readReturn;
 
 			read_data(recvBuf, data);
@@ -232,10 +246,20 @@ void Controller::ClientThread(void* params)
 				{
 					cout << "Adding Object " << obj[i].OID << 
 						" : " << obj[i].name << endl;
+					
+					/*
+					CvBox2D box = TrackingObject::ArrayToBox(obj[i].box);
+					CvHistogram* hist = 
+						TrackingObject::ArrayToHistogram(obj[i].color);
+					CvScalar color = CV_RGB(0, 0, 0);
 
-					//need protocol update to add box and histogram for this
-					//TrackingObject* newObj = TrackingObject(
-					//add to the tracking objects vector
+					TrackingObject* newObj = 
+						new TrackingObject(hist, box, color);
+
+					newObj->SetID(obj[i].OID);
+
+					Camera::GetTrackableObjects().push_back(newObj);
+					*/
 				}
 			}
 			else if (type == P_ASSIGNMENT)
@@ -289,10 +313,30 @@ void Controller::ClientThread(void* params)
 bool Controller::Command(int id, int command, int arg)
 {
 	//example of command translation (not actual command)
-	if (command == 1)
+	if (command == P_CMD_FWD)
 	{
+		//can't call non-static from in a static
 		//GetRobot(id)->ExecuteCommand("forward " + arg);
 	}
+	else if(command == P_CMD_LFT)
+	{
+	}
+	else if(command == P_CMD_RGHT)
+	{
+	}
+	else if (command == P_CMD_CAMROT)
+	{
+	}
+	else if (command == P_CMD_DEL_OBJ)
+	{
+		//delete an object from the trackableObjects
+	}
+	/*
+	else if (command == P_CMD_SHUTDOWN)
+	{
+		//disconnect and then shutdown
+	}
+	*/
 
 	return true;
 }
@@ -483,7 +527,7 @@ void Controller::Update()
 			}
 		}
 
-		if (connected_)
+		if (connected_ && (robots_.size() > 0))
 		{
 			byteArray sendArray;
 
@@ -533,11 +577,11 @@ void Controller::Update()
 
 			int iResult = 0;
 
-			iResult = send(serverSocket_, sendArray.array, sendArray.size, 0);
+			iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
 		    if (iResult == SOCKET_ERROR) 
 			{
 		        printf("send failed: %d\n", WSAGetLastError());
-		        closesocket(serverSocket_);
+		        closesocket(connectSocket_);
 		        WSACleanup();
 		    }
 
@@ -545,6 +589,60 @@ void Controller::Update()
 		}
 
 		timer_ = 0;
+	}
+
+	if (connected_ && (Camera::GetTrackableObjects().size() > 0))
+	{
+		if (lastObjectSize_ != Camera::GetTrackableObjects().size())
+		{
+			lastObjectSize_ = Camera::GetTrackableObjects().size();
+
+			byteArray sendArray;
+
+			object* objects = new object[lastObjectSize_];
+
+			int i = 0;
+
+			vector<TrackingObject*>::iterator it;
+
+			for (it = Camera::GetTrackableObjects().begin(); 
+				it != Camera::GetTrackableObjects().end(); it++)
+			{
+				string name = "Animal" + (*it)->GetID();
+
+				char* arr;
+				int size;
+
+				objects[i].OID = (*it)->GetID();
+				objects[i].name = &name;
+
+				arr = TrackingObject::BoxToArray((*it)->GetOriginalBox(), &size);
+				objects[i].box = arr;
+				objects[i].box_size = size;
+
+				arr = TrackingObject::HistogramToArray((*it)->GetHistogram(), &size);
+				objects[i].color = arr;
+				objects[i].color_size = size;
+
+				i++;
+			}
+
+			write_data(P_ROBOT_UPDATE, objects, (short)lastObjectSize_, &sendArray);
+
+			delete[] objects;
+
+			int iResult = 0;
+
+			iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
+			if (iResult == SOCKET_ERROR) 
+			{
+				printf("send failed: %d\n", WSAGetLastError());
+				closesocket(connectSocket_);
+				WSACleanup();
+			}
+
+			delete[] sendArray.array;
+		}
 	}
 
 	vector<Robot*>::iterator it;

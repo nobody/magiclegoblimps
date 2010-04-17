@@ -1,6 +1,7 @@
 #include "TrackingObject.h"
 
-TrackingObject::TrackingObject(CvHistogram* hist, CvBox2D originalBox)
+TrackingObject::TrackingObject(CvHistogram* hist, CvBox2D originalBox, 
+	CvScalar color)
 {
 	int histDivs = 32;
 	float histRangesArray[] = {0, 180};
@@ -11,6 +12,8 @@ TrackingObject::TrackingObject(CvHistogram* hist, CvBox2D originalBox)
 	cvCopyHist(hist, &histogram_);
 	originalBox_ = originalBox;
 	trackBox_ = originalBox;
+
+	color_ = color;
 }
 
 int TrackingObject::GetCenteredPercentage(int width)
@@ -61,17 +64,19 @@ int TrackingObject::CenterDistanceToDegrees(int width, bool cam)
 	return dist / width * 45;
 }
 
-char* TrackingObject::BoxToArray(CvBox2D box)
+char* TrackingObject::BoxToArray(CvBox2D box, int* size)
 {
 	int fSize = sizeof(float);
-	short size = fSize * 5;
-	char* arr = new char[size];
+	short ssize = fSize * 5;
+	char* arr = new char[ssize];
 
 	memcpy(&arr[0], (char*)&box.angle, 4);
 	memcpy(&arr[4], (char*)&box.center.x, 4);
 	memcpy(&arr[8], (char*)&box.center.y, 4);
 	memcpy(&arr[12], (char*)&box.size.height, 4);
 	memcpy(&arr[16], (char*)&box.size.width, 4);
+
+	*size = ssize;
 	
 	return arr;
 }
@@ -106,7 +111,7 @@ CvBox2D TrackingObject::ArrayToBox(char* arr)
 	return box;
 }
 
-char* TrackingObject::HistogramToArray(CvHistogram* hist)
+char* TrackingObject::HistogramToArray(CvHistogram* hist, int* size)
 {
 	cvSave("histogram.xml", hist);
 
@@ -117,10 +122,14 @@ char* TrackingObject::HistogramToArray(CvHistogram* hist)
 	buffer << file.rdbuf();
 	string contents(buffer.str());
 
-	char* arr = new char[contents.length() + 1];
+	int ssize = contents.length() + 1;
+
+	char* arr = new char[ssize];
 	strcpy(arr, contents.c_str());
 
 	file.close();
+
+	*size = ssize;
 
 	return arr;
 }

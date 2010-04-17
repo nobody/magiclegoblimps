@@ -195,7 +195,16 @@ void Camera::DisplayFrame()
 		//stores the currently tracked (red) object
 		if (inKey_ == 's')
 		{
-			TrackingObject* newObject = new TrackingObject(hist, trackBox);
+			/*
+			float maxValue = 0;
+			int maxIndex = 0;
+			cvGetMinMaxHistValue(hist, NULL, &maxValue, NULL, &maxIndex);
+			CvScalar color = CV_RGB(h, s, maxValue);
+			*/
+			CvScalar color = CV_RGB(0, 0, 0);
+
+			TrackingObject* newObject = new TrackingObject(hist, trackBox, 
+				color);
 
 			newObject->SetTrackingWindow(cvRect(0, 0, 
 				image->width, image->height));
@@ -217,6 +226,13 @@ void Camera::DisplayFrame()
 
 			for (it = visibleObjects_.begin(); it != visibleObjects_.end(); it++)
 			{
+				cout << (*it)->GetColor().val << endl;
+
+				for (int i = 0; i < 4; i++)
+				{
+					cout << (*it)->GetColor().val[i] << endl;
+				}
+
 				float dist = 
 					(*it)->GetCenteredPercentage(image->width);
 
@@ -291,6 +307,8 @@ void Camera::Update()
 	if(!frame) 
 	{
 		cout << "ERROR! " + ip_ + " frame is NULL!" << endl;
+		cout << "Trying to reconnect..." << endl;
+		Connect();
 		return;
 	}		
 
@@ -449,6 +467,7 @@ int Camera::GetNextAvailableID()
 void Camera::Scan()
 {
 	//should check if object is already visible before rescanning
+	possibleObjects_ = trackableObjects_;
 
 	vector<TrackingObject*>::iterator it;
 
@@ -464,14 +483,16 @@ void Camera::Scan()
 
 void Camera::Lock()
 {
-
 	vector<TrackingObject*>::iterator it;
 
 	for (it = possibleObjects_.begin(); it != possibleObjects_.end(); it++)
 	{
 		if ((*it)->GetSizePercentage() > MAX_SIZE ||
 			(*it)->GetSizePercentage() < MIN_SIZE)
+		{
 			possibleObjects_.erase(it);
+			it = possibleObjects_.begin();
+		}
 	}
 
 	visibleObjects_ = possibleObjects_;
