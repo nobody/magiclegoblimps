@@ -408,8 +408,15 @@ void Controller::Disconnect()
 		}
 
 		Camera::GetTrackableObjects().clear();
+	}*/
+	
+
+	if (connectSocket_ != NULL)
+	{
+		//socket might need shutdown
+		closesocket(connectSocket_);
+	    WSACleanup();
 	}
-	*/
 	
 	if (connectSocket_ != NULL)
 	{
@@ -455,6 +462,14 @@ void Controller::Update()
 						atoi(tokens[3].c_str()),
 						atoi(tokens[4].c_str()),
 						atoi(tokens[5].c_str()));
+
+					if((*it)->getPath()->getSize())
+						(*it)->GetNXT()->SendMessage((*it)->newCmd());
+					else
+					{
+						(*it)->setPath(genPath(*(*it)));
+						(*it)->GetNXT()->SendMessage((*it)->newCmd());
+					}
 				}
 				catch (Nxt_exception& e)
 				{
@@ -564,11 +579,10 @@ Path* Controller::genPath(Robot& robot)
 		illMoves.push_back(moves[i]);
 	}
 
-	Path* best = pathHeap.top();
-	pathHeap.pop();
-
-	if(best != NULL)
+	if(pathHeap.size() != 0)
 	{
+		Path* best = pathHeap.top();
+		pathHeap.pop();
 		while(*best->getEnd() != *robot.getDestination())
 		{
 			moves = getValidMoves(*best->getEnd(), illMoves);
@@ -667,12 +681,22 @@ vector<GridLoc*> Controller::getIllMoves()
 {
 	vector<GridLoc*> illMoves;
 
-	for(int i = 0; i < robots_.size(); i++)
+	/*for(int i = 0; i < robots_.size(); i++)
 	{
 		GridLoc* robLoc = 
 			new GridLoc(robots_[i]->getLocation()->getX(),
 			robots_[i]->getLocation()->getY());
 		illMoves.push_back(robLoc);
+		
+	}*/
+	vector<Robot*>::iterator it;
+	for(it = robots_.begin(); it != robots_.end(); it++)
+	{
+		if((*it)->getRobotMoving())
+			illMoves.push_back(new GridLoc((*it)->getNextLoc()->getX(),
+				(*it)->getNextLoc()->getY()));
+		illMoves.push_back(new GridLoc((*it)->getLocation()->getX(),
+			(*it)->getLocation()->getY()));
 	}
 	return illMoves;
 }

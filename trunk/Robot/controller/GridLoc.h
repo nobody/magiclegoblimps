@@ -6,7 +6,7 @@ class GridLoc
 public:
 	GridLoc(void);
 	GridLoc(int xx, int yy);
-	virtual ~GridLoc(void);
+	~GridLoc(void);
 
 	void	setX(int xx);
 	void	setY(int yy);

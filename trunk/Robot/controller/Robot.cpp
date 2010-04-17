@@ -12,11 +12,13 @@ Robot::Robot(int port, string ip, bool dLink)
 	robotOnline_ = false;
 	robotActive_ = false;
 
+
 	batteryLevel_ = 0;
 	status_ = 0;
 
 	loc = new GridLoc();
 	dest = new GridLoc();
+	robotHeading_ = NORTH;
 }
 
 Robot::~Robot()
@@ -187,13 +189,13 @@ void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, int statu
 {
 	loc->setX(x);
 	loc->setY(y);
-	if (heading = 0)
+	if (heading == 0)
 		robotHeading_ = NORTH;
-	else if (heading = 1)
+	else if (heading == 1)
 		robotHeading_ = EAST;
-	else if (heading = 2)
+	else if (heading == 2)
 		robotHeading_ = SOUTH;
-	else if (heading = 3)
+	else if (heading == 3)
 		robotHeading_ = WEST;
 	cameraDirection_ = pan;
 	batteryLevel_ = battery;
@@ -227,9 +229,128 @@ void Robot::centerCameraOnTarget(int deg)
 	cameraDirection_ = deg;
 }
 
+string Robot::newCmd()
+{
+	string cmd;
+	if(!nextLoc)
+	{
+		return cmd;
+	}
+	else if(loc->getX() < nextLoc->getX())
+	{
+		switch(robotHeading_)
+		{
+		case NORTH:
+			cmd = "right";
+			printf("Turning right\n");
+			robotHeading_ = EAST;
+			break;
+		case EAST:
+			cmd = "forward";
+			printf("Moving forward\n");
+			robPath->advPath();
+			//updateLocation();
+			break;
+		case SOUTH:
+			cmd = "left";
+			printf("Turning left\n");
+			robotHeading_ = EAST;
+			break;
+		case WEST:
+			cmd = "turnaround";
+			printf("Turning around\n");
+			robotHeading_ = EAST;
+			break;
+		}
+	}
+	else if(loc->getX() > nextLoc->getX())
+	{
+		switch(robotHeading_)
+		{
+		case NORTH:
+			cmd = "left";
+			printf("Turning left\n");
+			robotHeading_ = WEST;
+			break;
+		case EAST:
+			cmd = "turnaround";
+			printf("Turning around\n");
+			robotHeading_ = WEST;
+			break;
+		case SOUTH:
+			cmd = "right";
+			printf("Turning right\n");
+			robotHeading_ = WEST;
+			break;
+		case WEST:
+			cmd = "forward";
+			printf("Moving forward\n");
+			robPath->advPath();
+			//updateLocation();
+			break;
+		}
+	}
+	else if(loc->getY() < nextLoc->getY())
+	{
+		switch(robotHeading_)
+		{
+		case NORTH:
+			cmd = "forward";
+			printf("Moving forward\n");
+			robPath->advPath();
+			//updateLocation();
+			break;
+		case EAST:
+			cmd = "left";
+			printf("Turning left\n");
+			robotHeading_ = NORTH;
+			break;
+		case SOUTH:
+			cmd = "turnaround";
+			printf("Turning around\n");
+			robotHeading_ = NORTH;
+			break;
+		case WEST:
+			cmd = "right";
+			printf("Turning right\n");
+			robotHeading_ = NORTH;
+			break;
+		}
+	}
+	else if(loc->getY() > nextLoc->getY())
+	{
+		switch(robotHeading_)
+		{
+		case NORTH:
+			cmd = "turnaround";
+			printf("Turning around\n");
+			robotHeading_ = SOUTH;
+			break;
+		case EAST:
+			cmd = "right";
+			printf("Turning right\n");
+			robotHeading_ = SOUTH;
+			break;
+		case SOUTH:
+			cmd = "forward";
+			printf("Moving forward\n");
+			robPath->advPath();
+			//updateLocation();
+			break;
+		case WEST:
+			cmd = "left";
+			printf("Turning left\n");
+			robotHeading_ = SOUTH;
+			break;
+		}
+	}
+
+	return cmd;
+}
+
 void Robot::setDestination(GridLoc* newD)
 {
-	delete dest;
+	/*delete dest;*/
 	dest = newD;
 }
 
@@ -241,9 +362,11 @@ void Robot::setNextLoc(GridLoc* newNextLoc)
 
 void Robot::setPath(Path* newPath)
 {
-	if(robPath)
-		delete robPath;
+	/*if(robPath)
+		delete robPath;*/
 	robPath = newPath;
+	if(robPath)
+		setNextLoc(robPath->advPath());
 }
 
 void Robot::updateLocation()

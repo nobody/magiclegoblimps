@@ -48,41 +48,30 @@ void Path::calcMetric(GridLoc curr, GridLoc dest)
 	int pEndX = path.back()->getX();
 	int pEndY = path.back()->getY();
 
-	double distCoveredSqrd = fabs((double)(rLocX - pEndX))
-		+ fabs((double)(rLocY - pEndY));
-	double distRemainingSqrd = fabs((double)(rDestX - pEndX))
-		+ fabs((double)(rDestY - pEndY));
-	metric = (1.0/distCoveredSqrd) + distRemainingSqrd 
-		+ path.size();
+	if(curr != dest)
+	{
+		double distCoveredSqrd = fabs((double)(rLocX - pEndX))
+			+ fabs((double)(rLocY - pEndY));
+		double distRemainingSqrd = fabs((double)(rDestX - pEndX))
+			+ fabs((double)(rDestY - pEndY));
+		metric = (1.0/distCoveredSqrd) + distRemainingSqrd 
+			+ path.size();
+	}
+	else
+		metric = 9999;
 }
 
-//bool operator<(const Path& p1, const Path& p2)
-//{
-//	printf("%f < %f = %d\n", p1.getMetric(), p2.getMetric(), p1.getMetric() < p2.getMetric());
-//	//cout << p1.getMetric() << " < " << p2.getMetric() << " = " << p1.getMetric() < p2.getMetric() << "\n";
-//	return p1.getMetric() < p2.getMetric();
-//}
-//
-//bool operator<=(const Path& p1, const Path& p2)
-//{
-//	printf("%f <= %f = %d\n", p1.getMetric(), p2.getMetric(), p1.getMetric() <= p2.getMetric());
-//	//cout << p1.getMetric() << " < " << p2.getMetric() << " = " << p1.getMetric() < p2.getMetric() << "\n";
-//	return p1.getMetric() <= p2.getMetric();
-//}
-//
-//bool operator>(const Path& p1, const Path& p2)
-//{
-//	printf("%f > %f = %d\n", p1.getMetric(), p2.getMetric(), p1.getMetric() < p2.getMetric());
-//	//cout << p1.getMetric() << " < " << p2.getMetric() << " = " << p1.getMetric() < p2.getMetric() << "\n";
-//	return p1.getMetric() > p2.getMetric();
-//}
-//
-//bool operator>=(const Path& p1, const Path& p2)
-//{
-//	printf("%f >= %f = %d\n", p1.getMetric(), p2.getMetric(), p1.getMetric() >= p2.getMetric());
-//	//cout << p1.getMetric() << " < " << p2.getMetric() << " = " << p1.getMetric() < p2.getMetric() << "\n";
-//	return p1.getMetric() >= p2.getMetric();
-//}
+void Path::print()
+{
+	vector<GridLoc*>::iterator pathIter;
+
+	for(pathIter=path.begin(); pathIter < path.end(); pathIter++)
+	{
+		printf("(%d, %d) ", (*pathIter)->getX(), 
+			(*pathIter)->getY());
+	}
+	printf("\n");
+}
 
 bool Path::operator()(const Path* p1, const Path* p2)
 {

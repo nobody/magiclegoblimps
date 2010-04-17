@@ -28,6 +28,8 @@ public:
 
 	bool operator()(const Path* p1, const Path* p2);
 
+	void print();
+
 	~Path(void);
 private:
 	vector<GridLoc*> path;
