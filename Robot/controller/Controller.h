@@ -52,8 +52,8 @@ public:
 	void Update();
 
 private:
-	static const int POLL_INTERVAL = 10;
-	static const int BUFFER_LENGTH = 512;
+	static const int POLL_INTERVAL = 5;
+	static const int BUFFER_LENGTH = 1024;
 
 	char* port_;
 	int xMax;
@@ -65,6 +65,8 @@ private:
 	//vector<Robot*> robots_;
 
 	static vector<Robot*> robots_;
+
+	int lastObjectSize_;
 
 	float timer_;
 	time_t lastTime_;
