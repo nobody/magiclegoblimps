@@ -76,8 +76,10 @@ public:
 	void StartDisplay();
 	void DisplayFrame();
 	void StopDisplay();
-	
+
+
 	void SetTarget(int id) { target_ = id; }
+	bool GetTargetVisible()	{ return targetVisible_; }
 
 	void SendKey(int key);
 
@@ -134,8 +136,8 @@ private:
 	vector<TrackingObject*> possibleObjects_;
 	vector<TrackingObject*> visibleObjects_;
 	bool targetVisible_;
-	void setTargetVisible(bool visible) { targetVisible_ = visible; }
-	void getTargetVisible()				{ return targetVisible_; }
+
+	bool isTargetVisible();
 
 	int target_;
 
