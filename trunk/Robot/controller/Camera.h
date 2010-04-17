@@ -14,6 +14,7 @@
 
 #include "TrackingObject.h"
 
+/*
 #ifdef _DEBUG
 #pragma comment(lib, "cv210d.lib")
 #pragma comment(lib, "cvaux210d.lib")
@@ -22,6 +23,25 @@
 #pragma comment(lib, "highgui210d.lib")
 #pragma comment(lib, "ml210d.lib")
 #pragma comment(lib, "opencv_ffmpeg210d.lib")
+#else
+#pragma comment(lib, "cv210.lib")
+#pragma comment(lib, "cvaux210.lib")
+#pragma comment(lib, "cxcore210.lib")
+#pragma comment(lib, "cxts210.lib")
+#pragma comment(lib, "highgui210.lib")
+#pragma comment(lib, "ml210.lib")
+#pragma comment(lib, "opencv_ffmpeg210.lib")
+#endif
+*/
+
+#ifdef _DEBUG
+#pragma comment(lib, "cv200d.lib")
+#pragma comment(lib, "cvaux200d.lib")
+#pragma comment(lib, "cxcore200d.lib")
+#pragma comment(lib, "cxts200d.lib")
+#pragma comment(lib, "highgui200d.lib")
+#pragma comment(lib, "ml200d.lib")
+#pragma comment(lib, "opencv_ffmpeg200d.lib")
 #else
 #pragma comment(lib, "cv200.lib")
 #pragma comment(lib, "cvaux200.lib")
