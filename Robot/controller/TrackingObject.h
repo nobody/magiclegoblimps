@@ -41,9 +41,9 @@ public:
 		trackWindow_ = trackWindow;
 	}
 
-	float GetCenteredPercentage(int width);
+	int GetCenteredPercentage(int width);
 	float GetQuality(int width);
-	float GetSizePercentage();
+	int GetSizePercentage();
 
 	int CenterDistanceToDegrees(int width, bool cam);
 

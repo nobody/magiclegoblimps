@@ -119,7 +119,7 @@ bool Controller::ConnectToServer(string ip)
 		}
 	}
 
-	write_data(P_ROBOT_INIT, init, robots_.size(), &sendArray);
+	write_data(P_ROBOT_INIT, init, (short)robots_.size(), &sendArray);
 
 	delete[] init;
 	delete[] sendArray.array;
@@ -429,7 +429,7 @@ void Controller::Disconnect()
 void Controller::Update()
 {
 	time_t seconds = time(NULL);
-	float interval = seconds - lastTime_;
+	float interval = (float)seconds - lastTime_;
 	lastTime_ = seconds;
 
 	timer_ += interval;
@@ -497,7 +497,7 @@ void Controller::Update()
 				update[i].x = (*it)->getLocation()->getX();
 				update[i].y = (*it)->getLocation()->getY();
 				update[i].listSize = 
-					(*it)->GetCamera()->GetVisibleObjects().size();
+					(int)(*it)->GetCamera()->GetVisibleObjects().size();
 
 				int* objects = new int[update[i].listSize];
 				for (int j = 0; j < update[i].listSize; j++)
@@ -527,7 +527,7 @@ void Controller::Update()
 				i++;
 			}
 
-			write_data(P_ROBOT_UPDATE, update, robots_.size(), &sendArray);
+			write_data(P_ROBOT_UPDATE, update, (short)robots_.size(), &sendArray);
 
 			delete[] update;
 
@@ -564,14 +564,30 @@ Path* Controller::genPath(Robot& robot)
 
 	//Make sure the destination is not in the list of illegal
 	//locations
-	for(int i = 0; i < illMoves.size(); i++)
+	vector<GridLoc*>::iterator glIter;
+	for(glIter = illMoves.begin(); glIter != illMoves.end(); glIter++)
 	{
-		if(illMoves[i] == robot.getDestination())
-			illMoves.erase(illMoves.begin()+i);
+		if((*glIter) == robot.getDestination())
+			illMoves.erase(glIter);
 	}
+	//for(int i = 0; i < illMoves.size(); i++)
+	//{
+	//	if(illMoves[i] == robot.getDestination())
+	//		illMoves.erase(illMoves.begin()+i);
+	//}
 
 	Path* pth;
-	for(int i = 0; i < moves.size(); i++)
+	vector<GridLoc*>::iterator mvIter;
+	for(mvIter = moves.begin(); mvIter != moves.end(); mvIter++)
+	{
+		pth = new Path();
+		pth->extend((*mvIter));
+		pth->calcMetric(*robot.getLocation(),
+			*robot.getDestination());
+		pathHeap.push(pth);
+		illMoves.push_back(*mvIter);
+	}
+	/*for(int i = 0; i < moves.size(); i++)
 	{
 		pth = new Path();
 		pth->extend(moves[i]);
@@ -579,7 +595,7 @@ Path* Controller::genPath(Robot& robot)
 			*robot.getDestination());
 		pathHeap.push(pth);
 		illMoves.push_back(moves[i]);
-	}
+	}*/
 
 	if(pathHeap.size() != 0)
 	{
@@ -588,7 +604,16 @@ Path* Controller::genPath(Robot& robot)
 		while(*best->getEnd() != *robot.getDestination())
 		{
 			moves = getValidMoves(*best->getEnd(), illMoves);
-			for(int i = 0; i < moves.size(); i++)
+			for(mvIter= moves.begin(); mvIter != moves.end(); mvIter++)
+			{
+				Path* newPath = best->copy();
+				newPath->extend(*mvIter);
+				newPath->calcMetric(*robot.getLocation(),
+					*robot.getDestination());
+				pathHeap.push(newPath);
+				illMoves.push_back(*mvIter);
+			}
+			/*for(int i = 0; i < moves.size(); i++)
 			{
 				Path* newPath = best->copy();
 				newPath->extend(moves[i]);
@@ -596,7 +621,7 @@ Path* Controller::genPath(Robot& robot)
 					*robot.getDestination());
 				pathHeap.push(newPath);
 				illMoves.push_back(moves[i]);
-			}
+			}*/
 
 			if(pathHeap.size() != 0)
 			{
@@ -659,7 +684,20 @@ vector<GridLoc*> Controller::getValidMoves(GridLoc loc,
 	}
 
 	//vector<GridLoc*> validMoves;
-	for(int i = 0; i < illMoves.size(); i++)
+	vector<GridLoc*>::iterator imIter;
+	for(imIter = illMoves.begin(); imIter != illMoves.end(); imIter++)
+	{
+		vector<GridLoc*>::iterator mvIter;
+		for(mvIter = moves.begin(); mvIter != moves.end(); mvIter++)
+		{
+			if(*mvIter == *imIter)
+			{
+				moves.erase(mvIter);
+				break;
+			}
+		}
+	}
+	/*for(int i = 0; i < illMoves.size(); i++)
 	{
 		int j = 0;
 		while(j < moves.size())
@@ -674,7 +712,7 @@ vector<GridLoc*> Controller::getValidMoves(GridLoc loc,
 				j++;
 			}
 		}
-	}
+	}*/
 
 	return moves;
 }
