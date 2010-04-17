@@ -8,7 +8,16 @@
 
 #include "Qos.h"
 #include "Point.h"
+#include "hungarian.h"
 #include <iostream>
+
+/* 
+* Camera quality constants.  Only two camera types are currently available, and only one is likely to be used.
+* In the future, more camera types and values can be added.
+* Camera Types:
+* [0] DLink DCS 920 Wireless Webcam
+* [1] Cisco WVC 210 Wireless Webcam
+*/
 
 const double Qos::CAM_VALUES[] = {1.0,0.7};
 
@@ -25,11 +34,12 @@ Qos::~Qos() {
     //Garbagecollect here
 }
 
+
 double Qos::calcQos(){
     double ret = 0;
     int i = 0;
     for(i = 0; i < numObjects; i++){ 
-        ret += demand[i]*calcQos(objects[i], objects[i]->viewedFrom );
+        ret += demand[i]*calcQos(objects[i], objects[i]->getViewedFrom() );
     }
         std::cout <<"[QS] System Qos: " << ret <<"\n";
     return ret;
@@ -37,19 +47,31 @@ double Qos::calcQos(){
 }
 
 //Calculate the Qos metric between an object and a robot
-double Qos::calcQos(Object* o, Robot* r){
+double Qos::calcQos(Object* o, Robot* r) {
     if(o == NULL || r == NULL) {
         return 0;
     }
 
     //Manually create points until/if we use point class
     Point* rPoint = new Point(r->getXCord(), r->getYCord());
-    //Point oPoint 
-    double q = (r ? dist(*rPoint, o->pos) * Qos::CAM_VALUES[r->getCamera()] : 0);
+
+    double distBasedQuality = dist(*rPoint, o->pos) * Qos::CAM_VALUES[r->getCamera()];
+    double camBasedQuality;
+
+    if (r->list->find(o->getOID()) != r->list->end()) { //verify the robot can see the item
+        camBasedQuality = (*r->list)[o->getOID()] * Qos::CAM_VALUES[r->getCamera()];
+    }
+    else {
+        camBasedQuality = 0; //If it is not visible, it is not contributing to QoS
+    }
+        
     //std::cout <<"[QS] Robot: " <<r->getRID() <<" Object: " <<o->getOID() <<" :: QoS: " <<q <<"\n"; 
     //return (r ? dist(r->pos, o->pos) * Qos::CAM_VALUES[r->getCamera()] : 0);
-    std::cout << "[QS] qos calculated as " << q << "\n";
-    return q;
+    std::cout << "[QS] qos calculated as " << distBasedQuality << "\n";
+    
+    delete rPoint;
+
+    return distBasedQuality;
 
 }
 
@@ -64,8 +86,5 @@ double Qos::dist(Point p1, Point p2){
     }
 
 }
-
-
-
 
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

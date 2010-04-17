@@ -20,7 +20,8 @@ OBJS = controller.o \
 	   protocol.o \
 	   Qos.o \
 	   Point.o \
-	   Assignment.o
+	   Assignment.o \
+	   hungarian.o
 
 
 

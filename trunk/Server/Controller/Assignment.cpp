@@ -56,7 +56,7 @@ while(true){
 //Find the object with highest demand that has not yet been assigned.  If all 
     int maxObject = -1;
     for(int j = 0; j < numObjects; ++j){
-        std::cout << "[AS] DEBUG: " << j << " " << numObjects << " " << maxObject << " " << demand[j] << " " << objAss[j] << " " << objects[j]->getOID() << "\n";
+        //std::cout << "[AS] DEBUG: " << j << " " << numObjects << " " << maxObject << " " << demand[j] << " " << objAss[j] << " " << objects[j]->getOID() << "\n";
         if(maxObject == -1 && objAss[j]==-1){
             maxObject = j;
         }
@@ -143,6 +143,7 @@ for(int i = 0; i < numRobots; i++){
  // After all assignments have been completed, write assignment map and return it.
  // Set 'viewed from' field of objects for next round of QoS
  //
+ 
  std::map<Robot* , int>* ret = new std::map<Robot* , int>();
  for(int i = 0; i < numRobots; i++){
     if(robotAssignments[i]!=-1){
@@ -151,6 +152,14 @@ for(int i = 0; i < numRobots; i++){
     }else{
         std::cout << "[AS] Assigning robot " << i << " to null object (-1)\n";
         ret->insert(std::pair<Robot*, int>(robots[i],-1));
+    }
+ }
+
+//Write the assignments back to the actual objects
+//
+ for(int i = 0; i < numObjects; i++) {
+    if(objAss[i] != -1) {
+        objects[i]->setViewedFrom(robots[objAss[i]]);
     }
  }
 
