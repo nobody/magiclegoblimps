@@ -82,6 +82,14 @@ class Object {
             color_ = new char[size];
             memcpy(color_, c, size);
         }
+
+        Robot* getViewedFrom() {
+            return viewedFrom;
+        }
+
+        void setViewedFrom(Robot* r) {
+            viewedFrom = r;
+        }
         void setBox(char* b, long size) {
             if (size < 1) {
                 delete box_;

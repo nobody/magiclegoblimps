@@ -139,7 +139,7 @@ int controller::doQOS(demand_t* demand) {
     for (int i = 0; i < objs->size(); ++i) {
         o[i] = objs->at(i);;
         o[i]->lock();
-        dem[i] =(*demand)[i];
+        dem[i] =(*demand)[o[i]->getOID()];
     }
 
     //set up the qos stuff and wait for it to comput
