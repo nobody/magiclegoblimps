@@ -56,7 +56,7 @@ while(true){
 //Find the object with highest demand that has not yet been assigned.  If all 
     int maxObject = -1;
     for(int j = 0; j < numObjects; ++j){
-        //std::cout << "[AS] DEBUG: " << j << " " << numObjects << " " << maxObject << " " << demand[j] << " " << objAss[j] << "\n";
+        std::cout << "[AS] DEBUG: " << j << " " << numObjects << " " << maxObject << " " << demand[j] << " " << objAss[j] << " " << objects[j]->getOID() << "\n";
         if(maxObject == -1 && objAss[j]==-1){
             maxObject = j;
         }
