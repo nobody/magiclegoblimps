@@ -19,6 +19,9 @@
 #include "protocol.h"
 
 typedef std::map<boost::asio::ip::tcp::endpoint,TcpServer::TcpConnection::pointer> conn_map;
+
+typedef std::map<boost::asio::ip::tcp::endpoint, boost::thread*> thread_map;
+
 class RobotHandler: public TcpServer::ConnHandler{
     public:
     RobotHandler();
@@ -29,6 +32,7 @@ class RobotHandler: public TcpServer::ConnHandler{
     void setRobots(Vector_ts<Robot*>* robots_);
     void sendAssignments(std::map<Robot*, int>* assignments);
     void sendCommand(command* comm, boost::asio::ip::tcp::endpoint conn);
+    void sendCommand(command* comm);
     private:
     void threaded_listen(boost::asio::ip::tcp::endpoint connEP);
     void cleanupConn(boost::asio::ip::tcp::endpoint connEP);
@@ -38,6 +42,7 @@ class RobotHandler: public TcpServer::ConnHandler{
     boost::mutex handlerMutex;
 
     static conn_map connections;
+    static thread_map threads;
     Vector_ts<Robot*>* robots;
     Vector_ts<Object*>* objects;
     VideoHandler* vidHandler;

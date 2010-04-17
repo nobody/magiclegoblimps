@@ -9,6 +9,7 @@
 #include "RobotHandler.h"
 
 conn_map RobotHandler::connections;
+thread_map RobotHandler::threads;
 
 RobotHandler::RobotHandler(){}
 RobotHandler::RobotHandler(Vector_ts<Robot*>* robots_, Vector_ts<Object*>* objects_, VideoHandler* vids_, DbManager* db_)
@@ -117,11 +118,10 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 	}
 
 	//consume the stuff in the buffer, we're done with it now;
-	//wasn't quite sure how to deal with the size_t issue...
 	inputBuffer.consume(total);
     count -= total;
 
-	//convert the char array to a 
+	//convert the char array to a an array of objects
 	readReturn* message = new readReturn;
 	if(read_data((void*)arr, message) < 0){
 		// read failed clean up the mess
@@ -162,7 +162,7 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
         //clean up stuff from 
         delete message;
 
-        // let the server know about the robots
+        // let the web server know about the robots
         db->insertCameras(robots);
 
     }
@@ -172,7 +172,6 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 	//object structs;
 	
 	objects->readLock();
-	std::cout<<objects->size();
     if(objects->size() > 0){
         object* objArr = new object[objects->size()];
         Vector_ts<Object*>::iterator ObjIt = objects->begin();
@@ -191,6 +190,9 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
         //now that we have the object array we need to gett the binary stream to transmitt
         byteArray* byte_ptr = new byteArray;
         write_data(P_OBJECT, objArr, objects->size(), byte_ptr);
+
+        //now that we have our byte array we can unlock the vector
+        //and delete the array
         objects->readUnlock();
         delete[] objArr;	
 
@@ -215,12 +217,14 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
         connections[connEP]->writeUnlock();
         delete byte_ptr;
     }else{
+        //if there are no objects in the system we should just unclock the vector
         objects->readUnlock();
     }
 	
     //spawn a thread to listen on the socket and return the function
     std::cout<<"[RH] launching threadd...\n";
-    boost::thread connThread(&RobotHandler::threaded_listen, this, connEP);
+    boost::thread* connThread = new boost::thread(&RobotHandler::threaded_listen, this, connEP);
+    threads[connEP] = connThread;
 
 }
 
@@ -238,14 +242,15 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 	std::cout<<"[RH] initiating loop\n";
 	while(connected){
 		std::cout<<"[RH] looping...\n";
-		//pull data from socket and release
-		//indexOfChar = boost::asio::read_until(connections[connEP]->socket(), inputBuffer, '\n', error);		
-			
-		//should check the buffer size so that i know how much
-		//is in there before it gets to a ridiculous size
 
+        //count keeps track of the number of bytes in the buffer
+        //it checks to see if the bytes it wants are already there
+        //so it doesn't block on the socket and wait for a new message 
+        //so that it can process a message we already have
         if(count < 5){
 
+            //locks the socket, reads into the buffer, increases count by the number of
+            //bytes read in and then unlocks the socket.
             connections[connEP]->readLock();
             count += boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(5), error);
             connections[connEP]->readUnlock();
@@ -269,10 +274,16 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 			connected = false;
 			continue;
 		}
+        if(error){
+            cleanupConn(connEP);
+            return;
+        }
 
 		std::cout<<"[RH] made it past the error traps...\n";
 		
 		//get the total number of bytes to read
+        //the last four bytes in this array should tell it how many it 
+        //needs overall to reconstruct the message
 		char* arr = new char[5];
 		boost::asio::streambuf::const_buffers_type data = inputBuffer.data();
 		boost::asio::buffers_iterator<boost::asio::streambuf::const_buffers_type> iter = boost::asio::buffers_begin(data);
@@ -288,7 +299,8 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 			iter++;
 		}
 		
-		//compute the total and the bytes remaing to be pulled from the socket
+		//compute the total and the bytes that need to be pulled from the socket 
+        //to get the entire message
 		size_t total = (size_t)(*((int*)(arr+1)));
 		size_t remaining = total - count;
 
@@ -310,11 +322,15 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 				connected = false;
 				continue;
 			}
+            if(error){
+                cleanupConn(connEP);
+                return;
+            }
 		}
 
 
 		std::cout<<"[RH] Recieved a message"<<std::endl;
-		//reset all the varibles with the new data
+		//reset all the varibles with the new data in the buffer
 		delete[] arr;
 		arr = new char[total];
 		data = inputBuffer.data();
@@ -327,6 +343,9 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		//consume the stuff in the buffer, we're done with it now;
 		//wasn't quite sure how to deal with the size_t issue...
 		inputBuffer.consume(total);
+
+        //remove the number of bytes consumed from count so that we 
+        //keep acurate track of how much is in the buffer
         count -= total;
 
 
@@ -334,6 +353,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 		//convert the char array to a 
 		std::cout<<"[RH] converting message to structs"<<std::endl;
 	
+        //create a readReturn struct and decode the message
 		readReturn* message = new readReturn;
 		if(read_data((void*)arr, message) < 0){
 			// read failed clean up the mess
@@ -359,16 +379,20 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 
 						//if it is the robot we are looking for, lock and update it
 						if ((*it)->getEndpoint() == connEP  && (*it)->getRID() == robotData[i].RID){
+
+                            //set the robot
 							(*it)->lock();
 							(*it)->setXCord(robotData[i].x);
 							(*it)->setYCord(robotData[i].y);
 							(*it)->setList(robotData[i].objects, robotData[i].qualities, robotData[i].listSize);
 
+                            //update the video handeler
                             std::stringstream msg_ss;
                             boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
                             msg_ss << now << "\n\n";
                             msg_ss << (*it)->getVideoURL() << ";";
 
+                            //free the robot
 							(*it)->unlock();
 
                             for (int j = 0; j < robotData[i].listSize; ++j) {
@@ -401,13 +425,17 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 			//actually it should whenever a new object is added
 			//i'll have to deal with that
 			{
+                //initialize stuff
 				object* objs = new object[message->size];
 				objs = (object*)(message->array);
 
 				Vector_ts<Object*>::iterator it;
 
+                //loop over the structs in the message
 				for(int i = 0; i < message->size; ++i){
 					bool exists = false;
+
+                    //see if the object exists with the same id or name
 					for(it = objects->begin(); it != objects->end() && !exists; ++it){
                         (*it)->lock();
 						if(objs[i].OID == (*it)->getOID() || !objs[i].name->compare((*it)->getName()))
@@ -415,15 +443,21 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                         (*it)->unlock();
 					}
 
+                    //if it doesen't exist we can add it to the system
 					if(!exists){
+
+                        //create the new robot
 						Object* temp = new Object(objs[i].OID, *(objs[i].name), objs[i].color, objs[i].color_size);
 						objects->lock();
 						objects->push_back(temp);
 						objects->unlock();
 
+                        //add it to the web database
                         db->insertObject(temp);
 
 						conn_map::iterator conn_iter;
+
+                        //notify any other handlers that a new aobject has been added
 						for(conn_iter = connections.begin(); conn_iter != connections.end(); conn_iter++){
 							if((*conn_iter).first == connEP)
 								continue;
@@ -441,12 +475,15 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 
             case P_ROBOT_INIT:
             {
+                //initiales stuff
                 robotInit* robot = new robotInit[message->size];
                 robot = (robotInit*)(message->array);
                 
+                //lock the robot vector for writing
                 robots->lock();
                for(int i = 0; i < message->size; ++i){
-                        
+                     
+                     //create the new robot object and add it to the vector
                      Robot* temp = new Robot(connEP, robot[i].RID);
                     temp->setXCord(robot[i].x);
                     temp->setYCord(robot[i].y);
@@ -496,11 +533,15 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
 		for(it = robots->begin(); it < robots->end(); ++it){
 			std::cout<<"[RH] have endpoint: " << (*it)->getEndpoint() << std::endl;
 			if ((*it)->getEndpoint() == connEP){
+                
+                //notifie the video server its dying
                 std::stringstream msg_ss;
                 boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
                 msg_ss << now << "\n\n";
                 msg_ss << "DELETE " << (*it)->getVideoURL() << "\n";
                 vidHandler->write(msg_ss.str());
+
+                //delet the robot and remove the pointer from the vector
 				delete (*it);
 				robots->erase(it);
 				loop = true;
@@ -522,6 +563,17 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
 		std::cerr<<"[RH] Robot Handler: couldn't find connection to delete\n";
 	}
 
+
+	thread_map::iterator iter2;
+	for(iter2 = threads.begin(); iter2 != threads.end(); ++iter2){
+		if((*iter2).first == connEP){
+			threads.erase(iter2);
+			break;
+		}
+		std::cerr<<"[RH] Robot Handler: couldn't find connection to delete\n";
+	}
+
+    //decrement handlers so we have an accurate count of how many connections we have
     handlerMutex.lock();
     --handlers;
     handlerMutex.unlock();
@@ -575,11 +627,20 @@ void RobotHandler::sendAssignments(std::map<Robot*, int>* assignments){
 	delete assignments;
 }
 
+void RobotHandler::sendCommand(command* comm) {
+    conn_map::iterator it;
+    for (it = connections.begin(); it != connections.end(); ++it) {
+        sendCommand(comm, (*it).first);
+    }
+}
 void RobotHandler::sendCommand(command* comm, boost::asio::ip::tcp::endpoint conn){	
 	byteArray* data = new byteArray;
 	boost::system::error_code error;
+
+    //get the command in bytes
 	write_data(P_COMMAND, comm, 1, data);
 	
+    //write the command to the socket
     connections[conn]->writeLock();
 	boost::asio::write(connections[conn]->socket(), boost::asio::buffer(data->array, data->size),
 		boost::asio::transfer_at_least(data->size), error);
@@ -595,7 +656,9 @@ void RobotHandler::shutdown(){
 
         handlerMutex.lock();
         std::cout << "[RH] got handlerMutex 1\n";
-        /*while(handlers && counter < 10){
+
+        //wait for ten seconds or until the handlers are gone
+        while(handlers && counter < 10){
             handlerMutex.unlock();
             ++counter;
             std::cout << "[RH] unlocked handlerMutex 2\n";
@@ -603,18 +666,26 @@ void RobotHandler::shutdown(){
             std::cout << "[RH] still waiting for handlers to go away\n";
             handlerMutex.lock();
             std::cout << "[RH] got handlerMutex 3\n";
-        }*/
+        }
 
-        if(/*counter >= */10){
+        //if there are still handlers after tenseconds 
+        //it needs to close their socket connections to force them to end
+        if(counter >= 10){
             handlerMutex.unlock();
             conn_map::iterator mapIter;
             for(mapIter = connections.begin(); mapIter != connections.end(); ++mapIter){
                 (*mapIter).second->stop();
             }
+
+            thread_map::iterator thread_iter;
+            for(thread_iter = threads.begin(); thread_iter != threads.end(); ++thread_iter){
+                (*thread_iter).second->interrupt();
+            }
             
             counter = 0;
             handlerMutex.lock();
 
+            //wait again to see if they close now
             while(handlers && counter < 10){
                 //std::cout<<"[RH] the damn handlers aren't dead yet...\n";
                 handlerMutex.unlock();
@@ -622,7 +693,8 @@ void RobotHandler::shutdown(){
                 boost::this_thread::sleep(boost::posix_time::seconds(3));
                 handlerMutex.lock();
             }
-
+            
+            //if there any handlers left, they had there chance
             if(handlers)
                 std::cout<<"[RH] let them die then >:( \n";
 

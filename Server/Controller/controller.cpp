@@ -29,12 +29,14 @@ controller::controller(boost::asio::io_service& io_service)
         objs = new Vector_ts<Object*>();
     }
 
+    //this wiil keep track of the robots commendered by admins
     used_robots = new Vector_ts<Robot*>();
 
+    //create a new database object and clear out the tables
     db = new DbManager(objs);
     db->truncateCameras();
 
-    // let's make sure that the database server knows ablut all our objects
+    // let's make sure that the database server knows about all our objects
     objs->readLock();
     if (objs->size() > 0) {
         for (Vector_ts<Object*>::iterator it = objs->begin(); it < objs->end(); ++it) {
@@ -43,15 +45,19 @@ controller::controller(boost::asio::io_service& io_service)
     }
     objs->readUnlock();
 
+    //video handler and tcp server
     vids = new VideoHandler(robots, objs);
     vidsSrv = new TcpServer(io_service, 20000, vids);
 
+    //new robot handler and tcp server
     robo = new RobotHandler(robots, objs, vids, db);
     roboSrv = new TcpServer(io_service, 9999, robo);
 
+    //new adminhandler and tcp server
     admin = new AdminHandler(robo, robots, used_robots, objs, this);
     adminSrv = new TcpServer(io_service, 10000, admin);
 
+    //launch the controller's worker thread
     qosThread = new boost::thread(&controller::controllerThread, this);
 }
 
@@ -87,15 +93,19 @@ int controller::writeObjects(Vector_ts<Object*>* objects) {
 
 int controller::doQOS(demand_t* demand) {
 
+    //lock the vectors so they don't change size
     objs->readLock();
     robots->readLock();
+
+    //create an array of robot pointers
     Robot** r;
-    if (robots->size() > 0) {
+    if (robots->size() - used_robots->size() > 0) {
         r = new Robot*[robots->size()];
     } else {
         r = NULL;
     }
 
+    //create an array of object pointers
     Object** o;
     double* dem;
     if (objs->size() > 0) {
@@ -106,18 +116,33 @@ int controller::doQOS(demand_t* demand) {
         dem = NULL;
     } 
 
-
+    //add unused robots to the array
     for (int i = 0; i < robots->size(); ++i) {
-        r[i] = robots->at(i);
-        r[i]->lock();
+        bool used = false;
+
+        //make sure the robot[i] has not been commendeered by an admin
+        for(int j = 0; j < used_robots->size(); ++j){
+            if(robots->at(i) == robots->at(j)){
+                used = true;
+                break;
+            }
+        }
+
+        //if it hasn't, add it to the list to give to the qos and lock it
+        if(!used){
+            r[i] = robots->at(i);
+            r[i]->lock();
+        }
     }
 
+    //add all the objects to the array
     for (int i = 0; i < objs->size(); ++i) {
         o[i] = objs->at(i);;
         o[i]->lock();
         dem[i] =(*demand)[i];
     }
 
+    //set up the qos stuff and wait for it to comput
     Qos q(r, robots->size(), o, objs->size(), dem);
     Assignment ass(r, robots->size(), o, objs->size(), dem, &q);
     
@@ -127,20 +152,25 @@ int controller::doQOS(demand_t* demand) {
     ass.calcAssignments();
     q.calcQos();
 
-
+    // unlock of the robots
     for (int i = 0; i < robots->size(); ++i) {
         r[i]->unlock();
     }
 
+    //unlock all of the objects
     for (int i = 0; i < objs->size(); ++i) {
         o[i]->unlock();
     }
 
-    delete[] o;
-    delete[] r;
-    delete[] dem;
+    //delete all of the arrays
+    if (o)
+        delete[] o;
+    if (r)
+        delete[] r;
+    if (dem)
+        delete[] dem;
 
-
+    //unlock the vectors
     robots->readUnlock();
     objs->readUnlock();
 
