@@ -44,8 +44,7 @@ bool Camera::Connect()
 
 	if (dLinkCam_)
 		camUrl_ += dLinkUrl_;
-	else
-		camUrl_ += ciscoUrl_;
+	else camUrl_ += ciscoUrl_;
 
 	//comment this out to disable the camera
 	capture_ = cvCreateFileCapture(camUrl_.c_str());
@@ -76,8 +75,7 @@ void Camera::SetDLinkCam(bool dLinkCam)
 }
 
 //clean some of this up into member variables/functions
-IplImage *image = 0, *hsv = 0, *hue = 0, *mask = 0, *backProject = 0, 
-	*histImage = 0;
+IplImage *image = 0, *hsv = 0, *hue = 0, *mask = 0, *backProject = 0, *histImage = 0;
 CvHistogram *hist = 0;
 bool selectObject = false;
 bool trackObject = false;
@@ -139,8 +137,7 @@ void onMouse(int event, int x, int y, int flags, void* param)
 CvScalar hsv2rgb(float hue)
 {
 	int rgb[3], p, sector;
-	static const int sector_data[][3]=
-	{{0, 2, 1}, {1, 2, 0}, {1, 0, 2}, {2, 0, 1}, {2, 1, 0}, {0, 1, 2}};
+	static const int sector_data[][3] = {{0, 2, 1}, {1, 2, 0}, {1, 0, 2}, {2, 0, 1}, {2, 1, 0}, {0, 1, 2}};
 	hue *= 0.033333333333333333333333333333333f;
 	sector = cvFloor(hue);
 	p = cvRound(255 * (hue - sector));
@@ -238,20 +235,16 @@ void Camera::DisplayFrame()
 
 				if (dist < CENTERED_EPSILON && dist > -CENTERED_EPSILON)
 				{
-					cout << (*it)->GetID() << " is centered." << 
-						endl;
+					cout << (*it)->GetID() << " is centered." << endl;
 				}
 				else
 				{
-					cout << (*it)->GetID() << " is " << dist <<
-						"% from the center." << endl;
+					cout << (*it)->GetID() << " is " << dist << "% from the center." << endl;
 				}
 
-				cout << (*it)->GetID() << " is size " <<
-					(*it)->GetSizePercentage() << "%" << endl;
+				cout << (*it)->GetID() << " is size " << (*it)->GetSizePercentage() << "%" << endl;
 
-				cout << (*it)->GetID() << " has quality " <<
-					(*it)->GetQuality(image->width) << endl;
+				cout << (*it)->GetID() << " has quality " << (*it)->GetQuality(image->width) << endl;
 			}
 		}
 
@@ -313,25 +306,24 @@ void Camera::Update()
 	}		
 
 	if (!image)
-    {
-        image = cvCreateImage(cvGetSize(frame), 8, 3);
-        image->origin = frame->origin;
-        hsv = cvCreateImage(cvGetSize(frame), 8, 3);
-        hue = cvCreateImage(cvGetSize(frame), 8, 1);
-        mask = cvCreateImage(cvGetSize(frame), 8, 1);
-        backProject = cvCreateImage(cvGetSize(frame), 8, 1);
-        hist = cvCreateHist(1, &histDivs, CV_HIST_ARRAY, &histRanges, 1);
-        histImage = cvCreateImage(cvSize(320, 200), 8, 3);
-        cvZero(histImage);
-    }
+    	{
+    	    image = cvCreateImage(cvGetSize(frame), 8, 3);
+    	    image->origin = frame->origin;
+    	    hsv = cvCreateImage(cvGetSize(frame), 8, 3);
+    	    hue = cvCreateImage(cvGetSize(frame), 8, 1);
+    	    mask = cvCreateImage(cvGetSize(frame), 8, 1);
+    	    backProject = cvCreateImage(cvGetSize(frame), 8, 1);
+    	    hist = cvCreateHist(1, &histDivs, CV_HIST_ARRAY, &histRanges, 1);
+    	    histImage = cvCreateImage(cvSize(320, 200), 8, 3);
+    	    cvZero(histImage);
+    	}
 
-    cvCopy(frame, image, 0);
-    cvCvtColor(image, hsv, CV_BGR2HSV);
+    	cvCopy(frame, image, 0);
+    	cvCvtColor(image, hsv, CV_BGR2HSV);
 
 	int _vMin = vMin, _vMax = vMax;
 
-	cvInRangeS(hsv, cvScalar(0, sMin, MIN(_vMin, _vMax), 0),
-		cvScalar(180, 256, MAX(_vMin, _vMax), 0), mask);
+	cvInRangeS(hsv, cvScalar(0, sMin, MIN(_vMin, _vMax), 0), cvScalar(180, 256, MAX(_vMin, _vMax), 0), mask);
 	cvSplit(hsv, hue, 0, 0, 0);
 
 	if (trackObject)
@@ -343,8 +335,7 @@ void Camera::Update()
 			cvSetImageROI(mask, selection);
 			cvCalcHist(&hue, hist, 0, mask);
 			cvGetMinMaxHistValue(hist, 0, &maxVal, 0, 0);
-			cvConvertScale(hist->bins, hist->bins, 
-				maxVal ? 255. / maxVal : 0., 0);
+			cvConvertScale(hist->bins, hist->bins, maxVal ? 255. / maxVal : 0., 0);
 			cvResetImageROI(hue);
 			cvResetImageROI(mask);
 
@@ -352,13 +343,9 @@ void Camera::Update()
 			binWidth = histImage->width / histDivs;
 			for (int i = 0; i < histDivs; i++)
 			{
-				int val = 
-					cvRound(cvGetReal1D(hist->bins, i) * 
-					histImage->height / 255);
+				int val = cvRound(cvGetReal1D(hist->bins, i) * histImage->height / 255);
 				CvScalar color = hsv2rgb(i * 180.f / histDivs);
-				cvRectangle(histImage, cvPoint(i * binWidth, histImage->height),
-					cvPoint((i + 1) * binWidth, histImage->height - val),
-					color, -1, 8, 0);
+				cvRectangle(histImage, cvPoint(i * binWidth, histImage->height), cvPoint((i + 1) * binWidth, histImage->height - val), color, -1, 8, 0);
 			}
 
 			histCreated = true;
@@ -366,16 +353,13 @@ void Camera::Update()
 
 		cvCalcBackProject(&hue, backProject, hist);
 		cvAnd(backProject, mask, backProject, 0);
-		cvCamShift(backProject, trackWindow,
-			cvTermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 10, 1),
-			&trackComp, &trackBox);
+		cvCamShift(backProject, trackWindow, cvTermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 10, 1), &trackComp, &trackBox);
 		trackWindow = trackComp.rect;
 
 		if (!image->origin)
 			trackBox.angle = -trackBox.angle;
 
-		cvEllipseBox(image, trackBox,
-			CV_RGB(255, 0, 0), 3, CV_AA, 0);
+		cvEllipseBox(image, trackBox, CV_RGB(255, 0, 0), 3, CV_AA, 0);
 	}
 
 	vector<TrackingObject*>::iterator it;
@@ -384,14 +368,10 @@ void Camera::Update()
 	{
 		for (it = possibleObjects_.begin(); it != possibleObjects_.end(); it++)
 		{
-			cvCalcBackProject(&hue, backProject, 
-				(*it)->GetHistogram());
+			cvCalcBackProject(&hue, backProject, (*it)->GetHistogram());
 			cvAnd(backProject, mask, backProject, 0);
 			trackBox = (*it)->GetTrackingBox();
-			cvCamShift(backProject, 
-				(*it)->GetTrackingWindow(), 
-				cvTermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 10, 1),
-				&trackComp, &trackBox);
+			cvCamShift(backProject, (*it)->GetTrackingWindow(), cvTermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 10, 1), &trackComp, &trackBox);
 			(*it)->SetTrackingBox(trackBox);
 			(*it)->SetTrackingWindow(trackComp.rect);
 
@@ -404,14 +384,10 @@ void Camera::Update()
 	{
 		for (it = visibleObjects_.begin(); it != visibleObjects_.end(); it++)
 		{
-			cvCalcBackProject(&hue, backProject, 
-				(*it)->GetHistogram());
+			cvCalcBackProject(&hue, backProject, (*it)->GetHistogram());
 			cvAnd(backProject, mask, backProject, 0);
 			trackBox = (*it)->GetTrackingBox();
-			cvCamShift(backProject, 
-				(*it)->GetTrackingWindow(), 
-				cvTermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 10, 1),
-				&trackComp, &trackBox);
+			cvCamShift(backProject, (*it)->GetTrackingWindow(), cvTermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 10, 1), &trackComp, &trackBox);
 			(*it)->SetTrackingBox(trackBox);
 			(*it)->SetTrackingWindow(trackComp.rect);
 
@@ -422,18 +398,15 @@ void Camera::Update()
 			{
 				if ((*it)->GetID() == target_)
 				{
-					cvEllipseBox(image, (*it)->GetTrackingBox(),
-						CV_RGB(0, 255, 0), 3, CV_AA, 0);
+					cvEllipseBox(image, (*it)->GetTrackingBox(), CV_RGB(0, 255, 0), 3, CV_AA, 0);
 				}
 				else
 				{
-					cvEllipseBox(image, (*it)->GetTrackingBox(),
-						CV_RGB(0, 0, 255), 3, CV_AA, 0);
+					cvEllipseBox(image, (*it)->GetTrackingBox(), CV_RGB(0, 0, 255), 3, CV_AA, 0);
 				}
 			}
 
-			if ((*it)->GetSizePercentage() > MAX_SIZE ||
-				(*it)->GetSizePercentage() < MIN_SIZE)
+			if ((*it)->GetSizePercentage() > MAX_SIZE || (*it)->GetSizePercentage() < MIN_SIZE)
 				visibleObjects_.erase(it);
 		}
 	}
@@ -473,8 +446,7 @@ void Camera::Scan()
 
 	for (it = possibleObjects_.begin(); it != possibleObjects_.end(); it++)
 	{
-		(*it)->SetTrackingWindow(cvRect(0, 0, image->width, 
-			image->height));
+		(*it)->SetTrackingWindow(cvRect(0, 0, image->width, image->height));
 	}
 
 	lockTimer_ = 0;
@@ -487,8 +459,7 @@ void Camera::Lock()
 
 	for (it = possibleObjects_.begin(); it != possibleObjects_.end(); it++)
 	{
-		if ((*it)->GetSizePercentage() > MAX_SIZE ||
-			(*it)->GetSizePercentage() < MIN_SIZE)
+		if ((*it)->GetSizePercentage() > MAX_SIZE || (*it)->GetSizePercentage() < MIN_SIZE)
 		{
 			possibleObjects_.erase(it);
 			it = possibleObjects_.begin();

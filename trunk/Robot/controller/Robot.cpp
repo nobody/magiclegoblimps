@@ -12,7 +12,6 @@ Robot::Robot(int port, string ip, bool dLink)
 	robotOnline_ = false;
 	robotActive_ = false;
 
-
 	batteryLevel_ = 0;
 	status_ = 0;
 
@@ -38,11 +37,9 @@ void Robot::Connect()
 			nxtConnected_ = true;
 			cout << "Robot " << id_ << " NXT connected." << endl;
 		}
-		else
-			cout << "Robot " << id_ << " NXT failed to connect." << endl;
+		else cout << "Robot " << id_ << " NXT failed to connect." << endl;
 	}
-	else
-		cout << "Robot " << id_ << " NXT already connected." << endl;
+	else cout << "Robot " << id_ << " NXT already connected." << endl;
 
 	if (!camConnected_)
 	{
@@ -51,11 +48,9 @@ void Robot::Connect()
 			camConnected_ = true;
 			cout << "Robot " << id_ << " camera connected." << endl;
 		}
-		else
-			cout << "Robot " << id_ << " camera failed to connect." << endl;
+		else cout << "Robot " << id_ << " camera failed to connect." << endl;
 	}
-	else
-		cout << "Robot " << id_ << " camera already connected." << endl;
+	else cout << "Robot " << id_ << " camera already connected." << endl;
 
 	if (nxtConnected_ && camConnected_)
 	{
@@ -89,12 +84,10 @@ GridLoc* Robot::GetObjectLocation(int id)
 
 	vector<TrackingObject*>::iterator it;
 
-	for (it = camera_->GetVisibleObjects().begin(); 
-		it != camera_->GetVisibleObjects().end(); it++)
+	for (it = camera_->GetVisibleObjects().begin(); it != camera_->GetVisibleObjects().end(); it++)
 	{
 		if ((*it)->GetID() == id)
-			center = (*it)->CenterDistanceToDegrees(camera_->GetImageWidth(), 
-				camera_->GetDLinkCam());
+			center = (*it)->CenterDistanceToDegrees(camera_->GetImageWidth(), camera_->GetDLinkCam());
 	}
 
 	int objectDirection = cameraDirection_ + center;
@@ -197,6 +190,7 @@ void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, int statu
 		robotHeading_ = SOUTH;
 	else if (heading == 3)
 		robotHeading_ = WEST;
+	
 	cameraDirection_ = pan;
 	batteryLevel_ = battery;
 	status_ = status;
@@ -220,13 +214,23 @@ void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, int statu
 
 void Robot::Update()
 {
-	//anything that needs to be done continously (i.e. if we continously 
-	//spinning the camera) can go here
+	//anything that needs to be done continously (i.e. if we're continuously spinning the camera) can go here
+	
+	if (camera_.isTargetVisible())
+		centerCameraOnTarget();
+	else ExecuteCommand(pan 10);
 }
 
-void Robot::centerCameraOnTarget(int deg)
+void Robot::centerCameraOnTarget()
 {
-	cameraDirection_ = deg;
+	int width = camera_.GetImageWidth();
+	bool cam = dLinkCam_;
+	
+	int d = CenterDistanceToDegrees(width, cam);
+	
+	String deg = printf(d);
+	
+	ExecuteCommand(pan deg);
 }
 
 string Robot::newCmd()
