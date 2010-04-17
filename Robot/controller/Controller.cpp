@@ -32,7 +32,6 @@ bool Controller::ConnectToServer(string ip)
 	WSADATA wsaData;
 	connectSocket_ = INVALID_SOCKET;
 	struct addrinfo *result = NULL, *ptr = NULL, hints;
-	char recvBuf[BUFFER_LENGTH];
 	int iResult = 0;
 	int recvBufLen = BUFFER_LENGTH;
 
@@ -484,28 +483,28 @@ void Controller::Update()
 					(*it)->GetCamera()->GetVisibleObjects().size();
 
 				int* objects = new int[update[i].listSize];
-				for (int i = 0; i < update[i].listSize; i++)
+				for (int j = 0; j < update[i].listSize; j++)
 				{
-					objects[i] = 
-						(*it)->GetCamera()->GetVisibleObjects()[i]->GetID();
+					objects[j] = 
+						(*it)->GetCamera()->GetVisibleObjects()[j]->GetID();
 				}
 				update[i].objects = objects;
 
 				float* qualities = new float[update[i].listSize];
-				for (int i = 0; i < update[i].listSize; i++)
+				for (int j = 0; j < update[i].listSize; j++)
 				{
-					qualities[i] = 
-						(*it)->GetCamera()->GetVisibleObjects()[i]->GetQuality(
+					qualities[j] = 
+						(*it)->GetCamera()->GetVisibleObjects()[j]->GetQuality(
 							(*it)->GetCamera()->GetImageWidth());
 				}
 				update[i].qualities = qualities;
 
 				int* xs = new int[update[i].listSize];
 				int* ys = new int[update[i].listSize];
-				for (int i = 0; i < update[i].listSize; i++)
+				for (int j = 0; j < update[i].listSize; j++)
 				{
-					xs[i] = (*it)->GetObjectLocation(objects[i])->getX();
-					ys[i] = (*it)->GetObjectLocation(objects[i])->getY();
+					xs[j] = (*it)->GetObjectLocation(objects[j])->getX();
+					ys[j] = (*it)->GetObjectLocation(objects[j])->getY();
 				}
 
 				i++;

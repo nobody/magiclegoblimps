@@ -173,8 +173,6 @@ void Camera::DisplayFrame()
 	if (!capture_ || !image)
 		return;
 
-	int binWidth;
-
 	cvShowImage(displayWindowName_.c_str(), image);
 	cvShowImage(histWindowName_.c_str(), histImage);
 
