@@ -260,7 +260,7 @@
         case P_COMMAND:
             {
                 command* data = (command*)data_;
-                short size = 3*sizeof(int);
+                short size = 3*sizeof(int) + sizeof(short);
                 for(int i = 0; i < number; ++i){
             
                     structs[i] = new char[size];

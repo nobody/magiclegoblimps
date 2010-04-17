@@ -85,6 +85,7 @@ class AdminClient {
         tcp::socket &sock_;
         message read_message_;
         std::deque<message> write_queue_;
+        bool closing;
 
         void read_handler(const boost::system::error_code&, size_t);
         void internal_write(message msg);
@@ -94,7 +95,7 @@ class AdminClient {
 };
 
 AdminClient::AdminClient(tcp::socket &socket)
-    : sock_(socket)
+    : sock_(socket), closing(false)
 {
 
     std::cout << "Calling async_read()\n";
@@ -178,8 +179,11 @@ void AdminClient::write_handler(const boost::system::error_code& error) {
 }
 
 void AdminClient::close() {
-    boost::this_thread::sleep(boost::posix_time::seconds(1));
-    sock_.get_io_service().post(boost::bind(&AdminClient::do_close, this));
+    if (!closing) {
+        closing = true;
+        boost::this_thread::sleep(boost::posix_time::seconds(1));
+        sock_.get_io_service().post(boost::bind(&AdminClient::do_close, this));
+    }
 }
 
 void AdminClient::do_close() {

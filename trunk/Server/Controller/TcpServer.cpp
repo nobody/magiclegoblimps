@@ -124,13 +124,13 @@ TcpServer::TcpConnection::~TcpConnection()
 }
 
 void TcpServer::TcpConnection::readLock(){
-    readMutex.lock();
+    //readMutex.lock();
 }
 void TcpServer::TcpConnection::writeLock(){
     writeMutex.lock();
 }
 void TcpServer::TcpConnection::readUnlock(){
-    readMutex.unlock();
+    //readMutex.unlock();
 }
 void TcpServer::TcpConnection::writeUnlock(){
     writeMutex.unlock();

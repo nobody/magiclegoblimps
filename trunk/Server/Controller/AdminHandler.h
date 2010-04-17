@@ -52,6 +52,7 @@ class AdminHandler : public TcpServer::ConnHandler {
                 ~session();
 
                 void start();
+                void close();
 
             private:
                 TcpServer::TcpConnection::pointer conn_;
@@ -60,11 +61,11 @@ class AdminHandler : public TcpServer::ConnHandler {
                 Vector_ts<Object*>* objects;
                 RobotHandler* robotControl;
                 controller* cont;
+                bool closing;
                 message read_message_;
 
                 void write_handler(const boost::system::error_code& error,  std::size_t bytes_transferred);
                 void read_handler(const boost::system::error_code& error,  std::size_t bytes_transferred);
-                void close();
                 void do_close();
 
         };
