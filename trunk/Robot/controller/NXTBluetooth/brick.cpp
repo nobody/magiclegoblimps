@@ -17,7 +17,7 @@ void Brick::write_msg(string message, int inbox, bool reply){
   unsigned char answer[NXT_BUFFER_SIZE];
   unsigned char command[NXT_BUFFER_SIZE];
   unsigned int i=0;
-  unsigned int length=message.length();
+  unsigned int length=(unsigned int)message.length();
   if(length>57){
      length = 57;
   }
@@ -82,7 +82,7 @@ string Brick::read_msg(int inbox, bool remove){
 void Brick::set_name(string name, bool reply){
   unsigned char answer[NXT_BUFFER_SIZE];
   unsigned char command[NXT_BUFFER_SIZE];
-  unsigned int length=name.length();
+  unsigned int length=(unsigned int)name.length();
   unsigned int i;
   if(length>15){
     length=15;
@@ -205,7 +205,7 @@ void Brick::beep(unsigned int time, bool reply){
 void Brick::play_soundfile(string file, bool loop, bool reply){
   unsigned char answer[NXT_BUFFER_SIZE];
   unsigned char command[NXT_BUFFER_SIZE];
-  unsigned int length=file.length();
+  unsigned int length=(unsigned int)file.length();
   unsigned int i;
   if(length>19){
     length=19;
@@ -260,7 +260,7 @@ void Brick::stop_soundplayback(bool reply){
 void Brick::start_program(string file, bool reply){
   unsigned char answer[NXT_BUFFER_SIZE];
   unsigned char command[NXT_BUFFER_SIZE];
-  int length=file.length();
+  int length=(int)file.length();
   int i;
   if(length>19){
     length=19;

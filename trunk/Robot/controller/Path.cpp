@@ -31,9 +31,13 @@ double Path::getMetric() const		{ return metric; }
 Path* Path::copy()
 {
 	Path* cpy = new Path();
-	for(int i = 0; i < path.size(); i++)
+	vector<GridLoc*>::iterator glIter;
+	for(glIter = path.begin(); glIter != path.end(); glIter++)
+		cpy->extend(new GridLoc((*glIter)->getX(),
+			(*glIter)->getY()));
+	/*for(int i = 0; i < path.size(); i++)
 		cpy->extend(new GridLoc(path[i]->getX(), 
-			path[i]->getY()));
+			path[i]->getY()));*/
 	return cpy;
 }
 

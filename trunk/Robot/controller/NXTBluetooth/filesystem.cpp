@@ -59,7 +59,7 @@ void Filesystem::delete_file(string file_name, bool reply){
   unsigned char command[24];
   unsigned char answer[NXT_BUFFER_SIZE];
   unsigned int i=0;
-  name_length = file_name.length();
+  name_length = (unsigned int)file_name.length();
   if(name_length > MAX_NAME_LENGTH){
     file_name.erase(MAX_NAME_LENGTH+1);
     name_length=MAX_NAME_LENGTH;
@@ -134,7 +134,7 @@ int Filesystem::get_first(string wild_card, Nxt_file *file){
   unsigned char answer[NXT_BUFFER_SIZE];
   unsigned char command[24];
   unsigned int i=0;
-  unsigned int name_length = wild_card.length();
+  unsigned int name_length = (unsigned int)wild_card.length();
   if(name_length > MAX_NAME_LENGTH){
     wild_card.erase(MAX_NAME_LENGTH+1);
     name_length=MAX_NAME_LENGTH;
@@ -279,7 +279,7 @@ Nxt_file Filesystem::open_read(string file_name){
   unsigned char command[24];
   unsigned char answer[NXT_BUFFER_SIZE];
   unsigned int i=0;
-  name_length = file_name.length();
+  name_length = (unsigned int)file_name.length();
   if(name_length > MAX_NAME_LENGTH){
     file_name.erase(MAX_NAME_LENGTH+1);
     name_length=MAX_NAME_LENGTH;
@@ -317,7 +317,7 @@ Nxt_file Filesystem::open_append(string file_name){
   unsigned char command[24];
   unsigned char answer[NXT_BUFFER_SIZE];
   unsigned int i=0;
-  name_length = file_name.length();
+  name_length = (unsigned int)file_name.length();
   if(name_length > MAX_NAME_LENGTH){
     file_name.erase(MAX_NAME_LENGTH+1);
     name_length=MAX_NAME_LENGTH;
@@ -355,7 +355,7 @@ Nxt_file Filesystem::open_write(string file_name, unsigned int file_size, char t
   unsigned char command[28];
   unsigned char answer[NXT_BUFFER_SIZE];
   unsigned int i=0;
-  name_length = file_name.length();
+  name_length = (unsigned int)file_name.length();
   if(name_length > MAX_NAME_LENGTH){
     file_name.erase(MAX_NAME_LENGTH+1);
     name_length=MAX_NAME_LENGTH;

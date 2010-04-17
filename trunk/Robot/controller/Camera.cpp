@@ -263,7 +263,7 @@ void Camera::Update()
 		return;
 
 	time_t seconds = time(NULL);
-	float interval = seconds - lastTime_;
+	float interval = (float)seconds - lastTime_;
 	lastTime_ = seconds;
 
 	scanTimer_ += interval;
