@@ -1,7 +1,6 @@
 // mailboxes
 #define OUTBOX 0  // to controller
 #define INBOX 1   // from controller
-#define CAMERABOX 2 // if needed
 
 // motors
 #define MOTOR_LEFT OUT_A
@@ -79,7 +78,6 @@ int heading;
 int STATUS = 0;
 int CALIBRATED = 0;
 
-
 void setLightOn()
 {
  SetSensorType(_SENSOR_LEFT, SENSOR_TYPE_LIGHT_ACTIVE);
@@ -103,15 +101,31 @@ void setSonarRaw()
  SetSensorLowspeed(_SONAR);
 }
 
+void remStatusIDLE()
+{
+ STATUS &= -1-(1<<IDLE);
+}
+
 void setStatus(int s)
 {
  STATUS |= (1 << s);
+
+ remStatusIDLE();
 }
 
 void remStatus(int s)
 {
- s = 1 << s;
  STATUS &= -1-(1 << s);
+ 
+ if( ( STATUS == 0 )
+  || ( STATUS == (1<<INTERSECTION) )
+  || ( STATUS != (1<<PAN) ) )
+     setStatus(IDLE);
+}
+
+bool checkStatus(int s)
+{
+ return ( STATUS & (1<<s) ) > 0;
 }
 
 int battery()
@@ -300,7 +314,7 @@ bool aboveThreshold()
 void intersection()
 {
  if( MODE != STOPPED ){
-     MODE = INTERSECTION;
+     setStatus(INTERSECTION);
 
      switch(heading)
      {
@@ -314,7 +328,10 @@ void intersection()
 
 void lineFollow()
 {
+ remStatus(STOPPED);
+ remStatus(INTERSECTION);
  setStatus(LINE_FOLLOW);
+ 
  setLightOn();
 
  Wait(100);
@@ -322,8 +339,10 @@ void lineFollow()
  do {
    checkSonar();  // blocking
    adjustLinePosition();
- } while( aboveThreshold() && MODE!=STOPPED );
+ } while( aboveThreshold() && checkStatus(STOPPED) );
 
+ stopWheels();
+ 
  intersection();
 
  stopWheels();
