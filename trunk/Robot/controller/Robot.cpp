@@ -216,6 +216,12 @@ void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, int statu
 	//stop 1024
 }
 
+void Robot::Update()
+{
+	//anything that needs to be done continously (i.e. if we continously 
+	//spinning the camera) can go here
+}
+
 void Robot::centerCameraOnTarget(int deg)
 {
 	cameraDirection_ = deg;

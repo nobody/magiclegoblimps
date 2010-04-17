@@ -234,6 +234,7 @@ void Controller::ClientThread(void* params)
 					cout << "Adding Object " << obj[i].OID << 
 						" : " << obj[i].name << endl;
 
+					//need protocol update to add box and histogram for this
 					//TrackingObject* newObj = TrackingObject(
 					//add to the tracking objects vector
 				}
@@ -308,6 +309,7 @@ bool Controller::TestServer(int type)
 	}
 	else if (type == P_ASSIGNMENT)
 	{
+		//set test assignments here
 		assignment* assign = new assignment[2];
 		assign[0].OID = 1;
 		assign[0].RID = 2;
@@ -527,6 +529,13 @@ void Controller::Update()
 		}
 
 		timer_ = 0;
+	}
+
+	vector<Robot*>::iterator it;
+
+	for (it = robots_.begin(); it != robots_.end(); it++)
+	{
+		(*it)->Update();
 	}
 }
 

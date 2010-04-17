@@ -56,6 +56,8 @@ public:
 
 	void SetUpdate(int x, int y, int heading, int pan, int battery, int status);
 
+	void Update();
+
 private:
 	int id_;
 
