@@ -382,6 +382,16 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
 
             }
             break;
+
+            case P_CMD_SHUTDOWN:
+            {
+                cmd.RID = -1;
+                cmd.cmd = P_CMD_SHUTDOWN;
+                cmd.arg = 0;
+                robotControl->sendCommand(&cmd);
+
+            }
+            break;
             
             default:
             break;

@@ -32,7 +32,9 @@
 #define P_CMD_CAMROT 4
 #define P_CMD_DEL_OBJ 5
 #define P_CMD_RLS_RBT 6
+#define P_CMD_SHUTDOWN 7
 
+//deprecated commands
 #define P_CMD_WEST 100
 #define P_CMD_MVTO 200
 
