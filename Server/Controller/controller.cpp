@@ -152,6 +152,8 @@ void controller::controllerThread(){
     while(running){
         std::cout << "[controller] executing the main loop\n";
 
+        objfile->write(objs);
+
         db->getRequests(demand);
         db->normalize(demand);
 
@@ -166,8 +168,8 @@ void controller::controllerThread(){
 }
 void controller::shutdown(){
     adminSrv->shutdown();
-    roboSrv->shutdown();
     vidsSrv->shutdown();
+    roboSrv->shutdown();
     std::cout << "[controller] completed shutdown() call\n";
     running = false;
 }

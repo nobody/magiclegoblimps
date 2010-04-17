@@ -10,7 +10,7 @@
 #include "VideoHandler.h"
 
 VideoHandler::VideoHandler(Vector_ts<Robot*>* robots, Vector_ts<Object*>* objs)
-    : robots_(robots), objs_(objs)
+    : robots_(robots), objs_(objs), closing(false)
 {
 }
 
@@ -79,11 +79,14 @@ void VideoHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_con
 }
 
 void VideoHandler::read_handler(const boost::system::error_code& error,  std::size_t bytes_transferred) {
-    tcp::socket &sock = conn_->socket();;
 
-
-    std::cout << "[VH] VideoHandler read " << bytes_transferred << " bytes from client " << sock.remote_endpoint().address().to_string() << ":" << sock.remote_endpoint().port() << "\n";
+    std::cout << "[VH] VideoHandler read " << bytes_transferred << " bytes \n";
     std::cout.flush();
+
+    if (bytes_transferred == 0)
+        return;
+
+    tcp::socket &sock = conn_->socket();;
 
     if (error == boost::asio::error::eof){
         conn_->releaseSocket();
@@ -154,6 +157,10 @@ void VideoHandler::write(std::string msg) {
 }
 
 void VideoHandler::close() {
+    if (closing || !conn_)
+        return;
+
+    closing = true;
     tcp::socket &sock = conn_->socket();;
 
     sock.get_io_service().post(boost::bind(&VideoHandler::do_close, this));
@@ -172,6 +179,9 @@ void VideoHandler::do_close() {
     conn_ = TcpServer::TcpConnection::pointer();;
 }
 
-void VideoHandler::shutdown(){}
+void VideoHandler::shutdown() {
+    close();
+
+}
 
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

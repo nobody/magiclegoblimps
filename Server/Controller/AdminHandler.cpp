@@ -47,7 +47,7 @@ void AdminHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_con
 }
 
 AdminHandler::session::session(TcpServer::TcpConnection::pointer tcp_, Vector_ts<Robot*>* robots_, Vector_ts<Robot*>* inUse_,RobotHandler* robotHandler, Vector_ts<Object*>* objects_, controller* cont_) 
-    : conn_(tcp_), robots(robots_), inUse(inUse_), objects(objects_), robotControl(robotHandler), cont(cont_)
+    : conn_(tcp_), robots(robots_), inUse(inUse_), objects(objects_), robotControl(robotHandler), cont(cont_), closing(false)
 {
 }
 
@@ -118,14 +118,15 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
     }
 
     command cmd;
-    Robot* subject;
+    Robot* subject = NULL;
 
     //check to make sure that the input is what we want
     if(s.find('$', 0) != std::string::npos){
         
         //parse the command id
         std::string token = s.substr(0, s.find('$', 0));
-        s =  s.substr( s.find('$', 0), std::string::npos);
+        s =  s.substr( token.size() + 1, std::string::npos);
+        std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
         robots->readLock();
         int switchvar = atoi(token.c_str());
@@ -138,9 +139,11 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                 cmd.cmd = P_CMD_FWD;
                 
                 token = s.substr(0, s.find('$', 0));
-                s = s.substr(s.find('$', 0), std::string::npos);
+                s = s.substr(token.size(), std::string::npos);
+                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 int robotid = atoi(token.c_str());
+                std::cout << "[AH] got RID:" << robotid << "\n";
 
                 Vector_ts<Robot*>::iterator it;
                 Vector_ts<Robot*>::iterator used_it;
@@ -152,6 +155,10 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                         break;
                     }
                     (*it)->unlock();
+                }
+                if (subject == NULL) {
+                    std::cout << "[AH] couldn't find rid:" << robotid << "\n";
+                    break;
                 }
 
 
@@ -178,7 +185,8 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                 cmd.cmd = P_CMD_LFT;
                 
                 token = s.substr(0, s.find('$', 0));
-                s = s.substr(s.find('$', 0), std::string::npos);
+                s = s.substr(token.size(), std::string::npos);
+                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 int robotid = atoi(token.c_str());
 
@@ -192,6 +200,10 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                         break;
                     }
                     (*it)->unlock();
+                }
+                if (subject == NULL) {
+                    std::cout << "[AH] couldn't find rid:" << robotid << "\n";
+                    break;
                 }
 
 
@@ -218,7 +230,8 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                 cmd.cmd = P_CMD_LFT;
                 
                 token = s.substr(0, s.find('$', 0));
-                s = s.substr(s.find('$', 0), std::string::npos);
+                s = s.substr(token.size(), std::string::npos);
+                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 int robotid = atoi(token.c_str());
 
@@ -234,6 +247,11 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                     }
                     (*it)->unlock();
                 }
+                if (subject == NULL) {
+                    std::cout << "[AH] couldn't find rid:" << robotid << "\n";
+                    break;
+                }
+
 
                 inUse->lock();
                     
@@ -261,12 +279,18 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
             break;
             case P_CMD_CAMROT:
             {
-                cmd.cmd = P_CMD_LFT;
+                cmd.cmd = P_CMD_CAMROT;
                 
                 token = s.substr(0, s.find('$', 0));
-                s = s.substr(s.find('$', 0), std::string::npos);
+                if (token.size() == s.size()) {
+                    std::cout << "[AH] token:\"" << token << "\" *is* s\n";
+                    break;
+                }
+                s = s.substr(token.size() + 1, std::string::npos);
+                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 int robotid = atoi(token.c_str());
+                std::cout << "[AH] camrot: got RID: " << robotid << "\n";
 
                 Vector_ts<Robot*>::iterator it;
                 Vector_ts<Robot*>::iterator used_it;
@@ -278,6 +302,10 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                         break;
                     }
                     (*it)->unlock();
+                }
+                if (subject == NULL) {
+                    std::cout << "[AH] couldn't find rid:" << robotid << "\n";
+                    break;
                 }
                 
 
@@ -297,7 +325,8 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                 cmd.RID = subject->getRID();
 
                 token = s.substr(0, s.find('$', 0));
-                s = s.substr(s.find('$', 0), std::string::npos);
+                s = s.substr(token.size(), std::string::npos);
+                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 cmd.arg = atoi(token.c_str());
 
@@ -310,7 +339,8 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
             {
             
                 token = s.substr(0, s.find('$', 0));
-                s = s.substr(s.find('$', 0), std::string::npos);
+                s = s.substr(token.size(), std::string::npos);
+                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 int robotid = atoi(token.c_str());
 
@@ -331,9 +361,11 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
             case P_CMD_DEL_OBJ:
             {
                 token = s.substr(0, s.find('$', 0));
-                s = s.substr(s.find('$', 0), std::string::npos);
+                s = s.substr(token.size(), std::string::npos);
+                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 int objID = atoi(token.c_str());
+                std::cout << "[AH] deleting object " << objID << "\n";
 
                 Vector_ts<Object*>::iterator it;
 
@@ -367,6 +399,10 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
 }
 
 void AdminHandler::session::close() {
+    if (closing || !conn_)
+        return;
+
+    closing = true;
     tcp::socket &sock = conn_->socket();;
 
     sock.get_io_service().post(boost::bind(&AdminHandler::session::do_close, this));
@@ -383,6 +419,11 @@ void AdminHandler::session::do_close() {
     conn_->releaseSocket();
 }
 
-void AdminHandler::shutdown(){}
+void AdminHandler::shutdown() {
+    std::vector<boost::shared_ptr<session> >::iterator it;
+    for (it = sessions.begin(); it < sessions.end(); ++it) {
+        (*it)->close();
+    }
+}
 
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

@@ -253,6 +253,10 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
             std::cout<<"[RH] data read, socket released\n";
 
         }
+        if (count < 5) {
+            connected = false;
+            continue;
+        }
 
 		//catch errors to tell when the connection closes;
 		if(error == boost::asio::error::eof){
@@ -478,6 +482,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 
 
 void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
+    std::cout << "[RH] is cleaning up\n";
 	//get a lock on the robot vector and declare and iterator
 	robots->lock();
 	Vector_ts<Robot*>::iterator it;
@@ -520,6 +525,7 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
     handlerMutex.lock();
     --handlers;
     handlerMutex.unlock();
+    std::cout << "[RH] cleanup done\n";
 }
 
 void RobotHandler::sendAssignments(std::map<Robot*, int>* assignments){
@@ -589,7 +595,7 @@ void RobotHandler::shutdown(){
 
         handlerMutex.lock();
         std::cout << "[RH] got handlerMutex 1\n";
-        while(handlers && counter < 10){
+        /*while(handlers && counter < 10){
             handlerMutex.unlock();
             ++counter;
             std::cout << "[RH] unlocked handlerMutex 2\n";
@@ -597,9 +603,9 @@ void RobotHandler::shutdown(){
             std::cout << "[RH] still waiting for handlers to go away\n";
             handlerMutex.lock();
             std::cout << "[RH] got handlerMutex 3\n";
-        }
+        }*/
 
-        if(counter >= 10){
+        if(/*counter >= */10){
             handlerMutex.unlock();
             conn_map::iterator mapIter;
             for(mapIter = connections.begin(); mapIter != connections.end(); ++mapIter){
@@ -610,10 +616,10 @@ void RobotHandler::shutdown(){
             handlerMutex.lock();
 
             while(handlers && counter < 10){
-                std::cout<<"[RH] the damn handlers aren't dead yet...\n";
+                //std::cout<<"[RH] the damn handlers aren't dead yet...\n";
                 handlerMutex.unlock();
                 ++counter;
-                boost::this_thread::sleep(boost::posix_time::seconds(1));
+                boost::this_thread::sleep(boost::posix_time::seconds(3));
                 handlerMutex.lock();
             }
 

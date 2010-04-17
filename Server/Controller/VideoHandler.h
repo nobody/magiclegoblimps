@@ -45,6 +45,7 @@ class VideoHandler : public TcpServer::ConnHandler {
         
         Vector_ts<Robot*>* robots_;
         Vector_ts<Object*>* objs_;
+        bool closing;
         std::deque<std::string> write_queue_;
 };
 
