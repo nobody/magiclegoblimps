@@ -13,12 +13,12 @@
 #include <iostream>
 
 Assignment::Assignment(Robot** r, int nr, Object** o,int no,  double* d, Qos* q){
-	demand = d;
-	robots = r;
-	objects = o;
-	numObjects = no;
-	numRobots = nr;
-	quality = q;
+    demand = d;
+    robots = r;
+    objects = o;
+    numObjects = no;
+    numRobots = nr;
+    quality = q;
 }
 Assignment::~Assignment()
 {
@@ -54,42 +54,42 @@ std::map<Robot*, int>* Assignment::calcAssignments() {
 
 while(true){
 //Find the object with highest demand that has not yet been assigned.  If all 
-	int maxObject = -1;
-	for(int j = 0; j < numObjects; ++j){
-		//std::cout << "[AS] DEBUG: " << j << " " << numObjects << " " << maxObject << " " << demand[j] << " " << objAss[j] << "\n";
-		if(maxObject == -1 && objAss[j]==-1){
-			maxObject = j;
-		}
-		else if(demand[j] > demand[maxObject] && objAss[j] == -1){
-			maxObject = j;
-		}
-	}
-	if(maxObject == -1){//No object is not being looked at
-		std::cout << "[AS] More robots than objects.  Assigning remaing robots -1 object values\n";
-		break;
-	}
-	
+    int maxObject = -1;
+    for(int j = 0; j < numObjects; ++j){
+        //std::cout << "[AS] DEBUG: " << j << " " << numObjects << " " << maxObject << " " << demand[j] << " " << objAss[j] << "\n";
+        if(maxObject == -1 && objAss[j]==-1){
+            maxObject = j;
+        }
+        else if(demand[j] > demand[maxObject] && objAss[j] == -1){
+            maxObject = j;
+        }
+    }
+    if(maxObject == -1){//No object is not being looked at
+        std::cout << "[AS] More robots than objects.  Assigning remaing robots -1 object values\n";
+        break;
+    }
+    
 //Find the robot that best services this demand that has not yet been assigned
-	int maxRobot = -1;
-	double tQos = -1;
+    int maxRobot = -1;
+    double tQos = -1;
 
-	for(int j = 0; j < numRobots; j++){
-		double t = quality -> calcQos(objects[maxObject],robots[j]);
-		if(t>tQos && robotAssignments[j]==-1){
-			tQos = t;
-			maxRobot = j;
-		}
-	}
+    for(int j = 0; j < numRobots; j++){
+        double t = quality -> calcQos(objects[maxObject],robots[j]);
+        if(t>tQos && robotAssignments[j]==-1){
+            tQos = t;
+            maxRobot = j;
+        }
+    }
 //Store the assignment
-	robotAssignments[maxRobot] = maxObject;
-	objAss[maxObject] = maxRobot;
-	
+    robotAssignments[maxRobot] = maxObject;
+    objAss[maxObject] = maxRobot;
+    
 //Continue until done
-	if(isDone()==-1){
-		break;
-	}
+    if(isDone()==-1){
+        break;
+    }
 }
-	
+    
 /*  WARNING: Hazardous Code!  Debug at your own risk.
  while(next != -1) { //until all robots have assignments
     
@@ -112,7 +112,7 @@ while(true){
             qual[next] = t; // The current best quality robot 'next' can contribute is t.
         }
     }
-	std::cout << maxIndex << "\n";
+    std::cout << maxIndex << "\n";
     //
     // At this point we have a maximum assignment for a the currently considered robot
     // If there is no conflict (no robot is currently looking at this object) assign it.
@@ -130,13 +130,13 @@ while(true){
     std::cout << "Robot " <<next <<" is now assigned to object " <<maxIndex <<"\n";
         
     next = isDone(); //Find the next unassigned robot
-	break;
+    break;
  }
 */
 
 /*  ASSIGNMENT METHOD: Uninformed Assignment
 for(int i = 0; i < numRobots; i++){
-	robotAssignments[i] = i % numObjects;
+    robotAssignments[i] = i % numObjects;
 }
 */
  //
@@ -145,13 +145,13 @@ for(int i = 0; i < numRobots; i++){
  //
  std::map<Robot* , int>* ret = new std::map<Robot* , int>();
  for(int i = 0; i < numRobots; i++){
-	if(robotAssignments[i]!=-1){
-		std::cout << "[AS] Assigning robot " << i << " to object " << objects[robotAssignments[i]]->getOID() << "\n";
- 		ret->insert(std::pair<Robot*, int>(robots[i],objects[robotAssignments[i]]->getOID()));
-	}else{
-		std::cout << "[AS] Assigning robot " << i << " to null object (-1)\n";
-		ret->insert(std::pair<Robot*, int>(robots[i],-1));
-	}
+    if(robotAssignments[i]!=-1){
+        std::cout << "[AS] Assigning robot " << i << " to object " << objects[robotAssignments[i]]->getOID() << "\n";
+         ret->insert(std::pair<Robot*, int>(robots[i],objects[robotAssignments[i]]->getOID()));
+    }else{
+        std::cout << "[AS] Assigning robot " << i << " to null object (-1)\n";
+        ret->insert(std::pair<Robot*, int>(robots[i],-1));
+    }
  }
 
  delete[] qual;

@@ -11,13 +11,14 @@
 
 class Point {
     public:
-		Point();
-		Point(double a, double b);
-		virtual ~Point();
+        Point();
+        Point(double a, double b);
+        virtual ~Point();
         double x;
-		double y;
-		
+        double y;
+        
 };
 
 
 #endif /* POINT_H_ */
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

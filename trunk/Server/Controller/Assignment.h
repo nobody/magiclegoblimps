@@ -20,18 +20,18 @@ class Assignment {
         std::map<Robot*, int>* calcAssignments();
 
     private:
-		Qos* quality;
-		Robot** robots;
-		int numRobots;
-		Object** objects;
-		int numObjects;
-		double* demand;
-		double gamma;         //Multplier for cost term
-		int* robotAssignments;
-		void initAssignments();
-		int isDone();         //Returns -1 if done, else returns index of next robot to assign
-		
-		
+        Qos* quality;
+        Robot** robots;
+        int numRobots;
+        Object** objects;
+        int numObjects;
+        double* demand;
+        double gamma;         //Multplier for cost term
+        int* robotAssignments;
+        void initAssignments();
+        int isDone();         //Returns -1 if done, else returns index of next robot to assign
+        
+        
 };
 
 

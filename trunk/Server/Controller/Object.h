@@ -29,7 +29,7 @@ class Object {
                 color_[colorsize] = color[colorsize];
             }
         }
-	Point pos;
+    Point pos;
         ~Object()
         {
             delete[] color_;
