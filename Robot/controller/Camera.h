@@ -133,6 +133,9 @@ private:
 	bool showTracking_;
 	vector<TrackingObject*> possibleObjects_;
 	vector<TrackingObject*> visibleObjects_;
+	bool targetVisible_;
+	void setTargetVisible(bool visible) { targetVisible_ = visible; }
+	void getTargetVisible()				{ return targetVisible_; }
 
 	int target_;
 

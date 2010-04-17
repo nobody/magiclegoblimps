@@ -456,11 +456,19 @@ void Controller::Update()
 						atoi(tokens[4].c_str()),
 						atoi(tokens[5].c_str()));
 
-					if((*it)->getPath()->getSize())
-						(*it)->GetNXT()->SendMessage((*it)->newCmd());
-					else
+					if(!(*it)->getPath()->getSize())
 					{
 						(*it)->setPath(genPath(*(*it)));
+						(*it)->GetNXT()->SendMessage((*it)->newCmd());
+					}
+					else 
+					{
+						vector<GridLoc*> illMoves = getIllMoves();
+						vector<GridLoc*>::iterator glIter;
+
+						for(glIter = illMoves.begin(); glIter != illMoves.end(); glIter++)
+							if((*glIter) == (*it)->getPath()->getStart())
+								(*it)->setPath(getPath(*(*it)));
 						(*it)->GetNXT()->SendMessage((*it)->newCmd());
 					}
 				}
