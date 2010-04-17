@@ -20,7 +20,7 @@ public:
     double calcQos();
     double calcQos(Object* o, Robot* r);
     double dist(Point p1, Point p2);
-    static const double OPTIMAL_DIST = 10;
+    static const double OPTIMAL_DIST = 2;
     static const double CAM_VALUES [];
 
     private:
