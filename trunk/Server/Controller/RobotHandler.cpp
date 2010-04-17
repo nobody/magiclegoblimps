@@ -182,6 +182,8 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
             objArr[i].name = new std::string((*ObjIt)->getName());
             objArr[i].color_size = (*ObjIt)->getColorsize();
             objArr[i].color = (*ObjIt)->getColor();
+            objArr[i].box = (*ObjIt)->getBox();
+            objArr[i].box_size = (*ObjIt)->getBoxsize();;
             (*ObjIt)->unlock();
 
             ++ObjIt;
