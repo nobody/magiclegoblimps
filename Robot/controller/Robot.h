@@ -46,15 +46,20 @@ public:
 	void setNextLoc(GridLoc* newNextLoc);
 	void setPath(Path* newPath);
 	void updateLocation();
+	void setRobotMoving(bool moving) { robotMoving_ = moving; }
 
 	GridLoc* getLocation()		{ return loc; }
 	GridLoc* getNextLoc()		{ return nextLoc; }
 	GridLoc* getDestination()	{ return dest; }
 	Path* getPath()			{ return robPath; }
+	int getHeading()			{ return robotHeading_; }
+	int getID()					{ return id_; }
+	bool getRobotMoving()		{ return robotMoving_; }
 
 	void ExecuteCommand(string command);
 
 	void SetUpdate(int x, int y, int heading, int pan, int battery, int status);
+	string newCmd();
 
 	void Update();
 
@@ -69,6 +74,7 @@ private:
 
 	bool robotOnline_;
 	bool robotActive_;
+	bool robotMoving_;
 
 	GridLoc* loc;
 	GridLoc* nextLoc;
