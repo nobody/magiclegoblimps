@@ -78,9 +78,9 @@ struct robotUpdate{
     int* ys;
     ~robotUpdate(){
         delete[] objects;
-	delete[] qualities;
-	delete[] xs;
-	delete[] ys;
+    delete[] qualities;
+    delete[] xs;
+    delete[] ys;
     }
 };
 struct object{
@@ -135,4 +135,4 @@ int readRobotUpdate(void* array, robotUpdate* &robots);
 
 #endif /* PROTOCOL_H_ */
 
-/*vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */

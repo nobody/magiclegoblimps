@@ -11,8 +11,8 @@
 Point::Point(){}
 Point::Point(double a, double b) {
     
-	x = a;
-	y = b;
+    x = a;
+    y = b;
 }
 
 Point::~Point(){
