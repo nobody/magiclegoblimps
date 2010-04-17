@@ -280,6 +280,8 @@ void Camera::Update()
 	{
 		if (!locked_)
 			Lock();
+
+		targetVisible_ = isTargetVisible();
 	}
 
 	int binWidth;
@@ -475,4 +477,20 @@ void Camera::Lock()
 	visibleObjects_ = possibleObjects_;
 
 	locked_ = true;
+}
+
+bool Camera::isTargetVisible()
+{
+	if (target_ == -1)
+		return false;
+
+	vector<TrackingObject*>::iterator it;
+
+	for (it = visibleObjects_.begin(); it != visibleObjects_.end(); it++)
+	{
+		if ((*it)->GetID() == target_)
+			return true;
+	}
+
+	return false;
 }

@@ -236,7 +236,7 @@ string Robot::newCmd()
 	{
 		return cmd;
 	}
-	else if(camera_->getTargetVisible())
+	else if(camera_->GetTargetVisible())
 	{
 		if(cameraDirection_ <= 45 || cameraDirection_ > 315)
 			cmd = "forward";

@@ -468,7 +468,8 @@ void Controller::Update()
 
 						for(glIter = illMoves.begin(); glIter != illMoves.end(); glIter++)
 							if((*glIter) == (*it)->getPath()->getStart())
-								(*it)->setPath(getPath(*(*it)));
+								//I assume this is what you meant to do
+								(*it)->setPath((*it)->getPath());
 						(*it)->GetNXT()->SendMessage((*it)->newCmd());
 					}
 				}
