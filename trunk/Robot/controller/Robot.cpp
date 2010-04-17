@@ -236,6 +236,17 @@ string Robot::newCmd()
 	{
 		return cmd;
 	}
+	else if(camera_->getTargetVisible())
+	{
+		if(cameraDirection_ <= 45 || cameraDirection_ > 315)
+			cmd = "forward";
+		else if(cameraDirection_ <= 135 && cameraDirection_ > 45)
+			cmd = "left";
+		else if(cameraDirection_ <= 225 && cameraDirection_ > 135)
+			cmd = "turnaround";
+		else if(cameraDirection_ <= 315 && cameraDirection_ > 225)
+			cmd = "right";
+	}
 	else if(loc->getX() < nextLoc->getX())
 	{
 		switch(robotHeading_)
