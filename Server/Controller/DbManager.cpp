@@ -375,6 +375,20 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
         for (it = robots->begin(); it < it_end; ++it) {
             (*it)->lock();
             std::stringstream ss;
+            std::stringstream clear_ss;
+
+            clear_ss << "CALL delServiceRecord('" << (*it)->getGlobalID() << "')";
+            cmd = clear_ss.str();
+            try {
+                stmt->execute(cmd);
+            } catch (...) {
+                std::cout << "[db] Failed query: " << cmd << "\n";
+                (*it)->unlock();
+                ret = false;
+                continue;
+            }
+            std::cout << "[db] Succeeded query: " << cmd << "\n";
+
             ss << "CALL setCameraPosition('";
             ss << (*it)->getGlobalID()
                << "', '"
@@ -391,11 +405,25 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
                     max_qual_id = ito->first;
                     max_qual = ito->second;
                 }
+                std::stringstream visibility_ss;
+                visibility_ss << "CALL addServiceRecord('" << (*it)->getGlobalID() << "', '" << ito->first << "')";
+                cmd = visibility_ss.str();
+                try {
+                    stmt->execute(cmd);
+                } catch (...) {
+                    std::cout << "[db] Failed query: " << cmd << "\n";
+                    continue;
+                }
+                std::cout << "[db] Succeeded query: " << cmd << "\n";
             }
             if (max_qual_id > -1)
-                ss << max_qual_id << "')";
+                ss << max_qual_id;
             else 
-                ss << "NULL');";
+                ss << "NULL";
+
+            ss << "', '"
+               << (*it)->getDir()
+               << "')";
             cmd = ss.str();
 
             try {

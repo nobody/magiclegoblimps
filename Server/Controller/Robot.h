@@ -38,12 +38,14 @@ public:
     int getXCord();
     int getYCord();
     int getCamera();
+    int getDir();
 
     std::string getVideoURL();
 
     void setCamera(int type);
     void setXCord(int x);
     void setYCord(int y);
+    void setDir(int d);
     void setVideoURL(std::string);
     void setList(int* objects, float* qualities, int size);
 
@@ -89,6 +91,7 @@ private:
     int xCord;
     int yCord;
     int camera;
+    int dir;
     std::string videoURL;
 
     

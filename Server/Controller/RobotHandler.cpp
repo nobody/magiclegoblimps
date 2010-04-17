@@ -386,6 +386,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                             (*it)->lock();
                             (*it)->setXCord(robotData[i].x);
                             (*it)->setYCord(robotData[i].y);
+                            (*it)->setDir(robotData[i].dir);
                             (*it)->setList(robotData[i].objects, robotData[i].qualities, robotData[i].listSize);
 
                             //update the video handeler
