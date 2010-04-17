@@ -72,6 +72,13 @@ int Robot::getYCord(){
     return yCord;
 }
 
+void Robot::setDir(int d){
+    dir = d;
+}
+int Robot::getDir(){
+    return dir;
+}
+
 
 std::string Robot::getVideoURL() {
     return videoURL;

@@ -43,6 +43,12 @@
 #define P_LOW(x) x & 0x0000ffff
 #define P_COORD(x, y) ((x << 16) & 0xffff0000) | ( y & 0x0000ffff)
 
+// directions
+#define P_NORTH 0
+#define P_EAST 1 
+#define P_SHOUTH 2
+#define P_WEST 3
+
 //some error codes
 #define P_OK 0
 #define P_NULL_PTR -1
@@ -71,6 +77,7 @@ struct robotUpdate{
     int RID;
     int x;
     int y;
+    int dir;
     int listSize;
     int* objects;
     float* qualities;
@@ -78,9 +85,9 @@ struct robotUpdate{
     int* ys;
     ~robotUpdate(){
         delete[] objects;
-    delete[] qualities;
-    delete[] xs;
-    delete[] ys;
+        delete[] qualities;
+        delete[] xs;
+        delete[] ys;
     }
 };
 struct object{
@@ -125,15 +132,12 @@ struct command{
 int write_data(int type, void* data_, short number, byteArray* byte_ptr);
 
 
-// If you get a robotInit array from this function,
+// If you get an object array from this function,
 // 
 // You MUST delete object.color when you are done with it!!!!
+// You MUST delete object.box   when you are done with it!!!!
 //
 int read_data(void* array, readReturn* ret);
-
-int readRobotInit(void* array, robotInit* &robots);
-
-int readRobotUpdate(void* array, robotUpdate* &robots);
 
 #endif /* PROTOCOL_H_ */
 

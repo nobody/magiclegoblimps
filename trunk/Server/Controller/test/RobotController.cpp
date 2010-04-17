@@ -12,19 +12,19 @@ int main() {
 
     robots[0].RID = 0;
     robots[0].x = 0;
-    robots[0].y = 9;
+    robots[0].y = 1;
     robots[0].cameraType = 0;
     robots[0].VideoURL = new std::string("http://10.10.1.100:7500");
 
     robots[1].RID = 1;
     robots[1].x = 1;
-    robots[1].y = 8;
+    robots[1].y = 4;
     robots[1].cameraType = 0;
     robots[1].VideoURL = new std::string("http://10.10.1.101:7500");
 
     robots[2].RID = 2;
     robots[2].x = 2;
-    robots[2].y = 7;
+    robots[2].y = 3;
     robots[2].cameraType = 1;
     robots[2].VideoURL = new std::string("http://10.10.1.102:7500");
 
@@ -38,7 +38,8 @@ int main() {
 
     update[0].RID = 0;
     update[0].x = 1;
-    update[0].y = 9;
+    update[0].y = 2;
+    update[0].dir = 0;
     update[0].listSize = 1;
     update[0].objects = new int[1];
     update[0].objects[0] = 1;
@@ -51,7 +52,8 @@ int main() {
 
     update[1].RID = 1;
     update[1].x = 2;
-    update[1].y = 8;
+    update[1].y = 4;
+    update[1].dir = 2;
     update[1].listSize = 2;
     update[1].objects = new int[2];
     update[1].objects[0] = 2;
@@ -68,24 +70,25 @@ int main() {
 
     update[2].RID = 2;
     update[2].x = 3;
-    update[2].y = 7;
+    update[2].y = 3;
+    update[2].dir = 1;
     update[2].listSize = 3;
     update[2].objects = new int[3];
     update[2].objects[0] = 1;
     update[2].objects[1] = 3;
     update[2].objects[2] = 4;
     update[2].qualities = new float[3];
-    update[2].qualities[0] = 0.7;
+    update[2].qualities[0] = 0.1;
     update[2].qualities[1] = 0.2;
     update[2].qualities[2] = 0.5;
     update[2].xs= new int[3];
     update[2].xs[0] = 1;
     update[2].xs[1] = 2;
-    update[2].xs[2] = 5;
+    update[2].xs[2] = 3;
     update[2].ys= new int[3];
     update[2].ys[0] = 1;
     update[2].ys[1] = 2;
-    update[2].ys[2] = 5;
+    update[2].ys[2] = 3;
 
     byteArray updArr;
     if (write_data(P_ROBOT_UPDATE, update, 3, &updArr)) {
