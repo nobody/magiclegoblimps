@@ -36,9 +36,9 @@ void Bluetooth::connect(unsigned int comport){
   /***************************************************************************
   *** See http://www.robbayer.com/files//serial-win.pdf for dokumentation  ****
   ***************************************************************************/
-  std::stringstream temp;
+  std::wstringstream temp;
   temp << comport;
-  string port = "\\\\.\\COM" + temp.str();
+  wstring port = L"\\\\.\\COM" + temp.str();
   handle = CreateFile(port.c_str(), GENERIC_READ | GENERIC_WRITE, 0,0,OPEN_EXISTING,0,0);
   if (handle == INVALID_HANDLE_VALUE){
     throw Nxt_exception::Nxt_exception("connect","Bluetooth", BT_INVALID_COM_PORT);

@@ -2,25 +2,43 @@
 
 #include <iostream>
 
+//static member variables must be redeclared in source
 vector<TrackingObject*> Camera::trackableObjects_;
 
 Camera::Camera(string ip, bool dLinkCam)
 {
+	scanInterval_ = 3;		
+	lockTime_ = 1;
+
 	ip_ = ip;
 	dLinkCam_ = dLinkCam;
 
+	dLinkUrl_ = "/video.cgi?a=.mjpg";		
+	ciscoUrl_ = "/img/mjpeg.cgi?a=.mjpg";
+
 	localDisplay_ = false;
+	histDisplay_ = true;		
+	showTracking_ = true;		
+	locked_ = false;		
+
+	inKey_ = -1;		
+	waitingKey_ = false;		
+
+	target_ = -1;		
+	
+	displayWindowName_ = "";
 }
 
 bool Camera::Connect()
 {
 	capture_ = 0;
 
-	dLinkUrl_ = "/video.cgi?a=.mjpg";
-	ciscoUrl_ = "/img/mjpeg.cgi?a=.mjpg";
-
 	user_ = "admin";
-	pass_ = "admin";
+
+	if (dLinkCam_)
+		pass_ = "";
+	else
+		pass_ = "admin";
 
 	camUrl_ = "http://" + user_ + ":" + pass_ + "@" + ip_;
 
@@ -142,8 +160,6 @@ int Camera::GetImageWidth()
 
 void Camera::StartDisplay()
 {
-	localDisplay_ = true;
-
 	displayWindowName_ = "RobotView " + ip_;
 	cvNamedWindow(displayWindowName_.c_str(), CV_WINDOW_AUTOSIZE);
 	cvSetMouseCallback(displayWindowName_.c_str(), onMouse, 0);
@@ -160,7 +176,7 @@ void Camera::StartDisplay()
 
 void Camera::DisplayFrame()
 {
-	if (capture_ == 0 || !localDisplay_)
+	if (capture_ == 0 || !image)
 		return;
 
 	cvShowImage(displayWindowName_.c_str(), image);
@@ -272,21 +288,21 @@ void Camera::Update()
 
 	if(!frame) 
 	{
-		cout << "ERROR! " + displayWindowName_ + " Frame is NULL!" << endl;
+		cout << "ERROR! " + ip_ + " frame is NULL!" << endl;
 		return;
 	}		
 
 	if (!image)
     {
-            image = cvCreateImage(cvGetSize(frame), 8, 3);
-            image->origin = frame->origin;
-            hsv = cvCreateImage(cvGetSize(frame), 8, 3);
-            hue = cvCreateImage(cvGetSize(frame), 8, 1);
-            mask = cvCreateImage(cvGetSize(frame), 8, 1);
-            backProject = cvCreateImage(cvGetSize(frame), 8, 1);
-            hist = cvCreateHist(1, &histDivs, CV_HIST_ARRAY, &histRanges, 1);
-            histImage = cvCreateImage(cvSize(320, 200), 8, 3);
-            cvZero(histImage);
+        image = cvCreateImage(cvGetSize(frame), 8, 3);
+        image->origin = frame->origin;
+        hsv = cvCreateImage(cvGetSize(frame), 8, 3);
+        hue = cvCreateImage(cvGetSize(frame), 8, 1);
+        mask = cvCreateImage(cvGetSize(frame), 8, 1);
+        backProject = cvCreateImage(cvGetSize(frame), 8, 1);
+        hist = cvCreateHist(1, &histDivs, CV_HIST_ARRAY, &histRanges, 1);
+        histImage = cvCreateImage(cvSize(320, 200), 8, 3);
+        cvZero(histImage);
     }
 
     cvCopy(frame, image, 0);
@@ -430,8 +446,6 @@ int Camera::GetNextAvailableID()
 
 void Camera::Scan()
 {
-	cvDestroyWindow(displayWindowName_.c_str());
-
 	//should check if object is already visible before rescanning
 
 	vector<TrackingObject*>::iterator it;

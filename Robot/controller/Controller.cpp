@@ -408,15 +408,8 @@ void Controller::Disconnect()
 		}
 
 		Camera::GetTrackableObjects().clear();
-	}*/
-	
-
-	if (connectSocket_ != NULL)
-	{
-		//socket might need shutdown
-		closesocket(connectSocket_);
-	    WSACleanup();
 	}
+	*/
 	
 	if (connectSocket_ != NULL)
 	{

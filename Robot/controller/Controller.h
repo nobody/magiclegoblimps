@@ -16,6 +16,7 @@
 #include "TrackingObject.h"
 
 #include "Server/protocol.h"
+
 #pragma comment(lib, "ws2_32.lib")
 
 using namespace std;
