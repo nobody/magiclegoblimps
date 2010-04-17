@@ -9,13 +9,11 @@ bool testCommand(string msg, string cmd)
 task receiveCommand()
 {
  string msg = "";
- int value;
- int len;
 
  FOREVER
  {
   setLightOff();
-  
+
   ReceiveMessage(INBOX,false,msg);
 
   if(StrLen(msg)>0)
@@ -26,65 +24,36 @@ task receiveCommand()
    }
    
    ReceiveMessage(INBOX,true,msg);
-   //len = StrLen(msg);
 
    if( testCommand(msg,"left" ) )
    {
-    MODE = TURNLEFT;
     turnLeftWait( 400, 300 );
     lineCorrect();
     stopWheels();
-    MODE = IDLE;
    }
    else if( testCommand(msg,"right" ) )
    {
-    MODE = TURNRIGHT;
     turnRightWait( 400, 300 );
     lineCorrect();
     stopWheels();
-    MODE = IDLE;
    }
    else if( testCommand(msg,"turnaround" ) )
    {
-    MODE = TURNAROUND;
     turnAround();
-    MODE = IDLE;
    }
    //*
    else if( testCommand(msg,"calibrate" ) )
    {
-    MODE = CALIBRATING;
     calibrate();
-    MODE = IDLE;
    }
    //*/
    else if( testCommand(msg,"correct") )
    {
     lineCorrect();
    }
-   
    else if( testCommand(msg,"forward") )
    {
-    //if( len == 7 )
-    {
-     MODE = LINE_FOLLOW;
      lineFollow();
-    }
-    /*
-    else
-    {
-     msg = SubStr(msg,8,len-8);
-     value = NumToStr( msg );
-
-     MODE = LINE_FOLLOW;
-     Wait(value); // split up into intervals?
-     if( MODE != INTERSECTION )
-     {
-      MODE = DESTINATION;
-     }
-     stopWheels();
-    }
-    */
    }
    else
    {
@@ -97,24 +66,19 @@ task receiveCommand()
 
 task cmdPan()
 {
- int deg;
  string msg;
- int len;
 
  FOREVER
  {
   ReceiveMessage(INBOX,false,msg);
 
-  len = StrLen(msg);
-
   if( testCommand(msg,"pan") )
   {
    ReceiveMessage(INBOX,true,msg);
 
-   msg = SubStr( msg, 4, len );
-   deg = StrToNum( msg );
+   msg = SubStr( msg, 4, StrLen(msg) );
 
-   pan( deg );
+   pan( StrToNum( msg ) ); // send deg
   }
  }
 }
@@ -122,24 +86,21 @@ task cmdPan()
 // only stops forward command
 task cmdStop()
 {
- int deg;
  string msg;
- int len;
 
  FOREVER
  {
   ReceiveMessage(INBOX,false,msg);
 
-  len = StrLen(msg);
 
-  if( testCommand(msg,"stop") )
+  if( StrLen(msg)>0 && testCommand(msg,"stop") )
   {
    ReceiveMessage(INBOX,true,msg);
 
 //   StopTask(receiveCommand); // requires Enhanced Firmware
 //   StartTask(receiveCommand);
 
-    MODE = STOPPED;
+    setStatus(STOPPED);
     
     repeat(100)
      stopWheels();
@@ -147,15 +108,6 @@ task cmdStop()
  }
 }
 
-/*
- * 1. current location (x,y)
- * 2. current heading
- * 3. current camera pan
- * 4. battery life percent
- * 5. status flags
- *
- * if OUTBOX is empty then fill it
- */
 task sendFeedBack()
 {
    const string d = " ";
@@ -184,43 +136,10 @@ task sendFeedBack()
    }
 }
 
-/*
-task display()
-{
- string out;
- string in;
- FOREVER
- {
-    ClearScreen();
-    ReceiveMessage(OUTBOX,false,out);
-    //ReceiveMessage(INBOX,false,in)
-    TextOut(0,LCD_LINE3,out,false);
-    //TextOut(0,LCD_LINE5,in,false);
-    switch(MODE)
-    {
-     case STOPPED : TextOut(0,0,"STOPPED",false); break;
-     case IDLE : TextOut(0,0,"IDLE",false); break;
-     case DESTINATION : TextOut(0,0,"DESTINATION",false); break;
-     case LINE_FOLLOW : TextOut(0,0,"LINE_FOLLOW",false); break;
-     case INTERSECTION : TextOut(0,0,"INTERSECTION",false); break;
-     case TURNLEFT : TextOut(0,0,"TURNLEFT",false); break;
-     case TURNRIGHT : TextOut(0,0,"TURNRIGHT",false); break;
-     case TURNAROUND : TextOut(0,0,"TURNAROUND",false); break;
-     case SONARBLOCK : TextOut(0,0,"SONARBLOCK",false); break;
-     default : TextOut(0,0,"Invalid",false);
-    }
-
-    Wait(100);
- }
-}
-*/
-
 task main()
 {
  Precedes(receiveCommand,cmdPan,cmdStop,sendFeedBack);
 
  setSonarRaw();
  setLightRaw();
- 
- SendMessage(OUTBOX,"hello");
 }
