@@ -1,7 +1,6 @@
 #include "TrackingObject.h"
 
-TrackingObject::TrackingObject(CvHistogram* hist, CvBox2D originalBox, 
-	CvScalar color)
+TrackingObject::TrackingObject(CvHistogram* hist, CvBox2D originalBox, CvScalar color)
 {
 	int histDivs = 32;
 	float histRangesArray[] = {0, 180};
@@ -44,7 +43,9 @@ float TrackingObject::GetQuality(int width)
 	}
 
 	if (size < 0)
+	{
 		size = 0;
+	}
 
 	return (centered + size) / 200.0f;
 }
@@ -61,7 +62,9 @@ int TrackingObject::CenterDistanceToDegrees(int width, bool cam)
 {
 	int dist = (width / 2) - trackBox_.center.x;
 
-	return dist / width * 45;
+	if (cam == true)
+		return dist / width * 45;
+	else return dist / width * 60;
 }
 
 char* TrackingObject::BoxToArray(CvBox2D box, int* size)

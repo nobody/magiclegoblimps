@@ -77,7 +77,6 @@ public:
 	void DisplayFrame();
 	void StopDisplay();
 
-
 	void SetTarget(int id) { target_ = id; }
 	bool GetTargetVisible()	{ return targetVisible_; }
 
