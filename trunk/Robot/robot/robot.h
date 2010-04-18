@@ -361,6 +361,9 @@ void lineFollow()
 
  Wait(100);
 
+ forwardWait(400);
+ lineCorrect();
+
  do {
    checkSonar();  // blocking
    adjustLinePosition();
