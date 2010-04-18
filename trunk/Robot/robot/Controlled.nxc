@@ -57,9 +57,48 @@ task receiveCommand()
    {
      lineFollow();
    }
+   else if( testCommand(msg,"coordinates") )
+   {
+    int i,x,y,len=StrLen(msg);
+    
+    // get first space
+    for( i=0; i<len; i++)
+    {
+     if( SubStr(msg,i,1) == " ")
+     {
+      x=i+1;
+     }
+    }
+    // get second space
+    for(; i<len; i++)
+    {
+     if( SubStr(msg,i,1) == " " )
+     {
+      y=i+1;
+     }
+    }
+    // test for extra space
+    for(; i<len; i++)
+    {
+     if( SubStr(msg,i,1) == " " )
+     {
+      break;
+     }
+    }
+    //get new curX and curY
+    if( x<y && y<i )
+    {
+     curX = SubStr(msg,x,y-x-1);
+     curY = SubStr(msg,y,i-y); // might need to i-y+1
+    }
+    else
+    {
+     PlayTone(1000,50);
+    }
+   }
    else
    {
-    PlayTone(1000, 50);
+    PlayTone(1000,50);
    }
 
   }
