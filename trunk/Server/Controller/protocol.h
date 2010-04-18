@@ -84,10 +84,12 @@ struct robotUpdate{
     int* xs;
     int* ys;
     ~robotUpdate(){
-        delete[] objects;
-        delete[] qualities;
-        delete[] xs;
-        delete[] ys;
+        if (listSize > 0) {
+            delete[] objects;
+            delete[] qualities;
+            delete[] xs;
+            delete[] ys;
+        }
     }
 };
 struct object{

@@ -184,12 +184,12 @@ void controller::controllerThread(){
 
         objfile->write(objs);
 
-        db->getRequests(demand);
-        db->normalize(demand);
+        //db->getRequests(demand);
+        //db->normalize(demand);
 
-        db->updateCameras(robots);
+        //db->updateCameras(robots);
 
-        doQOS(demand);
+        //doQOS(demand);
 
         boost::asio::deadline_timer timer(io_, boost::posix_time::seconds(C_QOS_INTV));
         timer.wait();
@@ -197,11 +197,11 @@ void controller::controllerThread(){
     std::cout << "[controller] controllerThread exiting...\n";
 }
 void controller::shutdown(){
+    running = false;
     adminSrv->shutdown();
     vidsSrv->shutdown();
     roboSrv->shutdown();
     std::cout << "[controller] completed shutdown() call\n";
-    running = false;
 }
 
 /* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
