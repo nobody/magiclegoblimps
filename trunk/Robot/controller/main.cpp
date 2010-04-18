@@ -1,5 +1,6 @@
 #include <string>
 #include <conio.h>
+#include <sstream>
 
 #define _WINSOCKAPI_ 
 
@@ -9,6 +10,8 @@
 #include "Controller.h"
 #include "NXT.h"
 #include "Robot.h"
+
+//#define SIMON
 
 using namespace std;
 
@@ -160,7 +163,7 @@ void LocalInput()
 		{
 			string command = tokens[2];
 
-			for (int i = 3; i < tokens.size(); i++)
+			for (int i = 3; i < (int)tokens.size(); i++)
 				command += " " + tokens[i];
 
 			controller->GetRobot(
@@ -223,40 +226,126 @@ void LocalInput()
 
 int main(int argc, char* argv[])
 {
-	controller = new Controller(5, 4);
+	//BEGIN Simon's Camera Test Code
+	//------------------------------------------------------>
+#ifdef SIMON
+	controller = new Controller();
 
-	cout << "ROBOT CONTROLLER" << endl;
-	cout << "----------------" << endl;
+    cout << "ROBOT CONTROLLER" << endl;
+    cout << "----------------" << endl;
 
-	while (running)
-	{	
-		if (_kbhit())
-			LocalInput();
+    while (running)
+    {       
+            if (_kbhit())
+                    LocalInput();
 
-		controller->Update();
+            controller->Update();
 
-		int c = cvWaitKey(10);
+            int c = cvWaitKey(10);
 
-		vector<Robot*> robots = controller->GetRobotVector();
-		vector<Robot*>::iterator it;
+            vector<Robot*> robots = controller->GetRobotVector();
+            vector<Robot*>::iterator it;
 
-		for (it = robots.begin(); it != robots.end(); it++)
-		{
-			(*it)->GetCamera()->Update();
+            for (it = robots.begin(); it != robots.end(); it++)
+            {
+                    (*it)->GetCamera()->Update();
 
-			if ((*it)->GetCamera()->GetLocalDisplay())
-			{
-				if (c != -1)
-					(*it)->GetCamera()->SendKey(c);
+                    if ((*it)->GetCamera()->GetLocalDisplay())
+                    {
+                            if (c != -1)
+                                    (*it)->GetCamera()->SendKey(c);
 
-				(*it)->GetCamera()->DisplayFrame();
-			}
+                            (*it)->GetCamera()->DisplayFrame();
+                    }
+            }
+    }
+
+    controller->Disconnect();
+
+    delete controller;
+
+    return 0;
+#else
+
+	//<------------------------------------------------------
+	//END Simon's Camera Test Code
+
+
+	//Begin my test code
+	//------------------------------------------------------>
+	//Init Controller with 10x10 grid
+	//TODO:
+	//Update robot location needs fixing
+	//Setting targetVisible
+	//Setting robotMoving flag
+	controller = new Controller(10, 10);
+
+	//Create robot, add it to controller
+	Robot* robbie = new Robot(0, "0.0.0.0", false);
+	//Robot* robbi2 = new Robot(1, "0.0.0.0", false);
+	//Robot* robbi3 = new Robot(2, "0.0.0.0", false);
+	//Robot* robbi4 = new Robot(3, "0.0.0.0", false);
+	controller->AddRobot(robbie);
+	//controller->AddRobot(robbi2);
+	//controller->AddRobot(robbi3);
+	//controller->AddRobot(robbi4);
+
+	//Test vals in robot
+	//robbi2->getLocation()->setX(1);
+	//robbi3->getLocation()->setY(1);
+	//robbi4->getLocation()->setX(1);
+	//robbi4->getLocation()->setY(1);
+
+	//Set destination
+	robbie->setDestination(new GridLoc(1, 1));
+	//robbi2->setDestination(new GridLoc(5, 4));
+	//robbi3->setDestination(new GridLoc(5, 6));
+	//robbi4->setDestination(new GridLoc(5, 7));
+
+	//Generate Path
+	//robbi2->setPath(controller->genPath(*robbi2));
+	//robbi3->setPath(controller->genPath(*robbi3));
+	//robbi4->setPath(controller->genPath(*robbi4));
+	robbie->setPath(controller->genPath(*robbie));
+	//robbi2->getPath()->print();
+	//robbi3->getPath()->print();
+	//robbi4->getPath()->print();
+	//if(robbie->getPath())
+	robbie->getPath()->print();
+
+	vector<Robot*> robs = controller->GetRobotVector();
+	vector<Robot*>::iterator it;
+	for(it = robs.begin(); it != robs.end(); it++)
+	{		
+		printf("Robot: %d - (%d, %d, %d)->(%d, %d)\n", (*it)->getID(),
+			(*it)->getLocation()->getX(), 
+			(*it)->getLocation()->getY(),
+			(*it)->getHeading(),
+			(*it)->getPath()->getStart()->getX(),
+			(*it)->getPath()->getStart()->getY());
+		(*it)->getPath()->print();
+		printf("\n");
+	}
+	for(int i = 0; i < 5; i++)
+	{
+		for(it = robs.begin(); it != robs.end(); it++)
+		{	
+			(*it)->SetUpdate((*it)->getLocation()->getX(),
+				(*it)->getLocation()->getY(),
+				(*it)->getHeading(), 0, 100, 0);
+			(*it)->newCmd();	
+			printf("Robot: %d - (%d, %d, %d)->(%d, %d)\n", (*it)->getID(),
+				(*it)->getLocation()->getX(), 
+				(*it)->getLocation()->getY(),
+				(*it)->getHeading(),
+				(*it)->getPath()->getStart()->getX(),
+				(*it)->getPath()->getStart()->getY());
+			(*it)->getPath()->print();
+			printf("\n");
 		}
 	}
-
-	controller->Disconnect();
-
-	delete controller;
-
+	_getch();
+	
 	return 0;
+#endif
 }

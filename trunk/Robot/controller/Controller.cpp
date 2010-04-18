@@ -560,7 +560,7 @@ void Controller::Update()
 						(*it)->GetNXT()->SendMessage((*it)->newCmd());
 					else if((*it)->getLocation() == (*it)->getDestination())
 					{}
-					else if((*it)->getPath()->getSize() == 0)
+					else if(!(*it)->getHasPath())
 					{
 						(*it)->setPath(genPath(*(*it)));
 						(*it)->GetNXT()->SendMessage((*it)->newCmd());
