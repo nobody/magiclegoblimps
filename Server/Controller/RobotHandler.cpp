@@ -393,6 +393,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                             (*it)->setYCord(robotData[i].y);
                             (*it)->setDir(robotData[i].dir);
                             (*it)->setList(robotData[i].objects, robotData[i].qualities, robotData[i].listSize);
+                            std::cout << "[RH] got robot with listsize: " << robotData[i].listSize << "\n";
 
                             //update the video handeler
                             std::stringstream msg_ss;
@@ -404,6 +405,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                             (*it)->unlock();
 
                             for (int j = 0; j < robotData[i].listSize; ++j) {
+                                std::cout << "[RH] j: " << j << " listsize:" << robotData[i].listSize << "\n";
                                 msg_ss << robotData[i].objects[j] << ";" << robotData[i].qualities[j] << ";";
                             }
                             msg_ss << "\n";

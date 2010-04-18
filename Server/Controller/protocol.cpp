@@ -500,28 +500,35 @@ int readRobotUpdate(void* array, robotUpdate* &robots){
             ref[j] = current[0]; current++;
         }
 
-        list = new int[listSize];
-        qos = new float[listSize];
-        xs = new int[listSize];
-        ys = new int[listSize];
-        ref = (char*)list;
-        for(int j = 0; j < listSize*4; ++j){
-            ref[j] = current[0]; current++;
-        }
+        if (listSize > 0) {
+            list = new int[listSize];
+            qos = new float[listSize];
+            xs = new int[listSize];
+            ys = new int[listSize];
+            ref = (char*)list;
+            for(int j = 0; j < listSize*4; ++j){
+                ref[j] = current[0]; current++;
+            }
 
-        ref =(char*)(qos);
-        for(int j = 0; j < listSize*4; ++j){
-            ref[j] = current[0]; current++;
-        }
+            ref =(char*)(qos);
+            for(int j = 0; j < listSize*4; ++j){
+                ref[j] = current[0]; current++;
+            }
 
-        ref = (char*)(xs);
-        for(int j = 0; j < listSize * (int)sizeof(int); ++j){
-            ref[j] = current[0]; ++current;
-        }
+            ref = (char*)(xs);
+            for(int j = 0; j < listSize * (int)sizeof(int); ++j){
+                ref[j] = current[0]; ++current;
+            }
 
-        ref = (char*)(ys);
-        for(int j = 0; j < listSize * (int)sizeof(int); ++j){
-            ref[j] = current[0]; ++current;
+            ref = (char*)(ys);
+            for(int j = 0; j < listSize * (int)sizeof(int); ++j){
+                ref[j] = current[0]; ++current;
+            }
+        } else {
+            list = NULL;
+            qos = NULL;
+            xs = NULL;
+            ys = NULL;
         }
 
         // build the robotInit struct
@@ -795,10 +802,20 @@ int read_data(void* array, readReturn* ret){
                 
                 return count;
             }
+        case P_COMMAND:
+            {
+                command* arr;
+                int count = readCommand(array, arr);
+                ret->array = (void*)arr;
+                ret->size = count;
+                ret->type = P_COMMAND;
+
+                return count;
+            }
 
         default:
 
-            std::cerr << "Attempt to read unknown type\n";
+            std::cerr << "Attempt to read unknown type: " << std::hex  << (char) ((char*)array)[0] << "\n";
     }
     return P_INVD_TYPE;
 }
