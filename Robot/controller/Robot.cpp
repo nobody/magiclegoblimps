@@ -12,6 +12,7 @@ Robot::Robot(int port, string ip, bool dLink)
 	robotOnline_ = false;
 	robotActive_ = false;
 	robotMoving_ = false;
+	hasPath = false;
 
 	batteryLevel_ = 0;
 	status_ = 0;
@@ -398,6 +399,7 @@ void Robot::setPath(Path* newPath)
 	/*if(robPath)
 		delete robPath;*/
 	robPath = newPath;
+	hasPath = true;
 	/*if(robPath)
 		setNextLoc(robPath->advPath());*/
 }
@@ -408,4 +410,6 @@ void Robot::updateLocation()
 	//loc = nextLoc;
 	//setNextLoc(robPath->advPath());
 	loc = robPath->advPath();
+	if(robPath->getSize() == 0)
+		hasPath = false;
 }

@@ -53,10 +53,11 @@ public:
 	GridLoc* getNextLoc()		{ return nextLoc; }
 	GridLoc* getDestination()	{ return dest; }
 	Path* getPath()				{ return robPath; }
-	int getHeading()		{ return robotHeading_; }
-	int getID()			{ return id_; }
+	int getHeading()			{ return robotHeading_; }
+	int getID()					{ return id_; }
 	bool getRobotMoving()		{ return robotMoving_; }
 	int getStatus()				{ return status_; }
+	int getHasPath()			{ return hasPath; }
 
 	void ExecuteCommand(string command);
 
@@ -89,6 +90,7 @@ private:
 	int status_;
 
 	Path* robPath;
+	bool hasPath;
 };
 
 #endif
