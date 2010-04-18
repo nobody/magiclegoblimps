@@ -15,6 +15,9 @@
 #define TURN90 160
 #define TURN180 320
 #define PAN_RATIO 7 / 3
+#define PGAIN 50
+#define IGAIN 50
+#define DGAIN 50
 
 int PAN_SPEED = 20;
 int curPan = 0;
@@ -228,6 +231,28 @@ void pan(int deg)
  curPan += deg;
  
  RotateMotor(MOTOR_CAMERA,PAN_SPEED,deg*PAN_RATIO);
+ 
+ // normalize current
+ while( curPan < 0 )
+        curPan += 360;
+ curPan %= 360;
+ 
+ remStatus(PAN);
+}
+
+// angle
+void pid(int angle)
+{
+ setStatus(PAN);
+ 
+ // normalize input
+ while( angle < -360 )
+        angle += 360;
+ angle %= 360;
+
+ curPan += angle;
+ 
+ RotateMotorPID(MOTOR_CAMERA,PAN_SPEED,angle*PAN_RATIO,PGAIN,IGAIN,DGAIN);
  
  // normalize current
  while( curPan < 0 )
