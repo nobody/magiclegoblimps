@@ -500,6 +500,8 @@ void Controller::Update()
 						atoi(tokens[4].c_str()),
 						atoi(tokens[5].c_str()));
 
+					(*it)->setRobotMoving(false);
+
 					if(!((*it)->getStatus() & (INTERSECTION | IDLE)))
 					{
 					}
@@ -512,31 +514,15 @@ void Controller::Update()
 						(*it)->setPath(genPath(*(*it)));
 						(*it)->GetNXT()->SendMessage((*it)->newCmd());
 					}
-					else if((*it)->getLocation()->calcDist(*(*it)->getPath()->getStart()) != 0)
-					{}
+					else if((*it)->getLocation()->calcDist(*(*it)->getPath()->getStart()) != 1)
+					{
+						(*it)->setPath(genPath(*(*it)));
+						(*it)->GetNXT()->SendMessage((*it)->newCmd());
+					}
 					else
-					{}
-					//else if((*it)->getPath()->getSize() == 0 && 
-					//	!(*it)->GetCamera()->GetTargetVisible() &&
-					//	(*it)->getLocation() != (*it)->getPath()->getStart())
-					//{
-					//	(*it)->setPath(genPath(*(*it)));
-					//	(*it)->GetNXT()->SendMessage((*it)->newCmd());
-					//}
-					//else if((*it)->getLocation()->calcDist((*it)->getPath()->getStart()) != 1)
-					//{
-					//	if(!(*it)->GetCamera()->GetTargetVisible())
-					//	{
-					//		vector<GridLoc*> illMoves = getIllMoves();
-					//		vector<GridLoc*>::iterator glIter;
-
-					//		for(glIter = illMoves.begin(); glIter != illMoves.end(); glIter++)
-					//			if((*glIter) == (*it)->getPath()->getStart())
-					//				//I assume this is what you meant to do
-					//				(*it)->setPath(genPath(*(*it)));
-					//	}
-					//	(*it)->GetNXT()->SendMessage((*it)->newCmd());
-					//}
+					{
+						(*it)->GetNXT()->SendMessage((*it)->newCmd());
+					}
 				}
 				catch (Nxt_exception& e)
 				{
@@ -820,12 +806,12 @@ void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
 	camera->SetTarget(objID);
 	
 	//TODO: camera thread/spinning
-	while (!(camera->GetTargetVisible()))
-	{
-		//TODO: SPIN CAMERA.
-            //This needs to happen continuously while the robot is moving through
-            //the spiral search. Maybe a separate thread?
-	}
+	//while (!(camera->GetTargetVisible()))
+	//{
+	//	//TODO: SPIN CAMERA.
+ //           //This needs to happen continuously while the robot is moving through
+ //           //the spiral search. Maybe a separate thread?
+	//}
 	
 	if (!(camera->GetTargetVisible()))
 	{

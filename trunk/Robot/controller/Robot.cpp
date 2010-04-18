@@ -220,33 +220,44 @@ void Robot::Update()
 	if (camera_->GetTargetVisible())
 		centerCameraOnTarget();
 	else 
-	{//ExecuteCommand(pan 10);
-	}
+		ExecuteCommand("pan 359");
 }
 
 void Robot::centerCameraOnTarget()
 {
+	string cmd = "pan ";
 	int width = camera_->GetImageWidth();
 	bool cam = camera_->GetDLinkCam();
 	
-	//int d = CenterDistanceToDegrees(width, cam);
-	
-	//String deg = printf(d);
-	
-	//ExecuteCommand(pan deg);
+	vector<TrackingObject*> visObjs = camera_->GetVisibleObjects();
+	vector<TrackingObject*>::iterator voIter;
+	for(voIter = visObjs.begin(); voIter != visObjs.end(); voIter++)
+	{
+		if(camera_->GetTargetID() == (*voIter)->GetID())
+			break;
+	}
+	int d = (*voIter)->CenterDistanceToDegrees(width, cam);
+
+	stringstream oss;
+	oss << "pan " << d;
+	cmd = oss.str();
+	ExecuteCommand(cmd);
 }
 
 string Robot::newCmd()
 {
 	string cmd;
-	if(!nextLoc)
+	if(!(robPath->getStart()))
 	{
 		return cmd;
 	}
 	else if(camera_->GetTargetVisible())
 	{
 		if(cameraDirection_ <= 45 || cameraDirection_ > 315)
+		{
 			cmd = "forward";
+			setRobotMoving(true);
+		}
 		else if(cameraDirection_ <= 135 && cameraDirection_ > 45)
 			cmd = "left";
 		else if(cameraDirection_ <= 225 && cameraDirection_ > 135)
@@ -254,7 +265,7 @@ string Robot::newCmd()
 		else if(cameraDirection_ <= 315 && cameraDirection_ > 225)
 			cmd = "right";
 	}
-	else if(loc->getX() < nextLoc->getX())
+	else if(loc->getX() < robPath->getStart()->getX())
 	{
 		switch(robotHeading_)
 		{
@@ -266,8 +277,9 @@ string Robot::newCmd()
 		case EAST:
 			cmd = "forward";
 			printf("Moving forward\n");
-			robPath->advPath();
-			//updateLocation();
+			//robPath->advPath();
+			setRobotMoving(true);
+			updateLocation();
 			break;
 		case SOUTH:
 			cmd = "left";
@@ -281,7 +293,7 @@ string Robot::newCmd()
 			break;
 		}
 	}
-	else if(loc->getX() > nextLoc->getX())
+	else if(loc->getX() > robPath->getStart()->getX())
 	{
 		switch(robotHeading_)
 		{
@@ -303,20 +315,22 @@ string Robot::newCmd()
 		case WEST:
 			cmd = "forward";
 			printf("Moving forward\n");
-			robPath->advPath();
-			//updateLocation();
+			//robPath->advPath();
+			setRobotMoving(true);
+			updateLocation();
 			break;
 		}
 	}
-	else if(loc->getY() < nextLoc->getY())
+	else if(loc->getY() < robPath->getStart()->getY())
 	{
 		switch(robotHeading_)
 		{
 		case NORTH:
 			cmd = "forward";
 			printf("Moving forward\n");
-			robPath->advPath();
-			//updateLocation();
+			//robPath->advPath();
+			setRobotMoving(true);
+			updateLocation();
 			break;
 		case EAST:
 			cmd = "left";
@@ -335,7 +349,7 @@ string Robot::newCmd()
 			break;
 		}
 	}
-	else if(loc->getY() > nextLoc->getY())
+	else if(loc->getY() > robPath->getStart()->getY())
 	{
 		switch(robotHeading_)
 		{
@@ -352,8 +366,9 @@ string Robot::newCmd()
 		case SOUTH:
 			cmd = "forward";
 			printf("Moving forward\n");
-			robPath->advPath();
-			//updateLocation();
+			//robPath->advPath();
+			setRobotMoving(true);
+			updateLocation();
 			break;
 		case WEST:
 			cmd = "left";
@@ -383,13 +398,14 @@ void Robot::setPath(Path* newPath)
 	/*if(robPath)
 		delete robPath;*/
 	robPath = newPath;
-	if(robPath)
-		setNextLoc(robPath->advPath());
+	/*if(robPath)
+		setNextLoc(robPath->advPath());*/
 }
 
 void Robot::updateLocation()
 {
 	//delete loc;
-	loc = nextLoc;
-	setNextLoc(robPath->advPath());
+	//loc = nextLoc;
+	//setNextLoc(robPath->advPath());
+	loc = robPath->advPath();
 }

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <queue>
+#include <sstream>
 #include "Camera.h"
 #include "NXT.h"
 #include "Tokenizer.h"
