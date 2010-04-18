@@ -18,7 +18,9 @@ task receiveCommand()
 
   if(StrLen(msg)>0)
   {
-   if( testCommand(msg,"pan") || testCommand(msg,"stop" ) )
+   if( testCommand(msg,"pan")
+    || testCommand(msg,"stop")
+    || testCommand(msg,"pid") )
    {
     continue;
    }
@@ -79,6 +81,14 @@ task cmdPan()
    msg = SubStr( msg, 4, StrLen(msg) );
 
    pan( StrToNum( msg ) ); // send deg
+  }
+  else if( testCommand(msg,"pid") )
+  {
+   ReceiveMessage(INBOX,true,msg);
+   
+   msg = SubStr( msg, 4, StrLen(msg) );
+   
+   pid( StrToNum(msg) ); // send angle
   }
  }
 }
