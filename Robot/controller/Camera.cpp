@@ -48,7 +48,7 @@ bool Camera::Connect()
 	else camUrl_ += ciscoUrl_;
 
 	//comment this out to disable the camera
-	capture_ = cvCreateFileCapture(camUrl_.c_str());
+	//capture_ = cvCreateFileCapture(camUrl_.c_str());
 
 	if (capture_ == 0)
 		return false;

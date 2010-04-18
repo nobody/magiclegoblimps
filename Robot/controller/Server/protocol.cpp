@@ -85,7 +85,7 @@
             {
                 robotUpdate* data = (robotUpdate*)data_;
                 for (int i = 0; i < number; ++i){
-                    short size = sizeof(int) * 4 + sizeof(short) + data[i].listSize * 4 * sizeof(int);
+                    short size = sizeof(int) * 5 + sizeof(short) + data[i].listSize * 4 * sizeof(int);
                     structs[i] = new char[size];
 
                     //push size ontop of the array
@@ -112,11 +112,17 @@
                         structs[i][j] = ref[j-10];
                     }
 
-                    ref = (char*)&(data[i].listSize);
+                    //push dir
+                    ref = (char*)&(data[i].dir);
                     for(int j = 14; j < 18; ++j){
-                        structs[i][j] = ref[j - 14];
+                        structs[i][j] = ref[j-14];
                     }
-                    int startIndex = 18;
+
+                    ref = (char*)&(data[i].listSize);
+                    for(int j = 18; j < 22; ++j){
+                        structs[i][j] = ref[j - 18];
+                    }
+                    int startIndex = 22;
                     ref = (char*)(data[i].objects);
                     for(int j = startIndex; j < (int) ( startIndex + data[i].listSize * sizeof(int) ); ++j){
                         structs[i][j] = ref[j-startIndex];
@@ -452,6 +458,7 @@ int readRobotUpdate(void* array, robotUpdate* &robots){
         int rid;
         int x;
         int y;
+        int dir;
         int listSize;
         int* list;
         float* qos;
@@ -481,40 +488,54 @@ int readRobotUpdate(void* array, robotUpdate* &robots){
             ref[j] = current[0]; current++;
         }
 
+        // retrieve dir
+        ref = (char*)&dir;
+        for (int j = 0; j < (int)sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
         //retrieve listSize;
         ref = (char*)&listSize;
         for(int j = 0; j < (int)sizeof(int); ++j){
             ref[j] = current[0]; current++;
         }
 
-        list = new int[listSize];
-        qos = new float[listSize];
-        xs = new int[listSize];
-        ys = new int[listSize];
-        ref = (char*)list;
-        for(int j = 0; j < listSize*4; ++j){
-            ref[j] = current[0]; current++;
-        }
+        if (listSize > 0) {
+            list = new int[listSize];
+            qos = new float[listSize];
+            xs = new int[listSize];
+            ys = new int[listSize];
+            ref = (char*)list;
+            for(int j = 0; j < listSize*4; ++j){
+                ref[j] = current[0]; current++;
+            }
 
-        ref =(char*)(qos);
-        for(int j = 0; j < listSize*4; ++j){
-            ref[j] = current[0]; current++;
-        }
+            ref =(char*)(qos);
+            for(int j = 0; j < listSize*4; ++j){
+                ref[j] = current[0]; current++;
+            }
 
-        ref = (char*)(xs);
-        for(int j = 0; j < listSize * (int)sizeof(int); ++j){
-            ref[j] = current[0]; ++current;
-        }
+            ref = (char*)(xs);
+            for(int j = 0; j < listSize * (int)sizeof(int); ++j){
+                ref[j] = current[0]; ++current;
+            }
 
-        ref = (char*)(ys);
-        for(int j = 0; j < listSize * (int)sizeof(int); ++j){
-            ref[j] = current[0]; ++current;
+            ref = (char*)(ys);
+            for(int j = 0; j < listSize * (int)sizeof(int); ++j){
+                ref[j] = current[0]; ++current;
+            }
+        } else {
+            list = NULL;
+            qos = NULL;
+            xs = NULL;
+            ys = NULL;
         }
 
         // build the robotInit struct
         robots[i].RID = rid;
         robots[i].x = x;
         robots[i].y = y;
+        robots[i].dir = dir;
         robots[i].listSize = listSize;
         robots[i].objects = list;
         robots[i].qualities = qos;
@@ -670,7 +691,7 @@ int readAssignment(void* array, assignment* &ass){
     return overall_size;
 }
 
-int readCommand(void* array, command* com){
+int readCommand(void* array, command* &com){
 
     char* arr = (char*)array;
     char* current = arr+5;
@@ -781,10 +802,20 @@ int read_data(void* array, readReturn* ret){
                 
                 return count;
             }
+        case P_COMMAND:
+            {
+                command* arr;
+                int count = readCommand(array, arr);
+                ret->array = (void*)arr;
+                ret->size = count;
+                ret->type = P_COMMAND;
+
+                return count;
+            }
 
         default:
 
-            std::cerr << "Attempt to read unknown type\n";
+            std::cerr << "Attempt to read unknown type: " << std::hex  << (char) ((char*)array)[0] << "\n";
     }
     return P_INVD_TYPE;
 }

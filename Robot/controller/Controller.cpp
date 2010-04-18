@@ -11,7 +11,8 @@ Controller::Controller()
 	serverSocket_ = NULL;
 	port_ = "9999";
 	
-	lastObjectSize_ = 1;
+	lastObjectSize_ = 0;
+	lastRobotSize_ = 0;
 
 	connected_ = false;
 }
@@ -26,7 +27,8 @@ Controller::Controller(int xDim, int yDim)
 	serverSocket_ = NULL;
 	port_ = "9999";
 
-	lastObjectSize_ = 1;
+	lastObjectSize_ = 0;
+	lastRobotSize_ = 0;
 
 	connected_ = false;
 }
@@ -75,6 +77,7 @@ bool Controller::ConnectToServer(string ip)
 		{
             closesocket(connectSocket_);
            	connectSocket_ = INVALID_SOCKET;
+			connected_ = false;
             continue;
         }
         break;
@@ -100,6 +103,8 @@ bool Controller::ConnectToServer(string ip)
 		init = new robotInit[1];
 		init[0].RID = -1;
 		init[0].VideoURL = NULL;
+
+		write_data(P_ROBOT_INIT, init, 1, &sendArray);
 	}
 	else
 	{
@@ -115,15 +120,17 @@ bool Controller::ConnectToServer(string ip)
 				init[i].cameraType = P_DLINK;
 			else
 				init[i].cameraType = P_CISCO;
-			init[i].VideoURL = &(*it)->GetCamera()->GetVideoURL();
+			init[i].VideoURL = new string((*it)->GetCamera()->GetVideoURL());
 			init[i].x = (*it)->getLocation()->getX();
 			init[i].y = (*it)->getLocation()->getY();
 
 			i++;
 		}
-	}
 
-	write_data(P_ROBOT_INIT, init, (short)robots_.size(), &sendArray);
+		write_data(P_ROBOT_INIT, init, (short)robots_.size(), &sendArray);
+
+		//delete[] init;
+	}
 
 	iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
     if (iResult == SOCKET_ERROR) 
@@ -131,10 +138,10 @@ bool Controller::ConnectToServer(string ip)
         printf("send failed: %d\n", WSAGetLastError());
         closesocket(connectSocket_);
         WSACleanup();
+		connected_ = false;
     }
 
 	delete[] init;
-	delete[] sendArray.array;
 
 	_beginthread(ClientThread, 0, NULL);
 
@@ -229,8 +236,6 @@ void Controller::ClientThread(void* params)
         iResult = recv(connectSocket_, recvBuf, recvBufLen, 0);
         if (iResult > 0)
 		{
-			cout << "RECEIVING" << endl;
-
 			readReturn* data = new readReturn;
 
 			read_data(recvBuf, data);
@@ -239,14 +244,13 @@ void Controller::ClientThread(void* params)
 
 			if (type == P_OBJECT)
 			{
-				object* obj = new object[data->size];
-				obj = (object*)data->array;
+				object* obj = (object*)data->array;
 
 				for (int i = 0; i < data->size; i++)
 				{
 					cout << "Adding Object " << obj[i].OID << 
 						" : " << obj[i].name << endl;
-					
+
 					/*
 					CvBox2D box = TrackingObject::ArrayToBox(obj[i].box);
 					CvHistogram* hist = 
@@ -259,13 +263,14 @@ void Controller::ClientThread(void* params)
 					newObj->SetID(obj[i].OID);
 
 					Camera::GetTrackableObjects().push_back(newObj);
+
+					delete hist;
 					*/
 				}
 			}
 			else if (type == P_ASSIGNMENT)
 			{
-				assignment* assign = new assignment[data->size];
-				assign = (assignment*)data->array;
+				assignment* assign = (assignment*)data->array;
 
 				for (int i = 0; i < data->size; i++)
 				{
@@ -284,8 +289,7 @@ void Controller::ClientThread(void* params)
 			}
 			else if (type == P_COMMAND)
 			{
-				command* comm = new command[data->size];
-				comm = (command*)data->array;
+				command* comm = (command*)data->array;
 
 				for (int i = 0; i < data->size; i++)
 				{
@@ -331,12 +335,10 @@ bool Controller::Command(int id, int command, int arg)
 	{
 		//delete an object from the trackableObjects
 	}
-	/*
 	else if (command == P_CMD_SHUTDOWN)
 	{
 		//disconnect and then shutdown
 	}
-	*/
 
 	return true;
 }
@@ -377,9 +379,6 @@ bool Controller::TestServer(int type)
         WSACleanup();
         return false;
     }
-	return true;
-
-	delete[] sendArray.array;
 
 	return true;
 }
@@ -460,6 +459,7 @@ void Controller::Disconnect()
 		//socket might need shutdown
 		closesocket(connectSocket_);
 	    WSACleanup();
+		connected_ = false;
 	}
 
 	if (serverSocket_ != NULL)
@@ -477,6 +477,57 @@ void Controller::Update()
 	lastTime_ = seconds;
 
 	timer_ += interval;
+
+	if (connected_ && (robots_.size() > 0))
+	{
+		if (lastRobotSize_ != robots_.size())
+		{
+			lastRobotSize_ = robots_.size();
+
+			byteArray sendArray;
+			robotInit* init;
+
+			init = new robotInit[robots_.size()];
+
+			vector<Robot*>::iterator it;
+			int i = 0;
+
+			for (it = robots_.begin(); it != robots_.end(); it++)
+			{
+				init[i].RID = (*it)->GetID();
+				if ((*it)->GetCamera()->GetDLinkCam())
+					init[i].cameraType = P_DLINK;
+				else
+					init[i].cameraType = P_CISCO;
+				init[i].VideoURL = new string((*it)->GetCamera()->GetVideoURL());
+				init[i].x = (*it)->getLocation()->getX();
+				init[i].y = (*it)->getLocation()->getY();
+
+				cout << init[i].RID << endl;
+				cout << init[i].cameraType << endl;
+				cout << init[i].VideoURL << endl;
+				cout << init[i].x << endl;
+				cout << init[i].y << endl;
+
+				i++;
+			}
+
+			write_data(P_ROBOT_INIT, init, (short)robots_.size(), &sendArray);
+
+			int iResult = 0;
+
+			iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
+			if (iResult == SOCKET_ERROR) 
+			{
+				printf("send failed: %d\n", WSAGetLastError());
+				closesocket(connectSocket_);
+				WSACleanup();
+				connected_ = false;
+			}
+
+			delete[] init;
+		}
+	}
 
 	if (timer_ > POLL_INTERVAL)
 	{
@@ -545,34 +596,40 @@ void Controller::Update()
 			for (it = robots_.begin(); it != robots_.end(); it++)
 			{
 				update[i].RID = (*it)->GetID();
+				update[i].dir = (*it)->getHeading();
 				update[i].x = (*it)->getLocation()->getX();
 				update[i].y = (*it)->getLocation()->getY();
 				update[i].listSize = 
 					(int)(*it)->GetCamera()->GetVisibleObjects().size();
 
-				int* objects = new int[update[i].listSize];
-				for (int j = 0; j < update[i].listSize; j++)
-				{
-					objects[j] = 
-						(*it)->GetCamera()->GetVisibleObjects()[j]->GetID();
-				}
-				update[i].objects = objects;
+				cout << "LISTSIZE: " << update[i].listSize << endl;
 
-				float* qualities = new float[update[i].listSize];
-				for (int j = 0; j < update[i].listSize; j++)
+				if (update[i].listSize > 0)
 				{
-					qualities[j] = 
-						(*it)->GetCamera()->GetVisibleObjects()[j]->GetQuality(
-							(*it)->GetCamera()->GetImageWidth());
-				}
-				update[i].qualities = qualities;
+					int* objects = new int[update[i].listSize];
+					for (int j = 0; j < update[i].listSize; j++)
+					{
+						objects[j] = 
+							(*it)->GetCamera()->GetVisibleObjects()[j]->GetID();
+					}
+					update[i].objects = objects;
 
-				int* xs = new int[update[i].listSize];
-				int* ys = new int[update[i].listSize];
-				for (int j = 0; j < update[i].listSize; j++)
-				{
-					xs[j] = (*it)->GetObjectLocation(objects[j])->getX();
-					ys[j] = (*it)->GetObjectLocation(objects[j])->getY();
+					float* qualities = new float[update[i].listSize];
+					for (int j = 0; j < update[i].listSize; j++)
+					{
+						qualities[j] = 
+							(*it)->GetCamera()->GetVisibleObjects()[j]->GetQuality(
+								(*it)->GetCamera()->GetImageWidth());
+					}
+					update[i].qualities = qualities;
+
+					int* xs = new int[update[i].listSize];
+					int* ys = new int[update[i].listSize];
+					for (int j = 0; j < update[i].listSize; j++)
+					{
+						xs[j] = (*it)->GetObjectLocation(objects[j])->getX();
+						ys[j] = (*it)->GetObjectLocation(objects[j])->getY();
+					}
 				}
 
 				i++;
@@ -590,9 +647,8 @@ void Controller::Update()
 		        printf("send failed: %d\n", WSAGetLastError());
 		        closesocket(connectSocket_);
 		        WSACleanup();
+				connected_ = false;
 		    }
-
-			delete[] sendArray.array;
 		}
 
 		timer_ = 0;
@@ -631,6 +687,8 @@ void Controller::Update()
 				objects[i].color = arr;
 				objects[i].color_size = size;
 
+				delete arr;
+
 				i++;
 			}
 
@@ -646,9 +704,8 @@ void Controller::Update()
 				printf("send failed: %d\n", WSAGetLastError());
 				closesocket(connectSocket_);
 				WSACleanup();
+				connected_ = false;
 			}
-
-			delete[] sendArray.array;
 		}
 	}
 
@@ -813,7 +870,10 @@ void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
  //           //the spiral search. Maybe a separate thread?
 	//}
 	if(!lastKnownLoc)
-		SpiralSearch(robot, new GridLoc(XMAX/2, YMAX/2));
+	{
+		//this doesn't build correctly (something to do with camera)
+		//SpiralSearch(robot, camera, new GridLoc(yMax/2, xMax/2));
+	}
 	else if(!camera->GetTargetVisible())
 	{
 		robot->setDestination(lastKnownLoc);
