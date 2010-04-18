@@ -500,22 +500,43 @@ void Controller::Update()
 						atoi(tokens[4].c_str()),
 						atoi(tokens[5].c_str()));
 
-					if(!(*it)->getPath()->getSize())
+					if(!((*it)->getStatus() & (INTERSECTION | IDLE)))
+					{
+					}
+					else if((*it)->GetCamera()->GetTargetVisible())
+						(*it)->GetNXT()->SendMessage((*it)->newCmd());
+					else if((*it)->getLocation() == (*it)->getDestination())
+					{}
+					else if((*it)->getPath()->getSize() == 0)
 					{
 						(*it)->setPath(genPath(*(*it)));
 						(*it)->GetNXT()->SendMessage((*it)->newCmd());
 					}
-					else 
-					{
-						vector<GridLoc*> illMoves = getIllMoves();
-						vector<GridLoc*>::iterator glIter;
+					else if((*it)->getLocation()->calcDist(*(*it)->getPath()->getStart()) != 0)
+					{}
+					else
+					{}
+					//else if((*it)->getPath()->getSize() == 0 && 
+					//	!(*it)->GetCamera()->GetTargetVisible() &&
+					//	(*it)->getLocation() != (*it)->getPath()->getStart())
+					//{
+					//	(*it)->setPath(genPath(*(*it)));
+					//	(*it)->GetNXT()->SendMessage((*it)->newCmd());
+					//}
+					//else if((*it)->getLocation()->calcDist((*it)->getPath()->getStart()) != 1)
+					//{
+					//	if(!(*it)->GetCamera()->GetTargetVisible())
+					//	{
+					//		vector<GridLoc*> illMoves = getIllMoves();
+					//		vector<GridLoc*>::iterator glIter;
 
-						for(glIter = illMoves.begin(); glIter != illMoves.end(); glIter++)
-							if((*glIter) == (*it)->getPath()->getStart())
-								//I assume this is what you meant to do
-								(*it)->setPath((*it)->getPath());
-						(*it)->GetNXT()->SendMessage((*it)->newCmd());
-					}
+					//		for(glIter = illMoves.begin(); glIter != illMoves.end(); glIter++)
+					//			if((*glIter) == (*it)->getPath()->getStart())
+					//				//I assume this is what you meant to do
+					//				(*it)->setPath(genPath(*(*it)));
+					//	}
+					//	(*it)->GetNXT()->SendMessage((*it)->newCmd());
+					//}
 				}
 				catch (Nxt_exception& e)
 				{
@@ -668,11 +689,6 @@ Path* Controller::genPath(Robot& robot)
 		if((*glIter) == robot.getDestination())
 			illMoves.erase(glIter);
 	}
-	//for(int i = 0; i < illMoves.size(); i++)
-	//{
-	//	if(illMoves[i] == robot.getDestination())
-	//		illMoves.erase(illMoves.begin()+i);
-	//}
 
 	Path* pth;
 	vector<GridLoc*>::iterator mvIter;
@@ -685,15 +701,6 @@ Path* Controller::genPath(Robot& robot)
 		pathHeap.push(pth);
 		illMoves.push_back(*mvIter);
 	}
-	/*for(int i = 0; i < moves.size(); i++)
-	{
-		pth = new Path();
-		pth->extend(moves[i]);
-		pth->calcMetric(*robot.getLocation(), 
-			*robot.getDestination());
-		pathHeap.push(pth);
-		illMoves.push_back(moves[i]);
-	}*/
 
 	if(pathHeap.size() != 0)
 	{
@@ -711,15 +718,6 @@ Path* Controller::genPath(Robot& robot)
 				pathHeap.push(newPath);
 				illMoves.push_back(*mvIter);
 			}
-			/*for(int i = 0; i < moves.size(); i++)
-			{
-				Path* newPath = best->copy();
-				newPath->extend(moves[i]);
-				newPath->calcMetric(*robot.getLocation(),
-					*robot.getDestination());
-				pathHeap.push(newPath);
-				illMoves.push_back(moves[i]);
-			}*/
 
 			if(pathHeap.size() != 0)
 			{
@@ -781,7 +779,6 @@ vector<GridLoc*> Controller::getValidMoves(GridLoc loc,
 		moves.push_back(yminus);
 	}
 
-	//vector<GridLoc*> validMoves;
 	vector<GridLoc*>::iterator imIter;
 	for(imIter = illMoves.begin(); imIter != illMoves.end(); imIter++)
 	{
@@ -795,22 +792,6 @@ vector<GridLoc*> Controller::getValidMoves(GridLoc loc,
 			}
 		}
 	}
-	/*for(int i = 0; i < illMoves.size(); i++)
-	{
-		int j = 0;
-		while(j < moves.size())
-		{
-			if(*moves[j] == *illMoves[i])
-			{
-				moves.erase(moves.begin()+j);
-				break;
-			}
-			else
-			{
-				j++;
-			}
-		}
-	}*/
 
 	return moves;
 }
@@ -819,20 +800,12 @@ vector<GridLoc*> Controller::getIllMoves()
 {
 	vector<GridLoc*> illMoves;
 
-	/*for(int i = 0; i < robots_.size(); i++)
-	{
-		GridLoc* robLoc = 
-			new GridLoc(robots_[i]->getLocation()->getX(),
-			robots_[i]->getLocation()->getY());
-		illMoves.push_back(robLoc);
-		
-	}*/
 	vector<Robot*>::iterator it;
 	for(it = robots_.begin(); it != robots_.end(); it++)
 	{
 		if((*it)->getRobotMoving())
-			illMoves.push_back(new GridLoc((*it)->getNextLoc()->getX(),
-				(*it)->getNextLoc()->getY()));
+			illMoves.push_back(new GridLoc((*it)->getPath()->getStart()->getX(),
+				(*it)->getPath()->getStart()->getY()));
 		illMoves.push_back(new GridLoc((*it)->getLocation()->getX(),
 			(*it)->getLocation()->getY()));
 	}
@@ -858,16 +831,16 @@ void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
 	{
 		//send to last known location
 		robot->setDestination(lastKnownLoc);
-		genPath(robot);
+		//genPath(robot);
 		
-		while () {
-			//wait until travel is complete
-		}
+		//while () {
+		//	//wait until travel is complete
+		//}
 	}
 	
 	if (!(camera->GetTargetVisible()))
 	{
-		SpiralSearch(robot, center); //TODO: need to set center coordinates for grid
+		//SpiralSearch(robot, center); //TODO: need to set center coordinates for grid
 	}
 	else
 	{
@@ -879,7 +852,7 @@ void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
 void Controller::SpiralSearch(Robot* robot, Camera& camera, GridLoc* loc)
 {
 	robot->setDestination(loc);
-	genPath(robot);
+	//genPath(robot);
 	
 	int x = loc->getX();
 	int y = loc->getY();
@@ -891,7 +864,7 @@ void Controller::SpiralSearch(Robot* robot, Camera& camera, GridLoc* loc)
 	int countSpirals = 1;
 	int countSquares;
 	
-	while(!(camera->GetTargetVisible())) // && countOrbits < xMax*2
+	while(!(camera.GetTargetVisible())) // && countOrbits < xMax*2
 	{
 		for (countSquares = 0; countSquares < 2; countSquares++) {
 			
@@ -900,20 +873,20 @@ void Controller::SpiralSearch(Robot* robot, Camera& camera, GridLoc* loc)
 				xdir *= -1;
 				loc->setX(x);
 				robot->setDestination(loc);
-				genPath(robot);
-				while () {
-					//wait for robot to catch up
-				}
+				//genPath(robot);
+				//while () {
+				//	//wait for robot to catch up
+				//}
 			}
 			else {
 				y += ydir*countSpirals;
 				ydir *= -1;
 				loc->setY(y);
 				robot->setDestination(loc);
-				genPath(robot);
-				while () {
-					//wait for robot to catch up
-				}
+				//genPath(robot);
+				//while () {
+				//	//wait for robot to catch up
+				//}
 			}
 			
 			xory *= -1; //change dir (left turn)

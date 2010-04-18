@@ -25,6 +25,12 @@ void GridLoc::setY(int yy)
 int GridLoc::getX(void) { return x; }
 int GridLoc::getY(void) { return y; }
 
+double GridLoc::calcDist(GridLoc& gl)
+{
+	return sqrt(pow((double)(x-gl.getX()),2.0)+
+		pow((double)(y-gl.getY()),2.0));
+}
+
 bool GridLoc::operator==(const GridLoc& other) const
 {
 	if(x == other.x && 

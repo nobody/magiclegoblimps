@@ -1,5 +1,7 @@
 #ifndef GRIDLOC_H
 #define GRIDLOC_H
+#include <cmath>
+#include <string>
 
 class GridLoc
 {
@@ -12,6 +14,7 @@ public:
 	void	setY(int yy);
 	int		getX(void);
 	int		getY(void);
+	double	calcDist(GridLoc& gl);
 	bool	operator== (const GridLoc& other) const;
 	bool	operator!= (const GridLoc& other) const;
 private:

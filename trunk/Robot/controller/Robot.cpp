@@ -11,6 +11,7 @@ Robot::Robot(int port, string ip, bool dLink)
 	camConnected_ = false;
 	robotOnline_ = false;
 	robotActive_ = false;
+	robotMoving_ = false;
 
 	batteryLevel_ = 0;
 	status_ = 0;
@@ -216,21 +217,23 @@ void Robot::Update()
 {
 	//anything that needs to be done continously (i.e. if we're continuously spinning the camera) can go here
 	
-	if (camera_.isTargetVisible())
+	if (camera_->GetTargetVisible())
 		centerCameraOnTarget();
-	else ExecuteCommand(pan 10);
+	else 
+	{//ExecuteCommand(pan 10);
+	}
 }
 
 void Robot::centerCameraOnTarget()
 {
-	int width = camera_.GetImageWidth();
-	bool cam = dLinkCam_;
+	int width = camera_->GetImageWidth();
+	bool cam = camera_->GetDLinkCam();
 	
-	int d = CenterDistanceToDegrees(width, cam);
+	//int d = CenterDistanceToDegrees(width, cam);
 	
-	String deg = printf(d);
+	//String deg = printf(d);
 	
-	ExecuteCommand(pan deg);
+	//ExecuteCommand(pan deg);
 }
 
 string Robot::newCmd()
