@@ -691,7 +691,7 @@ int readAssignment(void* array, assignment* &ass){
     return overall_size;
 }
 
-int readCommand(void* array, command* com){
+int readCommand(void* array, command* &com){
 
     char* arr = (char*)array;
     char* current = arr+5;
