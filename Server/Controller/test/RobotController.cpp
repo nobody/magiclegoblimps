@@ -40,6 +40,8 @@ int main() {
     update[0].x = 1;
     update[0].y = 2;
     update[0].dir = 0;
+    update[0].listSize = 0;
+    /*
     update[0].listSize = 1;
     update[0].objects = new int[1];
     update[0].objects[0] = 1;
@@ -49,6 +51,7 @@ int main() {
     update[0].xs[0] = 1;
     update[0].ys= new int[1];
     update[0].ys[0] = 1;
+    */
 
     update[1].RID = 1;
     update[1].x = 2;

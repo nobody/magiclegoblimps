@@ -74,6 +74,11 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 
     //int type = *iter;
     //iter++;
+    if(count < 5){
+        cleanupConn(connEP);
+        std::cout <<"only got: " << count << " bytes; exiting...\n";
+        return;
+    }
     for(int i = 0; i < 5; ++i){
         arr[i] = *iter;
         printf("[RH] hex: %02X\n", *iter);
@@ -478,6 +483,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 
             case P_ROBOT_INIT:
             {
+                std::cout << "[RH] the message is a robotInit\n";
                 //initiales stuff
                 robotInit* robot = new robotInit[message->size];
                 robot = (robotInit*)(message->array);
@@ -485,18 +491,38 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                 //lock the robot vector for writing
                 robots->lock();
                for(int i = 0; i < message->size; ++i){
-                     
+
                      //create the new robot object and add it to the vector
-                     Robot* temp = new Robot(connEP, robot[i].RID);
+                    Robot* temp = new Robot(connEP, robot[i].RID);
                     temp->setXCord(robot[i].x);
                     temp->setYCord(robot[i].y);
+                    temp->setCamera(robot[i].cameraType);
                     //temp->setList(robotData[i].list, robotData[i].listSize);
                     temp->setVideoURL(std::string(*robot[i].VideoURL));
-            
-                    robots->push_back(temp);
+                     
+                    //check to make sure we don't get duplicates
+                    Vector_ts<Robot*>::iterator robot_it;
+                    bool isnew = true;
+                    for(robot_it = robots->begin(); robot_it != robots->end(); ++robot_it){
+                        if (*temp == *(*robot_it)){
+                            std::cout << "[RH] robot is a duplicate\n";
+                           isnew = false;
+                           break;
+                        }
+                    }
+
+                    //if its not a duplicate add it, if it is delete it
+                    if(isnew){
+                        robots->push_back(temp);
+                    }else{
+                        delete temp;
+                    }
                     //might want to clean up some stuff here if patrick doesn't fix destructor
                 }
                 robots->unlock();
+
+                // let the web server know about the robots
+                db->insertCameras(robots);
             }
             break;
             default:
@@ -522,7 +548,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 
 
 void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
-    std::cout << "[RH] is cleaning up\n";
+    std::cout << "[RH] thread "<<boost::this_thread::get_id() << " is cleaning up\n";
     //get a lock on the robot vector and declare and iterator
     robots->lock();
     Vector_ts<Robot*>::iterator it;
@@ -573,14 +599,14 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
             threads.erase(iter2);
             break;
         }
-        std::cerr<<"[RH] Robot Handler: couldn't find connection to delete\n";
+        std::cerr<<"[RH] Robot Handler: couldn't find thread to delete\n";
     }
 
     //decrement handlers so we have an accurate count of how many connections we have
     handlerMutex.lock();
     --handlers;
     handlerMutex.unlock();
-    std::cout << "[RH] cleanup done\n";
+    std::cout << "[RH] " << boost::this_thread::get_id() << " cleanup done\n";
 }
 
 void RobotHandler::sendAssignments(std::map<Robot*, int>* assignments){
@@ -637,6 +663,9 @@ void RobotHandler::sendCommand(command* comm) {
     }
 }
 void RobotHandler::sendCommand(command* comm, boost::asio::ip::tcp::endpoint conn){    
+    
+    std::cout << "[RH] sending command :" << comm->cmd << " to " << conn << std::endl;
+
     byteArray* data = new byteArray;
     boost::system::error_code error;
 
@@ -698,8 +727,11 @@ void RobotHandler::shutdown(){
             }
             
             //if there any handlers left, they had there chance
-            if(handlers)
+            if(handlers){
+                
+                std::cout<<"[RH] number of threads remaining: "<<threads.size()<<std::endl;
                 std::cout<<"[RH] let them die then >:( \n";
+            }
 
         }
 

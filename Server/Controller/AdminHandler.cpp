@@ -109,16 +109,22 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
     std::cout << "Got string \"" << s << "\"\n";
     std::cout.flush();
 
+    command cmd;
+    Robot* subject = NULL;
+
     if(!s.compare(std::string("shutdown\n"))){
         // we need to shutdown the system.
+
+        cmd.RID = -1;
+        cmd.cmd = P_CMD_SHUTDOWN;
+        cmd.arg = 0;
+        robotControl->sendCommand(&cmd);
         conn_->releaseSocket();
         cont->shutdown();
         
         return;
     }
 
-    command cmd;
-    Robot* subject = NULL;
 
     //check to make sure that the input is what we want
     if(s.find('$', 0) != std::string::npos){
