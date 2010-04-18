@@ -8,7 +8,6 @@
 #include <ws2tcpip.h>
 #include <Windows.h>
 #include <queue>
-#include <process.h>
 
 #include "Path.h"
 #include "Robot.h"
@@ -60,7 +59,7 @@ public:
 
 private:
 	static const int POLL_INTERVAL = 5;
-	static const int BUFFER_LENGTH = 1024;
+	static const int BUFFER_LENGTH = 512;
 
 	char* port_;
 	int xMax;
@@ -74,6 +73,7 @@ private:
 	static vector<Robot*> robots_;
 
 	int lastObjectSize_;
+	int lastRobotSize_;
 
 	float timer_;
 	time_t lastTime_;
