@@ -812,26 +812,38 @@ void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
  //           //This needs to happen continuously while the robot is moving through
  //           //the spiral search. Maybe a separate thread?
 	//}
-	
-	if (!(camera->GetTargetVisible()))
+	if(!lastKnownLoc)
+		SpiralSearch(robot, new GridLoc(XMAX/2, YMAX/2));
+	else if(!camera->GetTargetVisible())
 	{
-		//send to last known location
 		robot->setDestination(lastKnownLoc);
-		//genPath(robot);
-		
-		//while () {
-		//	//wait until travel is complete
-		//}
-	}
-	
-	if (!(camera->GetTargetVisible()))
-	{
-		//SpiralSearch(robot, center); //TODO: need to set center coordinates for grid
+		robot->setPath(genPath(*robot));
 	}
 	else
 	{
-		robot->GetObjectLocation(objID);
+		robot->setDestination(robot->GetObjectLocation(objID));
+		robot->setPath(genPath(*robot));
 	}
+
+	//if (!(camera->GetTargetVisible()))
+	//{
+	//	//send to last known location
+	//	robot->setDestination(lastKnownLoc);
+	//	//genPath(robot);
+	//	
+	//	//while () {
+	//	//	//wait until travel is complete
+	//	//}
+	//}
+	//
+	//if (!(camera->GetTargetVisible()))
+	//{
+	//	//SpiralSearch(robot, center); //TODO: need to set center coordinates for grid
+	//}
+	//else
+	//{
+	//	robot->GetObjectLocation(objID);
+	//}
 	
 }
 
