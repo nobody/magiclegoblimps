@@ -19,7 +19,8 @@ Camera::Camera(string ip, bool dLinkCam)
 	localDisplay_ = false;
 	histDisplay_ = true;		
 	showTracking_ = true;		
-	locked_ = false;		
+	locked_ = false;	
+	targetVisible_ = false;
 
 	inKey_ = -1;		
 	waitingKey_ = false;		

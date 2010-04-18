@@ -19,6 +19,9 @@
 
 #pragma comment(lib, "ws2_32.lib")
 
+#define INTERSECTION	0x08
+#define IDLE			0x01
+
 using namespace std;
 
 class Controller
@@ -48,6 +51,10 @@ public:
 	vector<GridLoc*> getValidMoves(GridLoc loc, 
 		vector<GridLoc*> illMoves);
 	vector<GridLoc*> getIllMoves();
+
+	void SearchObject(int robotID, int objID, GridLoc* lastKnownLoc);
+	void SpiralSearch(Robot* robot, Camera& camera, GridLoc* loc);
+
 
 	void Update();
 

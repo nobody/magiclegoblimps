@@ -51,10 +51,11 @@ public:
 	GridLoc* getLocation()		{ return loc; }
 	GridLoc* getNextLoc()		{ return nextLoc; }
 	GridLoc* getDestination()	{ return dest; }
-	Path* getPath()			{ return robPath; }
+	Path* getPath()				{ return robPath; }
 	int getHeading()		{ return robotHeading_; }
 	int getID()			{ return id_; }
 	bool getRobotMoving()		{ return robotMoving_; }
+	int getStatus()				{ return status_; }
 
 	void ExecuteCommand(string command);
 
