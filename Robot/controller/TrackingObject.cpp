@@ -60,11 +60,18 @@ int TrackingObject::GetSizePercentage()
 
 int TrackingObject::CenterDistanceToDegrees(int width, bool cam)
 {
-	int dist = (width / 2) - trackBox_.center.x;
+	float centered = GetCenteredPercentage(width);
+	centered /= 100.0f;
 
-	if (cam == true)
-		return dist / width * 45;
-	else return dist / width * 60;
+	if (abs(centered) > 0.15f)
+	{
+		if (cam == true)
+			return centered * 45.0f;
+		else 
+			return centered * 60.0f;
+	}
+	else
+		return 0;
 }
 
 char* TrackingObject::BoxToArray(CvBox2D box, int* size)

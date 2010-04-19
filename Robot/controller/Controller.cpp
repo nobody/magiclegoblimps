@@ -503,12 +503,6 @@ void Controller::Update()
 				init[i].x = (*it)->getLocation()->getX();
 				init[i].y = (*it)->getLocation()->getY();
 
-				cout << init[i].RID << endl;
-				cout << init[i].cameraType << endl;
-				cout << init[i].VideoURL << endl;
-				cout << init[i].x << endl;
-				cout << init[i].y << endl;
-
 				i++;
 			}
 
@@ -553,13 +547,13 @@ void Controller::Update()
 
 					(*it)->setRobotMoving(false);
 
-					if(!((*it)->getStatus() & (INTERSECTION | IDLE)))
-					{
+					if(!((*it)->getStatus() & (INTERSECTION | IDLE | STOP)))
+					{continue;
 					}
 					else if((*it)->GetCamera()->GetTargetVisible())
 						(*it)->GetNXT()->SendMessage((*it)->newCmd());
 					else if((*it)->getLocation() == (*it)->getDestination())
-					{}
+					{continue;}
 					else if(!(*it)->getHasPath())
 					{
 						(*it)->setPath(genPath(*(*it)));
@@ -577,10 +571,13 @@ void Controller::Update()
 				}
 				catch (Nxt_exception& e)
 				{
+					//keep the empty mailbox exceptions quiet
+					/*
 					cout << e.what() << endl;
 					cout << e.error_code() << endl;
 					cout << e.error_type() << endl;
 					cout << e.who() << endl;
+					*/
 				}
 			}
 		}

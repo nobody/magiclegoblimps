@@ -18,8 +18,9 @@
 
 #pragma comment(lib, "ws2_32.lib")
 
-#define INTERSECTION	0x08
-#define IDLE			0x01
+#define IDLE			1
+#define INTERSECTION	8
+#define STOP			1024
 
 using namespace std;
 

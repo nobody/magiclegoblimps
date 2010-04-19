@@ -11,7 +11,7 @@
 #include "NXT.h"
 #include "Robot.h"
 
-//#define SIMON
+#define SIMON
 
 using namespace std;
 
@@ -217,6 +217,16 @@ void LocalInput()
 		}
 	}
 
+	//testmove id x y
+	else if (tokens[0].compare("testmove") == 0)
+	{
+		GridLoc* loc = 
+			new GridLoc(atoi(tokens[2].c_str()), atoi(tokens[3].c_str()));
+
+		controller->GetRobot(atoi(tokens[1].c_str()))->setDestination(loc);
+		controller->GetRobot(atoi(tokens[1].c_str()))->setPath(controller->genPath(*controller->GetRobot(atoi(tokens[1].c_str()))));
+	}
+
 	//default
 	else
 	{
@@ -229,7 +239,7 @@ int main(int argc, char* argv[])
 	//BEGIN Simon's Camera Test Code
 	//------------------------------------------------------>
 #ifdef SIMON
-	controller = new Controller();
+	controller = new Controller(2, 2);
 
     cout << "ROBOT CONTROLLER" << endl;
     cout << "----------------" << endl;
