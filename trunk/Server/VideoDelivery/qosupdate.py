@@ -10,8 +10,10 @@ from logger import transcribe
 def parse(in_lines):
     """
     Takes input from the QoS server and returns a list of VidFeed objects
-    corresponding to the server input. This function returns a 2-tuple
-    (timestamp, VidFeed list).
+    corresponding to the server input. This function returns a 3-tuple
+    (timestamp, add/update feeds list, delete feeds list). If this function
+    returns None, this indicates to the caller that the message was not in
+    the proper format and should be dealt with accordingly.
     """
     if settings.DEBUG:
         s = '\n>>> From QoS Server\n\n'
@@ -19,43 +21,45 @@ def parse(in_lines):
             s += ln
         transcribe(s)
 
-    object_mode = True
-    timestamp = in_lines[0] #TODO: parse into datetime object
-    objects = []
-    robots = []
-
-    for ln in in_lines[1:]:
-        if ln == '\n':
-            object_mode = False
-            continue
-        elif object_mode: # object list
-            obj = get_object(ln)
-            if obj != None:
-                objects.append(obj)
-        else: # robot list
-            rbt = get_robot(ln)
-            if rbt != None:
-                robots.append(rbt)
-
-    vfeeds = []
-    for r in robots:
-        vf = VidFeed()
-        vf.feed_url = r[0]
-        for o in r[1]:
-            vf.objects.append(o)
-        vfeeds.append(vf)
-
-    return (timestamp, vfeeds)
-
-def get_object(line):
-    """
-    Returns a tuple (obj_id, obj_name) for the object represented by
-    the given line. Returns None if the format is invalid.
-    """
-    parts = line.split(';')
-    if len(parts) != 3:
+    if len(in_lines) < 2 or in_lines[1] != '':
         return None
-    return (int(parts[0]), parts[1])
+
+    timestamp = in_lines[0] #TODO: parse into datetime object
+    if len(in_lines) == 2:
+        return (timestamp, [], [])
+
+    addrobots = []
+    rmrobots = []
+    for ln in in_lines[2:]:
+        delmode = ln.startswith('DELETE')
+        if delmode:
+            ln = ln[7:]
+        rbt = get_robot(ln)
+        if rbt != None:
+            if delmode:
+                rmrobots.append(rbt)
+            else:
+                addrobots.append(rbt)
+
+    addfeeds = []
+    for r in addrobots:
+        addfeeds.append(make_vfeed(r))
+
+    rmfeeds = []
+    for r in rmrobots:
+        rmfeeds.append(make_vfeed(r))
+
+    return (timestamp, addfeeds, rmfeeds)
+
+def make_vfeed(r):
+    """
+    Takes a parsed robot tuple and creates a VidFeed object.
+    """
+    vf = VidFeed()
+    vf.feed_url = r[0]
+    for o in r[1]:
+        vf.objects.append(o)
+    return vf
 
 def get_robot(line):
     """
@@ -63,18 +67,32 @@ def get_robot(line):
     qos_objects is a list of (obj_id, QoS) tuples. Returns None if
     the format is invalid.
     """
-    qos_objects = []
     parts = line.split(';')
-    if len(parts) < 2:
+
+    # Only URL is given for delete statements
+    lp = len(parts)
+    if lp == 1 or lp == 2:
+        return (parts[0], [])
+
+    # Check for unbalanced object;qos; pairs
+    if lp == 0 or lp % 2 != 0:
         return None
-    parts = parts[:-1]
+
+    # Get list of obj;qos; pairs as [(obj, qos), ...]
     cam_url = parts[0]
+    qos_objects = []
     last_object = None
-    for i in range(1, len(parts)):
-        if i % 2 == 0:
-            qos_objects.append((last_object, float(parts[i])))
-        else:
-            last_object = int(parts[i])
+    parts = parts[:-1]
+
+    try:
+        for i in range(1, len(parts)):
+            if i % 2 == 0:
+                qos_objects.append((last_object, float(parts[i])))
+            else:
+                last_object = int(parts[i])
+    except:
+        return None # Do not attempt to parse invalid input
+
     return (cam_url, qos_objects)
     
 def prepare(vfeeds):
@@ -89,3 +107,6 @@ def prepare(vfeeds):
         s = '\n>>> To QoS Server\n\n' + s
         transcribe(s)
     return s.encode()
+
+if __name__ == '__main__':
+    print('To test this module, run `python qosupdate-test.py`')

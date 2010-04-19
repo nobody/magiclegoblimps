@@ -30,3 +30,7 @@ class VidFeed():
 
     def update(self, vfeed):
         self.objects = vfeed.objects
+
+    def __repr__(self):
+        return "VidFeed(feed:'{0}', stream:'{1}', obj/qos:{2})".format(
+            self.feed_url, self.stream_url, str(self.objects))
