@@ -44,3 +44,9 @@ FFMPEG_ARGS = ('ffmpeg', '-r', '15', '-i', 'input-stream', '-f', 'flv',
     'output-stream')
 
 FFSERVER_ARGS = ('ffserver', '-f', 'config-file')
+
+# MySQL settings
+MySQL_HOST = '0-22-19-13-ab-d8.dyn.utdallas.edu'
+MySQL_USER = 'servergroup'
+MySQL_PASS = 'agrajag'
+MySQL_DATABASE = 'zoocam'

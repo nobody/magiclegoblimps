@@ -6,6 +6,7 @@ import socket
 import config
 import ffserver
 import settings
+import MySQLdb
 from vidcontrol import change_working_directory
 from logger import log
 
@@ -67,6 +68,13 @@ class Archive():
         """
         log('Updated the Client database with Archived Videos')
 
+    def connect(self):
+        """
+        Connect to the database
+        """
+        conn = MySQLdb.connect (host = MySQL_HOST, user = MySQL_USER, passwd = MySQL_PASS, db = MySQL_DATABASE)
+        cursor = conn.cursor()
+        
 if __name__ == '__main__':
     change_working_directory()
     ar = Archive()
