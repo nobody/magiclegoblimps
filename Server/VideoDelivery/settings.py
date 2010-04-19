@@ -12,8 +12,6 @@ ROOT_DIR = [
         '/home/jordan/mlb/magiclegoblimps/Server/VideoDelivery',
         '/Users/jordanbach/Desktop/Spring2010/csproject/magiclegoblimps/Server/VideoDelivery', '/home/duck/Desktop/school/magiclegoblimps/Server/VideoDelivery']
 LIVE_CSV_FILE = '/var/www/mlb/live-feeds.csv'
-ARCHIVE_CSV_FILE = '/var/www/mlb/archive-feeds.csv'
-ARCHIVE_HTML = './archives/index.html'
 
 # QoS server settings
 # QOS_SERVER_URL = '10.21.1.110'
@@ -27,7 +25,12 @@ CONNECTION_RETRY_INTERVAL = 10
 CURRENT_IP = getip()
 FEEDER_URLS = 'http://localhost:{0}/{1}.ffm'
 LIVE_FEED_URLS = 'http://{0}:{1}/{2}.flv' # domain, port, filename
+
+# archive settings
 ARCHIVE_FEED_URLS = 'http://{0}/{2}.flv' # domain, filename
+ARCHIVE_CSV_FILE = '/var/www/mlb/archive-feeds.csv'
+ARCHIVE_HTML = './archives/index.html'
+ARCHIVE_DURATION = 30
 
 CONFIG_TEMPLATE = 'config-template.txt'
 CONFIG_FILE_DIR = './'

@@ -2,6 +2,9 @@ import os
 import signal
 import subprocess
 import settings
+from VidFeed import VidFeed
+from datetime import datetime
+from time import time
 from logger import log
 
 def launch(vfeed):
@@ -44,6 +47,38 @@ def ffmpeg_args(vfeed):
         settings.FEEDER_URLS.format(vfeed.port, vfeed.feed_name)
     ]
 
+def capture_archive(vfeed, object_id, qos):
+    """
+    Saves 30 seconds of the given feed to the archives directory.
+    Returns the filename for the archive file.
+    """
+    # ffmpeg -f mjpeg -i http://10.176.14.66/video.cgi -t 30 -f flv clip.flv
+    archive_file = '{0}-{1}-{2}.flv'.format(
+        str(qos), str(object_id), str(int(time())))
+    if not settings.DEBUG:
+        vfeed.archive_proc = subprocess.Popen(
+            ['ffmpeg', '-f', 'mjpeg', '-i', vfeed.feed_url,
+             '-t', str(settings.ARCHIVE_DURATION), '-f', 'flv',
+             archive_file])
+    vfeed.last_archived = datetime.now()
+    log('archiving feed: {0}, object:{1}, qos: {2}'.format(
+        vfeed.feed_url, str(object_id), str(qos)))
+    return archive_file
+
+def capture_screenshot(vfeed, object_id, qos):
+    """
+    Creates a screenshot for the specified feed.
+    Returns the filename for the screenshot.
+    """
+    # ffmpeg -f mjpeg -i http://10.176.14.66/video.cgi -t 30 -f flv clip.flv
+    screenshot_file = '{0}-{1}-{2}.jpg'.format(
+        str(qos), str(object_id), str(int(time())))
+    if not settings.DEBUG:
+        pass # TODO: launch ffmpeg to take a screenshot
+    log('took screenshot for feed: {0}, object:{1}, qos: {2}'.format(
+        vfeed.feed_url, str(object_id), str(qos)))
+    return screenshot_file
+
 def dummy_launch(vfeed):
     """
     Runs dummy processes that don't do anything in place of ffmpeg and
@@ -55,3 +90,10 @@ def dummy_launch(vfeed):
 
     vfeed.ffmpeg_proc = subprocess.Popen(['./ffmpeg-dummy'])
     log('started ffmpeg proc ' + str(vfeed.ffmpeg_proc.pid))
+
+# Testing for the archiving functions
+if __name__ == '__main__':
+    vf = VidFeed()
+    vf.feed_url = 'http://fake-url/video.cgi'
+    capture_archive(vf, 3, 0.76)
+    capture_screenshot(vf, 3, 0.76)
