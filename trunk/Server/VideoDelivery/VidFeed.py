@@ -21,6 +21,9 @@ class VidFeed():
         self.ffserver_proc = None
         self.ffmpeg_proc = None
 
+        self.last_archived = None # timestamp for start of last archive
+        self.archive_proc = None # subprocess
+
         if not vfeed is None:
             self.feed_url = vfeed.feed_url
             self.objects = vfeed.objects
