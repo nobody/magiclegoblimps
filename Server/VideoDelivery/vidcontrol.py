@@ -14,7 +14,7 @@ import sys
 import config
 import ffserver
 import settings
-from logger import log
+from logger import log, transcribe
 import qosupdate
 from VidFeed import VidFeed
 
@@ -68,24 +68,28 @@ class VidControl():
         """
         response = self.QoS_server.recv(self.BUFFER_SIZE)
         try:
-            lines = response.decode('utf-8').splitlines(True)
+            lines = response.decode('utf-8').splitlines()
             pr = qosupdate.parse(lines)
         except Exception as ex:
             log('Invalid data received from server: ' + str(ex))
             return None
-        timestamp = pr[0] # we are ignoring this for now
-        return pr[1]
+        return pr
 
-    def reply_to_QoS(self):
+    def reply_to_QoS(self, fail=False):
         """
         Send a response back to the QoS server, so it knows we received correct
         data and that we are ready to receive more updates.
         """
         # TODO: handle error sending reply
-        reply = qosupdate.prepare(self.feeds)
+        if fail:
+            reply = 'FAIL'.encode()
+            if settings.DEBUG:
+                transcribe('>>> To QoS Server:\nFAIL\n')
+        else:
+            reply = qosupdate.prepare(self.feeds)
         self.QoS_server.send(reply)
 
-    def update_feeds(self, vfeeds):
+    def update_feeds(self, addfeeds, rmfeeds):
         """
         Finds any new/missing feeds from QoS server then launches/kills
         corresponding processes to reflect the current state of the system.
@@ -93,21 +97,21 @@ class VidControl():
         1. Find and kill feeds in self.feeds that are not in vfeeds
         2. Find and launch feeds not in self.feeds that are in vfeeds
         """
-        if vfeeds is None:
-            return
-
-        for f in self.feeds:
-            if not f in vfeeds: # kill feed
-                self.kill_feed(f)
-
-        for f in vfeeds:
-            if f in self.feeds: # update feed
+        if rmfeeds is not None:
+            print(str(rmfeeds))
+            for f in rmfeeds:
                 i = self.feeds.index(f)
-                self.feeds[i].update(f)
-            else: # launch feed
-                feed = VidFeed(f)
-                self.feeds.append(feed)
-                self.launch_feed(feed)
+                self.kill_feed(self.feeds[i])
+
+        if addfeeds is not None:
+            for f in addfeeds:
+                if f in self.feeds: # update feed
+                    i = self.feeds.index(f)
+                    self.feeds[i].update(f)
+                else: # launch feed
+                    feed = VidFeed(f)
+                    self.feeds.append(feed)
+                    self.launch_feed(feed)
 
     def launch_feed(self, vfeed):
         """
@@ -172,7 +176,7 @@ class VidControl():
             return
         while True:
             try:
-                latest_feeds = self.poll_QoS()
+                feed_updates = self.poll_QoS()
             except socket.error as ex:
                 log('Lost connection to QoS server: ' + str(ex))
                 if not self.connect_QoS():
@@ -180,8 +184,14 @@ class VidControl():
                 else:
                     continue
                 
-            self.update_feeds(latest_feeds)
+            if feed_updates is None:
+                self.reply_to_QoS(fail=True)
+                continue # QoS update could not be parsed
+            else:
+                self.update_feeds(feed_updates[1], feed_updates[2])
+
             # TODO: QoS and archiving
+
             self.reply_to_QoS()
 
     def killserver(self):
