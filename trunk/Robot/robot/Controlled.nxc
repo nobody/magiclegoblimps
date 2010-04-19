@@ -88,8 +88,10 @@ task receiveCommand()
     //get new curX and curY
     if( x<y && y<i )
     {
-     curX = SubStr(msg,x,y-x-1);
-     curY = SubStr(msg,y,i-y); // might need to i-y+1
+     string t = SubStr(msg,x,y-x-1);
+     curX = StrToNum(t);
+     t = SubStr(msg,y,i-y);
+     curY = StrToNum(t); // might need to i-y+1
     }
     else
     {
