@@ -26,12 +26,6 @@ public:
 	CvRect GetTrackingWindow() { return trackWindow_; }
 	CvHistogram* GetHistogram() { return histogram_; }
 
-	//test function
-	void SetHistogram(CvHistogram* hist)
-	{
-		histogram_ = hist;
-	}
-
 	void SetTrackingBox(CvBox2D trackBox)
 	{
 		trackBox_ = trackBox;
@@ -47,7 +41,6 @@ public:
 
 	int CenterDistanceToDegrees(int width, bool cam);
 
-	//need to output the sizes of these to feed to protocol
 	static char* BoxToArray(CvBox2D box, int* size);
 	static char* HistogramToArray(CvHistogram* hist, int* size);
 	static CvBox2D ArrayToBox(char* arr);
