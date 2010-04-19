@@ -25,13 +25,20 @@ class Archive():
         Grabs all of the filenames in the archive directory
         Splits out the information in the filenames
         """
-        self.filenames = os.listdir(settings.ARCHIVE_DIR)
-        for x in self.filenames:
+        tmpfilenames = os.listdir(settings.ARCHIVE_DIR)
+        for x in tmpfilenames:
             parts = x.split('-')
+
+            # make sure this is a valid archive video entry
+            if not x.endswith('.flv') or len(parts) != 3:
+                continue
+
+            self.filenames.append(x)
             qos = parts[0]
             self.qos.append(qos)
             obj = parts[1]
             self.objects.append(obj)
+
         for x in range(len(self.filenames)):
             self.objects_qos[self.objects[x]] = self.qos[x]
         log('Checking archive folder for files')
@@ -48,7 +55,7 @@ class Archive():
             f.write('<body>\n')
             f.write('<h1>Current Archived Videos</h1>\n')
             for x in range(len(self.filenames)):
-                f.write('<a href=\"{0}/{1}\">{3}</a href>\n'.format(settings.ARCHIVE_DIR, self.filenames[x], self.filenames[x]))
+                f.write('<a href=\"{0}/{1}\">{2}</a>\n'.format(settings.ARCHIVE_DIR, self.filenames[x], self.filenames[x]))
             f.write('</body>\n')
             f.write('</html>\n')
         log('Created HTML page with latest archives')
