@@ -11,18 +11,17 @@ def parse(in_lines):
     """
     Takes input from the QoS server and returns a list of VidFeed objects
     corresponding to the server input. This function returns a 3-tuple
-    (timestamp, add/update feeds list, delete feeds list). If this function
-    returns None, this indicates to the caller that the message was not in
-    the proper format and should be dealt with accordingly.
+    (timestamp, add/update feeds list, delete feeds list). This function
+    throws an exception if the message could not be parsed.
     """
     if settings.DEBUG:
-        s = '\n>>> From QoS Server\n\n'
+        s = '>>> From QoS Server\n'
         for ln in in_lines:
-            s += ln
+            s += ln + '\n'
         transcribe(s)
 
     if len(in_lines) < 2 or in_lines[1] != '':
-        return None
+        raise Exception('could not parse QoS message')
 
     timestamp = in_lines[0] #TODO: parse into datetime object
     if len(in_lines) == 2:
@@ -104,7 +103,7 @@ def prepare(vfeeds):
     for vf in vfeeds:
         s += vf.feed_url + ';' + vf.stream_url + ';\n'
     if settings.DEBUG:
-        s = '\n>>> To QoS Server\n\n' + s
+        s = '>>> To QoS Server\n' + s
         transcribe(s)
     return s.encode()
 

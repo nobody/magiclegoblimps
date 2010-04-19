@@ -1,11 +1,19 @@
 The following messages represent sample message from the QoS server.
 The qosupdate module should successfully parse all of these messages.
+
+0) Response given by simulator
 1) Initial message - multiple cams w/ no obj;qos;
 2) Add/update message with single param
 3) Add/update with multiple params
 4) Delete
 5) Blank
 5-6) Malformed updates
+
+>>>
+2010-04-19 14:53:12.208442
+
+http://10.176.14.65/video.cgi;7;0.237702416782;10;0.179977740933;
+http://10.176.14.71/video.cgi;6;0.988110764473;2;0.381585590044;14;0.415629654843;
 >>>
 2010-Apr-05 08:41:11
 
