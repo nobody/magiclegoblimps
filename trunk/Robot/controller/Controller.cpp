@@ -4,19 +4,6 @@
 vector<Robot*> Controller::robots_;
 SOCKET Controller::connectSocket_;
 
-Controller::Controller()
-{
-	timer_ = 0;
-	connectSocket_ = NULL;
-	serverSocket_ = NULL;
-	port_ = "9999";
-	
-	lastObjectSize_ = 0;
-	lastRobotSize_ = 0;
-
-	connected_ = false;
-}
-
 Controller::Controller(int xDim, int yDim)
 {
 	xMax = xDim;
@@ -24,7 +11,6 @@ Controller::Controller(int xDim, int yDim)
 
 	timer_= 0;
 	connectSocket_ = NULL;
-	serverSocket_ = NULL;
 	port_ = "9999";
 
 	lastObjectSize_ = 0;
@@ -94,7 +80,6 @@ bool Controller::ConnectToServer(string ip)
 
 	cout << "Connected to server." << endl;
 
-	//send robot init stuff
 	byteArray sendArray;
 	robotInit* init;
 
@@ -128,8 +113,6 @@ bool Controller::ConnectToServer(string ip)
 		}
 
 		write_data(P_ROBOT_INIT, init, (short)robots_.size(), &sendArray);
-
-		//delete[] init;
 	}
 
 	iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
@@ -148,82 +131,6 @@ bool Controller::ConnectToServer(string ip)
 	connected_ = true;
 
 	return true;
-}
-
-//creates a listening server socket for testing with self
-bool Controller::Serve()
-{
-	WSADATA wsaData;
-    SOCKET listenSocket = INVALID_SOCKET;
-    struct addrinfo *result = NULL, hints;
-    int iResult = 0;
-    
-    iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
-    if (iResult != 0)
-	{
-        printf("WSAStartup failed: %d\n", iResult);
-        return false;
-    }
-
-    ZeroMemory(&hints, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-    hints.ai_flags = AI_PASSIVE;
-
-    iResult = getaddrinfo(NULL, port_, &hints, &result);
-    if (iResult != 0) 
-	{
-        printf("getaddrinfo failed: %d\n", iResult);
-        WSACleanup();
-        return false;
-    }
-
-    listenSocket = socket(result->ai_family, result->ai_socktype, 
-		result->ai_protocol);
-    if (listenSocket == INVALID_SOCKET) 
-	{
-        printf("socket failed: %ld\n", WSAGetLastError());
-        freeaddrinfo(result);
-        WSACleanup();
-        return false;
-    }
-
-    iResult = bind(listenSocket, result->ai_addr, (int)result->ai_addrlen);
-    if (iResult == SOCKET_ERROR) 
-	{
-        printf("bind failed: %d\n", WSAGetLastError());
-        freeaddrinfo(result);
-        closesocket(listenSocket);
-        WSACleanup();
-        return false;
-    }
-
-    freeaddrinfo(result);
-
-    iResult = listen(listenSocket, SOMAXCONN);
-    if (iResult == SOCKET_ERROR) 
-	{
-        printf("listen failed: %d\n", WSAGetLastError());
-        closesocket(listenSocket);
-        WSACleanup();
-        return false;
-    }
-
-    serverSocket_ = accept(listenSocket, NULL, NULL);
-    if (serverSocket_ == INVALID_SOCKET) 
-	{
-        printf("accept failed: %d\n", WSAGetLastError());
-        closesocket(listenSocket);
-        WSACleanup();
-        return false;
-    }
-
-    closesocket(listenSocket);
-
-	cout << "Client connected." << endl;
-
-    return true;
 }
 
 void Controller::ClientThread(void* params)
@@ -248,10 +155,10 @@ void Controller::ClientThread(void* params)
 
 				for (int i = 0; i < data->size; i++)
 				{
+					//remove output after testing
 					cout << "Adding Object " << obj[i].OID << 
 						" : " << obj[i].name << endl;
 
-					/*
 					CvBox2D box = TrackingObject::ArrayToBox(obj[i].box);
 					CvHistogram* hist = 
 						TrackingObject::ArrayToHistogram(obj[i].color);
@@ -265,7 +172,6 @@ void Controller::ClientThread(void* params)
 					Camera::GetTrackableObjects().push_back(newObj);
 
 					delete hist;
-					*/
 				}
 			}
 			else if (type == P_ASSIGNMENT)
@@ -274,15 +180,17 @@ void Controller::ClientThread(void* params)
 
 				for (int i = 0; i < data->size; i++)
 				{
+					//remove output after testing
 					cout << "Assigning Robot " << assign[i].RID << 
 						" to Object " << assign[i].OID << endl;
 
-					//can't call non-static from in a static
-					//need to sort this out
-					/*
-					GetRobot(assign[i].RID)->ExecuteCommand("target " + 
-						assign[i].OID + " " + assign[i].x + " " + assign[i].y);
-					*/
+					string cmd;
+					stringstream oss;
+					oss << "target " << assign[i].OID << " " << assign[i].x << 
+						" " << assign[i].y;
+					cmd = oss.str();
+
+					getRobot(assign[i].RID)->ExecuteCommand(cmd);
 				}
 
 				delete[] assign;
@@ -293,9 +201,11 @@ void Controller::ClientThread(void* params)
 
 				for (int i = 0; i < data->size; i++)
 				{
+					//remove output after testing
 					cout << "Command Robot " << comm[i].RID << 
 						" to " << comm[i].cmd << " with arg " << comm[i].arg <<
 						endl;
+
 					Command(comm[i].RID, comm[i].cmd, comm[i].arg);
 				}
 
@@ -316,69 +226,41 @@ void Controller::ClientThread(void* params)
 
 bool Controller::Command(int id, int command, int arg)
 {
-	//example of command translation (not actual command)
 	if (command == P_CMD_FWD)
 	{
-		//can't call non-static from in a static
-		//GetRobot(id)->ExecuteCommand("forward " + arg);
+		getRobot(id)->ExecuteCommand("forward " + arg);
 	}
 	else if(command == P_CMD_LFT)
 	{
+		getRobot(id)->ExecuteCommand("left");
 	}
 	else if(command == P_CMD_RGHT)
 	{
+		getRobot(id)->ExecuteCommand("right");
 	}
 	else if (command == P_CMD_CAMROT)
 	{
+		getRobot(id)->ExecuteCommand("pan " + arg);
 	}
 	else if (command == P_CMD_DEL_OBJ)
 	{
-		//delete an object from the trackableObjects
+		vector<TrackingObject*>::iterator it;
+
+		for (it = Camera::GetTrackableObjects().begin(); 
+			it != Camera::GetTrackableObjects().end(); it++)
+		{
+			if ((*it)->GetID() == arg)
+			{
+				delete (*it);
+				Camera::GetTrackableObjects().erase(it);
+				break;
+			}
+		}
 	}
 	else if (command == P_CMD_SHUTDOWN)
 	{
-		//disconnect and then shutdown
+		disconnect();
 	}
-
-	return true;
-}
-
-//after creating a server and connecting a client, can be used to send
-//test commands as if they were from the server
-bool Controller::TestServer(int type)
-{
-	byteArray sendArray;
-
-	if (type == P_OBJECT)
-	{
-	}
-	else if (type == P_ASSIGNMENT)
-	{
-		//set test assignments here
-		assignment* assign = new assignment[2];
-		assign[0].OID = 1;
-		assign[0].RID = 2;
-		assign[1].OID = 3;
-		assign[1].RID = 4;
-
-		write_data(P_ASSIGNMENT, assign, 2, &sendArray);
-
-		delete[] assign;
-	}
-	else if (type == P_COMMAND)
-	{
-	}
-
-	int iResult = 0;
-
-	iResult = send(serverSocket_, sendArray.array, sendArray.size, 0);
-    if (iResult == SOCKET_ERROR) 
-	{
-        printf("send failed: %d\n", WSAGetLastError());
-        closesocket(serverSocket_);
-        WSACleanup();
-        return false;
-    }
 
 	return true;
 }
@@ -389,6 +271,20 @@ void Controller::AddRobot(Robot* robot)
 }
 
 Robot* Controller::GetRobot(int id)
+{
+	vector<Robot*>::iterator it;
+
+	for (it = robots_.begin(); it != robots_.end(); it++)
+	{
+		if ((*it)->GetID() == id)
+			return (*it);
+	}
+
+	return NULL;
+}
+
+
+Robot* Controller::getRobot(int id)
 {
 	vector<Robot*>::iterator it;
 
@@ -424,6 +320,14 @@ vector<Robot*> Controller::GetRobotVector()
 
 void Controller::Disconnect()
 {
+	if (connectSocket_ != NULL)
+	{
+		shutdown(connectSocket_, SD_BOTH);
+		closesocket(connectSocket_);
+	    WSACleanup();
+		connected_ = false;
+	}
+
 	if (robots_.size() > 0)
 	{
 		vector<Robot*>::iterator it;
@@ -437,9 +341,6 @@ void Controller::Disconnect()
 		robots_.clear();
 	}
 
-	//vectors incompatible error
-	//needs fixing for cleaning up
-	/*
 	if (Camera::GetTrackableObjects().size() > 0)
 	{
 		vector<TrackingObject*>::iterator it;
@@ -452,21 +353,42 @@ void Controller::Disconnect()
 
 		Camera::GetTrackableObjects().clear();
 	}
-	*/
-	
+}
+
+void Controller::disconnect()
+{
 	if (connectSocket_ != NULL)
 	{
-		//socket might need shutdown
+		shutdown(connectSocket_, SD_BOTH);
 		closesocket(connectSocket_);
 	    WSACleanup();
-		connected_ = false;
+		//connected_ = false;
 	}
 
-	if (serverSocket_ != NULL)
+	if (robots_.size() > 0)
 	{
-		//socket might need shutdown
-		closesocket(serverSocket_);
-	    WSACleanup();
+		vector<Robot*>::iterator it;
+
+		for (it = robots_.begin(); it != robots_.end(); it++)
+		{
+			(*it)->Disconnect();
+			delete (*it);
+		}
+
+		robots_.clear();
+	}
+
+	if (Camera::GetTrackableObjects().size() > 0)
+	{
+		vector<TrackingObject*>::iterator it;
+
+		for (it = Camera::GetTrackableObjects().begin(); it != 
+			Camera::GetTrackableObjects().end(); it++)
+		{
+			delete (*it);
+		}
+
+		Camera::GetTrackableObjects().clear();
 	}
 }
 
@@ -863,8 +785,8 @@ void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
 	//while (!(camera->GetTargetVisible()))
 	//{
 	//	//TODO: SPIN CAMERA.
- //           //This needs to happen continuously while the robot is moving through
- //           //the spiral search. Maybe a separate thread?
+	//           //This needs to happen continuously while the robot is moving through
+	//           //the spiral search. Maybe a separate thread?
 	//}
 	if(!lastKnownLoc)
 	{

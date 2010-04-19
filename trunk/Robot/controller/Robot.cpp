@@ -157,11 +157,10 @@ void Robot::ExecuteCommand(string command)
 	
 	if (tokens[0].compare("target") == 0)
 	{
-		int id = 0;
 		//do what you need to with these
-		//int id = atoi(tokens[1].c_str());
-		//int startX = atoi(tokens[2].c_str());
-		//int startY = atoi(tokens[3].c_str());
+		int id = atoi(tokens[1].c_str());
+		int startX = atoi(tokens[2].c_str());
+		int startY = atoi(tokens[3].c_str());
 
 		camera_->SetTarget(id);
 	}
@@ -199,13 +198,6 @@ void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, int statu
 	batteryLevel_ = battery;
 	status_ = status;
 
-	if (status_ & 128)
-	{
-		cout << "SONAR BLOCK" << endl;
-	}
-
-	//left shift status
-
 	//status
 	//======
 	//idle 1
@@ -219,12 +211,18 @@ void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, int statu
 	//calibrate 256
 	//pan 512
 	//stop 1024
+
+	//example
+	/*
+	if (status_ & 128)
+	{
+		cout << "Sonar Block" << endl;
+	}
+	*/
 }
 
 void Robot::Update()
 {
-	//anything that needs to be done continously (i.e. if we're continuously spinning the camera) can go here
-
 	if (camera_->GetTargetVisible())
 		centerCameraOnTarget();
 	else 

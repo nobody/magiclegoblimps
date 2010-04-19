@@ -27,17 +27,13 @@ using namespace std;
 class Controller
 {
 public:
-	Controller();
 	Controller(int xDim, int yDim);
 
 	bool ConnectToServer(string ip);
 
-	bool Serve();
-
 	static void ClientThread(void* params);
 
 	static bool Command(int id, int command, int arg);
-	bool TestServer(int type);
 
 	void AddRobot(Robot* robot);
 	Robot* GetRobot(int id);
@@ -55,7 +51,6 @@ public:
 	void SearchObject(int robotID, int objID, GridLoc* lastKnownLoc);
 	void SpiralSearch(Robot* robot, Camera& camera, GridLoc* loc);
 
-
 	void Update();
 
 private:
@@ -69,7 +64,6 @@ private:
 	bool connected_;
 
 	vector<GridLoc*> permIllegalLocs;
-	//vector<Robot*> robots_;
 
 	static vector<Robot*> robots_;
 
@@ -80,7 +74,10 @@ private:
 	time_t lastTime_;
 
 	static SOCKET connectSocket_;
-	SOCKET serverSocket_;
+
+	//internal static versions for use in static thread
+	static Robot* getRobot(int id);
+	static void disconnect();
 };
 
 #endif
