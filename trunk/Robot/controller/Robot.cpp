@@ -13,6 +13,7 @@ Robot::Robot(int port, string ip, bool dLink)
 	robotActive_ = false;
 	robotMoving_ = false;
 	hasPath = false;
+	hasDest = false;
 
 	batteryLevel_ = 0;
 	status_ = 0;
@@ -259,6 +260,7 @@ string Robot::newCmd()
 	}
 	else if(camera_->GetTargetVisible())
 	{
+		hasDest = false;
 		if(cameraDirection_ <= 45 || cameraDirection_ > 315)
 		{
 			cmd = "forward";
@@ -390,6 +392,7 @@ string Robot::newCmd()
 void Robot::setDestination(GridLoc* newD)
 {
 	/*delete dest;*/
+	hasDest = true;
 	dest = newD;
 }
 
@@ -416,5 +419,8 @@ void Robot::updateLocation()
 	//setNextLoc(robPath->advPath());
 	loc = robPath->advPath();
 	if(robPath->getSize() == 0)
+	{
 		hasPath = false;
+		hasDest = false;
+	}
 }

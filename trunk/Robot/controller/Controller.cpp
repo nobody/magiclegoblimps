@@ -467,15 +467,17 @@ void Controller::Update()
 						atoi(tokens[4].c_str()),
 						atoi(tokens[5].c_str()));
 
+					cout << (*it)->getLocation()->getX() << ", " << (*it)->getLocation()->getY() << endl;
+
 					(*it)->setRobotMoving(false);
 
 					if(!((*it)->getStatus() & (INTERSECTION | IDLE | STOP)))
-					{continue;
-					}
+					{it + 1;}
 					else if((*it)->GetCamera()->GetTargetVisible())
 						(*it)->GetNXT()->SendMessage((*it)->newCmd());
-					else if((*it)->getLocation() == (*it)->getDestination())
-					{continue;}
+					else if(*((*it)->getLocation()) == *((*it)->getDestination())
+						|| !(*it)->getHasDest())
+					{it + 1;}
 					else if(!(*it)->getHasPath())
 					{
 						(*it)->setPath(genPath(*(*it)));
@@ -643,6 +645,11 @@ Path* Controller::genPath(Robot& robot)
 	vector<GridLoc*> moves = getValidMoves(*robot.getLocation(),
 		illMoves);
 
+	/*if(robot.getLocation() == robot.getDestination())
+	{
+		Path* newPth = new Path();*/
+
+
 	//Make sure the destination is not in the list of illegal
 	//locations
 	vector<GridLoc*>::iterator glIter;
@@ -791,7 +798,7 @@ void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
 	if(!lastKnownLoc)
 	{
 		//this doesn't build correctly (something to do with camera)
-		//SpiralSearch(robot, camera, new GridLoc(yMax/2, xMax/2));
+		//SpiralSearch(robot, new GridLoc(yMax/2, xMax/2));
 	}
 	else if(!camera->GetTargetVisible())
 	{
@@ -826,52 +833,53 @@ void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
 	
 }
 
-void Controller::SpiralSearch(Robot* robot, Camera& camera, GridLoc* loc)
+void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 {
-	robot->setDestination(loc);
-	//genPath(robot);
-	
-	int x = loc->getX();
-	int y = loc->getY();
-	
-	int xdir = 1; 
-	int ydir = 1;	
-	int xory = 1; //1 is x, -1 is y
-	
-	int countSpirals = 1;
-	int countSquares;
-	
-	while(!(camera.GetTargetVisible())) // && countOrbits < xMax*2
-	{
-		for (countSquares = 0; countSquares < 2; countSquares++) {
-			
-			if (xory == 1) {
-				x += xdir*countSpirals;
-				xdir *= -1;
-				loc->setX(x);
-				robot->setDestination(loc);
-				//genPath(robot);
-				//while () {
-				//	//wait for robot to catch up
-				//}
-			}
-			else {
-				y += ydir*countSpirals;
-				ydir *= -1;
-				loc->setY(y);
-				robot->setDestination(loc);
-				//genPath(robot);
-				//while () {
-				//	//wait for robot to catch up
-				//}
-			}
-			
-			xory *= -1; //change dir (left turn)
-			
-		}
-		
-		countSpirals++;
-	}
+	//robot->setDestination(loc);
+	//Path* spiral = genPath(*robot);
+
+	//
+	//int x = loc->getX();
+	//int y = loc->getY();
+	//
+	//int xdir = 1; 
+	//int ydir = 1;	
+	//int xory = 1; //1 is x, -1 is y
+	//
+	//int countSpirals = 1;
+	//int countSquares;
+	//
+	//while(!(camera.GetTargetVisible())) // && countOrbits < xMax*2
+	//{
+	//	for (countSquares = 0; countSquares < 2; countSquares++) {
+	//		
+	//		if (xory == 1) {
+	//			x += xdir*countSpirals;
+	//			xdir *= -1;
+	//			loc->setX(x);
+	//			robot->setDestination(loc);
+	//			//genPath(robot);
+	//			//while () {
+	//			//	//wait for robot to catch up
+	//			//}
+	//		}
+	//		else {
+	//			y += ydir*countSpirals;
+	//			ydir *= -1;
+	//			loc->setY(y);
+	//			robot->setDestination(loc);
+	//			//genPath(robot);
+	//			//while () {
+	//			//	//wait for robot to catch up
+	//			//}
+	//		}
+	//		
+	//		xory *= -1; //change dir (left turn)
+	//		
+	//	}
+	//	
+	//	countSpirals++;
+	//}
 	
 }
 
