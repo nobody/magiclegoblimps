@@ -45,6 +45,7 @@ def addCameraFeed(conn,cameraId,cameraFeed):
         cursor = conn.cursor()
         sql = 'UPDATE cameras SET cameras.camera_feed="CHANGE" WHERE cameras.camera_id=1' # 'CALL addCameraFeed('+cameraId+',\"'+cameraFeed+'\")'
         cursor.execute(sql)
+        conn.commit()
         cursor.close()
         log('Adding Camera Feeds to Database')
     except MySQLdb.Error as e:
@@ -59,6 +60,7 @@ def addArchiveFootage(conn,archiveUrl,objectId,qos,thumbUrl):
         cursor = conn.cursor()
         sql = 'CALL addArchiveFootage("'+archiveUrl+'",'+objectId+','+qos+',"'+thumbUrl+'")'
         cursor.execute(sql)
+        conn.commit()
         cursor.close()
         log('Adding Archive Footage to Database')
     except MySQLdb.Error as e:
@@ -82,7 +84,7 @@ def displayTable(conn,tableName):
 
 if __name__ == '__main__':
     c = connect()
-    addCameraFeed(c,'1','http://test.html')
+    addCameraFeed(c,'1','http://something-cooler-than-test.html')
     displayTable(c,'cameras')
     close(c)
     c1 = connect()
