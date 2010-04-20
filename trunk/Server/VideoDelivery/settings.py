@@ -2,8 +2,6 @@
 Application settings for the video delivery server controller.
 """
 
-from getip import getip
-
 # General settings
 DEBUG = True
 LOGFILE = 'logs/vidserver.log'
@@ -22,7 +20,7 @@ MAX_CONNECTION_ATTEMPTS = 10
 CONNECTION_RETRY_INTERVAL = 10
 
 # Video server settings
-CURRENT_IP = 'localhost' # getip()
+CURRENT_IP = 'localhost'
 FEEDER_URLS = 'http://localhost:{0}/{1}.ffm'
 LIVE_FEED_URLS = 'http://{0}:{1}/{2}.flv' # domain, port, filename
 
