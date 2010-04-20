@@ -14,11 +14,11 @@ def parse(in_lines):
     (timestamp, add/update feeds list, delete feeds list). This function
     throws an exception if the message could not be parsed.
     """
-    if settings.DEBUG:
-        s = '>>> From QoS Server\n'
-        for ln in in_lines:
-            s += ln + '\n'
-        transcribe(s)
+    # record incoming traffic
+    s = '>>> From QoS Server\n'
+    for ln in in_lines:
+        s += ln + '\n'
+    transcribe(s)
 
     if len(in_lines) < 2 or in_lines[1] != '':
         raise Exception('could not parse QoS message')
@@ -109,9 +109,11 @@ def prepare(vfeeds):
     s = str(datetime.today()) + '\n'
     for vf in vfeeds:
         s += vf.feed_url + ';' + vf.stream_url + ';\n'
-    if settings.DEBUG:
-        s = '>>> To QoS Server\n' + s
-        transcribe(s)
+
+    # record outgoing traffic
+    s = '>>> To QoS Server\n' + s
+    transcribe(s)
+
     return s.encode()
 
 if __name__ == '__main__':
