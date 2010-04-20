@@ -80,29 +80,30 @@ void VideoHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_con
 
 void VideoHandler::read_handler(const boost::system::error_code& error,  std::size_t bytes_transferred) {
 
-    std::cout << "[VH] VideoHandler read " << bytes_transferred << " bytes \n";
-    std::cout.flush();
+    //std::cout << "[VH] VideoHandler read " << bytes_transferred << " bytes \n";
+    //std::cout.flush();
 
     if (bytes_transferred == 0)
         return;
 
-    tcp::socket &sock = conn_->socket();;
-
     if (error == boost::asio::error::eof){
-        conn_->releaseSocket();
         close();
         return;
-    } else if (error == boost::asio::error::operation_aborted)
+    } else if (error == boost::asio::error::operation_aborted) {
+        close();
         return;
-    else if (error)
-        throw boost::system::system_error(error);
+    } else if (error) {
+        std::cerr << "[VH] unknown error in read handler\n";
+        return;
+    }
 
     std::string s(read_message_.data(bytes_transferred));
     read_message_.consume(bytes_transferred);
 
-    std::cout << "[VH] Got string \"" << s << "\"";
-    std::cout.flush();
+    //std::cout << "[VH] Got string \"" << s << "\"";
+    //std::cout.flush();
 
+    tcp::socket &sock = conn_->socket();;
 
     boost::asio::async_read_until(sock, read_message_.buffer(), '\n', 
         boost::bind(&VideoHandler::read_handler, this, 
@@ -113,11 +114,11 @@ void VideoHandler::read_handler(const boost::system::error_code& error,  std::si
 }
 
 void VideoHandler::write_handler(const boost::system::error_code& error,  std::size_t bytes_transferred) {
-    std::cout << "[VH] VideoHandler wrote " << bytes_transferred << " bytes to a client\n";
+    //std::cout << "[VH] VideoHandler wrote " << bytes_transferred << " bytes to a client\n";
     std::cout.flush();
     if (!error) {                                                                            
         std::string msg(write_queue_.front());
-        std::cout << "[VH] Successfully wrote \"" << msg << "\" to the socket.\n";
+        //std::cout << "[VH] Successfully wrote \"" << msg << "\" to the socket.\n";
 
         write_queue_.pop_front();
         if (!write_queue_.empty()){
@@ -161,18 +162,26 @@ void VideoHandler::close() {
         return;
 
     closing = true;
-    tcp::socket &sock = conn_->socket();;
-
-    sock.get_io_service().post(boost::bind(&VideoHandler::do_close, this));
+    try {
+        tcp::socket &sock = conn_->socket();;
+        sock.get_io_service().post(boost::bind(&VideoHandler::do_close, this));
+    } catch (...) {
+        std::cerr << "[VH] exception occurred in close()\n";
+    }
      
     conn_->releaseSocket();
 }
 
 void VideoHandler::do_close() {
-    tcp::socket &sock = conn_->socket();;
 
-    std::cout << "[VH] Closing socket to " << sock.remote_endpoint().address().to_string() << ":" << sock.remote_endpoint().port() << "\n";
-    sock.close();
+    try {
+        tcp::socket &sock = conn_->socket();;
+
+        std::cout << "[VH] Closing socket to " << sock.remote_endpoint().address().to_string() << ":" << sock.remote_endpoint().port() << "\n";
+        sock.close();
+    } catch (...) {
+        std::cerr << "[VH] exception occurred in do_close()\n";
+    }
 
     conn_->releaseSocket();
 

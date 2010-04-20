@@ -32,7 +32,6 @@ DbManager::DbManager(Vector_ts<Object*>* objs)
     : objs_(objs)
 {
 
-    std::cout << "[db] In database constructor\n";
     driver = sql::mysql::get_mysql_driver_instance();
     old = NULL;
 
@@ -71,22 +70,9 @@ bool DbManager::normalize(demand_t*& d ) {
         total_demand += it->second;
     }
 
-    if (!old){
-        // for now, let's just put the percentage of votes
-        for (it = d->begin(); it != d->end(); ++it) {
-            it->second = it->second / total_demand;
-            std::cout << "[db] noramlized demand for " << it->first << ":" << it->second << "\n"; 
-        }
-        
-        return true;
-    } else {
-        // phase out old demand
-        // for now, let's just put the percentage of votes
-        for (it = d->begin(); it != d->end(); ++it) {
-            it->second = ( it->second / total_demand );
-            std::cout << "[db] noramlized demand for " << it->first << ":" << it->second << "\n"; 
-        }
-        
+    for (it = d->begin(); it != d->end(); ++it) {
+        it->second = it->second / total_demand;
+        std::cout << "[db] noramlized demand for " << it->first << ":" << it->second << "\n"; 
     }
 
     double sum = 0;
@@ -117,7 +103,7 @@ bool DbManager::getRequests( demand_t*& m ) {
     try {
         con = driver->connect(db_uri, db_user, db_pass);
     } catch (...) {
-        std::cout << "[db] Failed to connect to database\n";
+        std::cerr << "[db] Failed to connect to database\n";
         return false;
     }
 
@@ -134,7 +120,7 @@ bool DbManager::getRequests( demand_t*& m ) {
     try{
         rs = stmt->executeQuery(cmd);
     }catch(...){
-        std::cout << "[db] Failed query: " << cmd << "\n";
+        //std::cout << "[db] Failed query: " << cmd << "\n";
         
         delete stmt;
         con->rollback();
@@ -155,11 +141,10 @@ bool DbManager::getRequests( demand_t*& m ) {
            << req_obj << "'";
         cmd = ss.str();
 
-        //std::cout << "[db] Executing query: " << cmd << "\n";
         try{
              rs_obj = stmt->executeQuery(cmd);
         }catch(...){
-            std::cout << "[db] Failed query: " << cmd << "\n";
+            //std::cout << "[db] Failed query: " << cmd << "\n";
             
             delete rs;
             delete stmt;
@@ -229,7 +214,7 @@ bool DbManager::truncateCameras() {
     try {
         con = driver->connect(db_uri, db_user, db_pass);
     } catch (...) {
-        std::cout << "[db] Failed to connect to database\n";
+        std::cerr << "[db] Failed to connect to database\n";
         return false;
     }
 
@@ -267,7 +252,7 @@ bool DbManager::insertCameras( Vector_ts<Robot*>* robots) {
     try {
         con = driver->connect(db_uri, db_user, db_pass);
     } catch (...) {
-        std::cout << "[db] Failed to connect to database\n";
+        std::cerr << "[db] Failed to connect to database\n";
         return false;
     }
 
@@ -300,7 +285,7 @@ bool DbManager::insertCameras( Vector_ts<Robot*>* robots) {
                << (*it)->getXCord()
                << "', '"
                << (*it)->getYCord()
-               << "', GEOMFROMTEXT('POINT(";
+               << "', '";
             if ((*it)->getCamera() < 3 && (*it)->getCamera() >= 0) {
                 ss << Robot::camdata[(*it)->getCamera()][0]
                    << " "
@@ -308,7 +293,7 @@ bool DbManager::insertCameras( Vector_ts<Robot*>* robots) {
             } else {
                 ss << "0 0";
             }
-            ss << ")'), '";
+            ss << "', '";
             if ((*it)->getCamera() < 3 && (*it)->getCamera() >= 0) {
                 ss << Robot::camdata[(*it)->getCamera()][2];
             } else {
@@ -321,18 +306,13 @@ bool DbManager::insertCameras( Vector_ts<Robot*>* robots) {
             try {
                 stmt->execute(cmd);
             } catch(...){
-                std::cout << "[db] Failed query: " << cmd << "\n";
+                //std::cout << "[db] Failed query: " << cmd << "\n";
                 
-                //delete stmt;
-                //con->rollback();
-                //delete con;
-
                 (*it)->unlock();
-                //robots->readUnlock();
                 ret = false;
                 continue;
             }
-            std::cout << "[db] Succeeded query: " << cmd << "\n";
+            //std::cout << "[db] Succeeded query: " << cmd << "\n";
             (*it)->unlock();
         }
     }
@@ -355,7 +335,7 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
     try {
         con = driver->connect(db_uri, db_user, db_pass);
     } catch (...) {
-        std::cout << "[db] Failed to connect to database\n";
+        std::cerr << "[db] Failed to connect to database\n";
         return false;
     }
 
@@ -382,12 +362,12 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
             try {
                 stmt->execute(cmd);
             } catch (...) {
-                std::cout << "[db] Failed query: " << cmd << "\n";
+                //std::cout << "[db] Failed query: " << cmd << "\n";
                 (*it)->unlock();
                 ret = false;
                 continue;
             }
-            std::cout << "[db] Succeeded query: " << cmd << "\n";
+            //std::cout << "[db] Succeeded query: " << cmd << "\n";
 
             ss << "CALL setCameraPosition('";
             ss << (*it)->getGlobalID()
@@ -411,10 +391,10 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
                 try {
                     stmt->execute(cmd);
                 } catch (...) {
-                    std::cout << "[db] Failed query: " << cmd << "\n";
+                    //std::cout << "[db] Failed query: " << cmd << "\n";
                     continue;
                 }
-                std::cout << "[db] Succeeded query: " << cmd << "\n";
+                //std::cout << "[db] Succeeded query: " << cmd << "\n";
             }
             if (max_qual_id > -1)
                 ss << max_qual_id;
@@ -429,18 +409,13 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
             try {
                 stmt->execute(cmd);
             } catch(...){
-                std::cout << "[db] Failed query: " << cmd << "\n";
+                //std::cout << "[db] Failed query: " << cmd << "\n";
                 
-                //delete stmt;
-                //con->rollback();
-                //delete con;
-
                 (*it)->unlock();
-                //robots->readUnlock();
                 ret = false;
                 continue;
             }
-            std::cout << "[db] Succeeded query: " << cmd << "\n";
+            //std::cout << "[db] Succeeded query: " << cmd << "\n";
             (*it)->unlock();
         }
     }
@@ -465,7 +440,7 @@ bool DbManager::insertObject( Object* obj ) {
     try {
         con = driver->connect(db_uri, db_user, db_pass);
     } catch (...) {
-        std::cout << "[db] Failed to connect to database\n";
+        std::cerr << "[db] Failed to connect to database\n";
         return false;
     }
 
@@ -486,7 +461,7 @@ bool DbManager::insertObject( Object* obj ) {
     try{
         rs = stmt->executeQuery(cmd);
     }catch(...){
-        std::cout << "[db] Failed query: " << cmd << "\n";
+        //std::cout << "[db] Failed query: " << cmd << "\n";
         
         delete stmt;
         con->rollback();
@@ -512,7 +487,7 @@ bool DbManager::insertObject( Object* obj ) {
         try{
             stmt->execute(cmd);
         }catch(...){
-            std::cout << "[db] Failed query: " << cmd << "\n";
+            //std::cout << "[db] Failed query: " << cmd << "\n";
             
             delete rs;
             delete stmt;
@@ -522,7 +497,7 @@ bool DbManager::insertObject( Object* obj ) {
             obj->unlock();
             return false;
         }
-        std::cout << "[db] Succeeded query: " << cmd << "\n";
+        //std::cout << "[db] Succeeded query: " << cmd << "\n";
 
     }
 

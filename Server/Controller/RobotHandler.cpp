@@ -450,7 +450,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                             std::stringstream msg_ss;
                             boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
                             msg_ss << now << "\n\n";
-                            msg_ss << (*it)->getVideoURL() << ";";
+                            msg_ss << (*it)->getGlobalID() << ";" << (*it)->getVideoURL() << ";";
 
                             //free the robot
                             (*it)->unlock();
@@ -620,7 +620,7 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
                 std::stringstream msg_ss;
                 boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
                 msg_ss << now << "\n\n";
-                msg_ss << "DELETE " << (*it)->getVideoURL() << "\n";
+                msg_ss << "DELETE " << (*it)->getGlobalID() << ";" << (*it)->getVideoURL() << "\n";
                 vidHandler->write(msg_ss.str());
 
                 //delet the robot and remove the pointer from the vector
@@ -717,7 +717,7 @@ void RobotHandler::sendCommand(command* comm) {
 }
 void RobotHandler::sendCommand(command* comm, boost::asio::ip::tcp::endpoint conn){    
     
-    std::cout << "[RH] sending command :" << comm->cmd << " to " << conn << std::endl;
+    std::cout << "[RH] sending command :" << comm->cmd << " with arg: " << comm->arg << " to " << conn << std::endl;
 
     byteArray* data = new byteArray;
     boost::system::error_code error;
