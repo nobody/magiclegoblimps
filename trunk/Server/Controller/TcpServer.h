@@ -15,6 +15,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/exception/all.hpp>
 
 
 using boost::asio::ip::tcp;

@@ -90,7 +90,13 @@ void TcpServer::TcpConnection::releaseSocket(){
 void TcpServer::TcpConnection::stop(){
     if(!closed){
         socketMutex.lock();
-        socket_.close();
+        try{
+            socket_.close();
+        }catch(boost::exception& e){
+            std::cerr << diagnostic_information(e);
+        }catch(...){
+            std::cerr << "caught unknown exception\n";
+        }
         socketMutex.unlock();
         closed = true;
     }
