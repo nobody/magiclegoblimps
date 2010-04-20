@@ -55,14 +55,15 @@ def make_vfeed(r):
     Takes a parsed robot tuple and creates a VidFeed object.
     """
     vf = VidFeed()
-    vf.feed_url = r[0]
-    for o in r[1]:
+    vf.cam_id = r[0]
+    vf.feed_url = r[1]
+    for o in r[2]:
         vf.objects.append(o)
     return vf
 
 def get_robot(line):
     """
-    Returns a tuple (cam_url, qos_objects) for the input line where
+    Returns a 3-tuple (cam_id, cam_url, qos_objects) for the input line where
     qos_objects is a list of (obj_id, QoS) tuples. Returns None if
     the format is invalid.
     """
@@ -72,17 +73,18 @@ def get_robot(line):
     if lp < 2: # not enough info, ignore this line
         return None
     elif lp == 2 or lp == 3: # url only w/ or w/o semicolon
-        return (parts[1], [])
+        return (parts[0], parts[1], [])
     elif lp > 3 and lp % 2 != 1: # unbalanced obj;qos;
         return None
 
     # Get list of obj;qos; pairs as [(obj, qos), ...]
-    cam_url = parts[0]
+    cam_id = parts[0]
+    cam_url = parts[1]
     qos_objects = []
     last_object = None
-    parts = parts[:-1]
 
     try:
+        parts = parts[:-1]
         for i in range(2, len(parts)):
             if i % 2 == 1:
                 qos_objects.append((last_object, float(parts[i])))
@@ -91,7 +93,7 @@ def get_robot(line):
     except:
         return None # Do not attempt to parse invalid input
 
-    return (cam_url, qos_objects)
+    return (cam_id, cam_url, qos_objects)
 
 def parse_timestamp(strtime):
     """
