@@ -15,11 +15,15 @@ def launch(vfeed):
         dummy_launch(vfeed)
         return
 
-    vfeed.ffserver_proc = subprocess.Popen(ffserver_args(vfeed))
+    vfeed.ffserver_proc = subprocess.Popen(ffserver_args(vfeed),
+                                           stdin=subprocess.PIPE,
+                                           stdout=subprocess.PIPE)
     log('started ffserver proc {0} with config file {1}'.format(
         str(vfeed.ffserver_proc.pid), vfeed.config_file))
 
-    vfeed.ffmpeg_proc = subprocess.Popen(ffmpeg_args(vfeed))
+    vfeed.ffmpeg_proc = subprocess.Popen(ffmpeg_args(vfeed),
+                                         stdin=subprocess.PIPE,
+                                         stdout=subprocess.PIPE)
     log('started ffmpeg proc ' + str(vfeed.ffmpeg_proc.pid))
 
 def kill(vfeed):
@@ -56,10 +60,12 @@ def capture_archive(vfeed, object_id, qos):
     archive_file = '{0}-{1}-{2}.flv'.format(
         str(qos), str(object_id), str(int(time())))
     if not settings.DEBUG:
-        vfeed.archive_proc = subprocess.Popen(
+        subprocess.Popen(
             ['ffmpeg', '-f', 'mjpeg', '-i', vfeed.feed_url,
              '-t', str(settings.ARCHIVE_DURATION), '-f', 'flv',
-             archive_file])
+             archive_file],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE)
     vfeed.last_archived = datetime.now()
     log('archiving feed: {0}, object:{1}, qos: {2}'.format(
         vfeed.feed_url, str(object_id), str(qos)))
@@ -76,7 +82,9 @@ def capture_screenshot(vfeed, object_id, qos):
     if not settings.DEBUG:
         subprocess.Popen(
             ['ffmpeg', '-f', 'mjpeg', '-i', vfeed.feed_url,
-             '-f', 'image2', '-t', '0.001', screenshot_file])
+             '-f', 'image2', '-t', '0.001', screenshot_file],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE)
     log('took screenshot for feed: {0}, object:{1}, qos: {2}'.format(
         vfeed.feed_url, str(object_id), str(qos)))
     return screenshot_file

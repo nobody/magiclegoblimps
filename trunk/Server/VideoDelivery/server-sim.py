@@ -147,9 +147,6 @@ def main():
             print('error: ' + str(ex2))
         if len(req) == 0:
             break
-        else:
-            print('>>>')
-            print(str(req))
         time.sleep(1.0)
 
 if __name__ == '__main__':
