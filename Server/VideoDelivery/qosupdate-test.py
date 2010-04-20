@@ -19,7 +19,7 @@ if __name__ == '__main__':
         feed_data = parse(lines)
 
         print('\n>>>\n')
-        print('Timestamp: ' + feed_data[0]) # timestamp
+        print('Timestamp: ' + str(feed_data[0]))
 
         print('Add/update feeds:')
         for x in feed_data[1]:

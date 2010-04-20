@@ -23,7 +23,7 @@ def parse(in_lines):
     if len(in_lines) < 2 or in_lines[1] != '':
         raise Exception('could not parse QoS message')
 
-    timestamp = in_lines[0] #TODO: parse into datetime object
+    timestamp = parse_timestamp(in_lines[0])
     if len(in_lines) == 2:
         return (timestamp, [], [])
 
@@ -93,6 +93,13 @@ def get_robot(line):
         return None # Do not attempt to parse invalid input
 
     return (cam_url, qos_objects)
+
+def parse_timestamp(strtime):
+    """
+    Converts the given string into a python datetime object. The string must be
+    in this format: 2010-Apr-19 16:18:56
+    """
+    return datetime.strptime(strtime, '%Y-%b-%d %H:%M:%S')
     
 def prepare(vfeeds):
     """
