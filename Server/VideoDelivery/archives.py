@@ -1,5 +1,5 @@
-#!/usr/bin/python3
-
+#!/usr/bin/python2.6
+from __future__ import print_function, with_statement
 import os
 import time
 import socket

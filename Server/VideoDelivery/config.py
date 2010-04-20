@@ -1,8 +1,8 @@
-#!/usr/bin/python3
+#!/usr/bin/python2.6
 """
 Classes for the management and generation of ffserver config files.
 """
-
+from __future__ import print_function, with_statement
 import re
 
 class Generator():
