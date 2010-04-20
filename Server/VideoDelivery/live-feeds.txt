@@ -1,4 +1,4 @@
 2010-Apr-19 23:27:36
 
-http://192.168.1.102/video.cgi
-http://192.168.1.103/video.cgi
+1;http://192.168.1.102/video.cgi;
+2;http://192.168.1.103/video.cgi

@@ -68,13 +68,12 @@ def get_robot(line):
     """
     parts = line.split(';')
 
-    # Only URL is given for delete statements
     lp = len(parts)
-    if lp == 1 or lp == 2:
-        return (parts[0], [])
-
-    # Check for unbalanced object;qos; pairs
-    if lp == 0 or lp % 2 != 0:
+    if lp < 2: # not enough info, ignore this line
+        return None
+    elif lp == 2 or lp == 3: # url only w/ or w/o semicolon
+        return (parts[1], [])
+    elif lp > 3 and lp % 2 != 1: # unbalanced obj;qos;
         return None
 
     # Get list of obj;qos; pairs as [(obj, qos), ...]
@@ -84,8 +83,8 @@ def get_robot(line):
     parts = parts[:-1]
 
     try:
-        for i in range(1, len(parts)):
-            if i % 2 == 0:
+        for i in range(2, len(parts)):
+            if i % 2 == 1:
                 qos_objects.append((last_object, float(parts[i])))
             else:
                 last_object = int(parts[i])

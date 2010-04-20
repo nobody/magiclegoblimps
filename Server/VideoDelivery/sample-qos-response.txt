@@ -12,34 +12,34 @@ The qosupdate module should successfully parse all of these messages.
 >>>
 2010-Apr-19 14:53:12
 
-http://10.176.14.65/video.cgi;7;0.237702416782;10;0.179977740933;
-http://10.176.14.71/video.cgi;6;0.988110764473;2;0.381585590044;14;0.415629654843;
+1;http://10.176.14.65/video.cgi;7;0.237702416782;10;0.179977740933;
+2;http://10.176.14.71/video.cgi;6;0.988110764473;2;0.381585590044;14;0.415629654843;
 >>>
 2010-Apr-05 08:41:11
 
-http://10.176.14.69/video.cgi;
-http://10.176.14.70/video.cgi;
-http://10.176.14.68/video.cgi
+3;http://10.176.14.69/video.cgi;
+2;http://10.176.14.70/video.cgi;
+1;http://10.176.14.68/video.cgi
 >>>
 2010-Apr-15 13:16:33
 
-http://10.176.14.66/video.cgi;3;0.43;
+2;http://10.176.14.66/video.cgi;3;0.43;
 >>>
 2010-Apr-15 13:16:33
 
-http://10.176.14.67/video.cgi;7;0.56;4;0.62;
+3;http://10.176.14.67/video.cgi;7;0.56;4;0.62;
 >>>
 2010-Apr-15 13:16:33
 
-DELETE http://10.10.1.101:7500
+DELETE 4;http://10.10.1.101:7500
 >>>
 2010-Apr-15 13:16:33
 
 >>>
 2010-Apr-15 13:16:33
 
-http://10.176.14.67/video.cgi;clowns;balloons;
+4;http://10.176.14.67/video.cgi;clowns;balloons;
 >>>
 2010-Apr-15 13:16:33
 
-http://10.176.14.67/video.cgi;3;
+3;http://10.176.14.67/video.cgi;3;
