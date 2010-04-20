@@ -62,7 +62,7 @@ void LocalInput()
 	else if (tokens[0].compare("testrobot") == 0)
 	{
 		//lazy connection for repeat testing
-		Robot* robot = new Robot(6, "192.168.1.100", false);
+		Robot* robot = new Robot(1, "192.168.1.101", true);
 		robot->Connect();
 		controller->AddRobot(robot);
 	}
@@ -106,7 +106,7 @@ void LocalInput()
 	//command port/id command
 	else if (tokens[0].compare("command") == 0)
 	{
-		if (tokens.size() == 3)
+		if (tokens.size() > 2)
 		{
 			string command = tokens[2];
 
@@ -154,6 +154,26 @@ void LocalInput()
 	{
 		if (tokens.size() == 2)
 			controller->GetRobot(atoi(tokens[1].c_str()))->GetNXT()->StopPrograms();
+	}
+
+	//removeobject id
+	else if (tokens[0].compare("removeobject") == 0)
+	{
+		if (tokens.size() == 2)
+		{
+			vector<TrackingObject*>::iterator it;
+
+			for (it = Camera::GetTrackableObjects().begin(); 
+				it != Camera::GetTrackableObjects().end(); it++)
+			{
+				if ((*it)->GetID() == atoi(tokens[1].c_str()))
+				{
+					delete (*it);
+					Camera::GetTrackableObjects().erase(it);
+					break;
+				}
+			}
+		}
 	}
 
 	//testmove id x y
