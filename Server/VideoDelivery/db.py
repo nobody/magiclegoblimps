@@ -43,7 +43,7 @@ def addCameraFeed(conn,cameraId,cameraFeed):
     """
     try:
         cursor = conn.cursor()
-        sql = 'UPDATE cameras SET cameras.camera_feed="CHANGE" WHERE cameras.camera_id=1' # 'CALL addCameraFeed('+cameraId+',\"'+cameraFeed+'\")'
+        sql = 'CALL addCameraFeed('+cameraId+',"'+cameraFeed+'")'
         cursor.execute(sql)
         conn.commit()
         cursor.close()
