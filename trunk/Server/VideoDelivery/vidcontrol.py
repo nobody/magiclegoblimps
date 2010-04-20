@@ -80,11 +80,9 @@ class VidControl():
         Send a response back to the QoS server, so it knows we received correct
         data and that we are ready to receive more updates.
         """
-        # TODO: handle error sending reply
         if fail:
             reply = 'FAIL'.encode()
-            if settings.DEBUG:
-                transcribe('>>> To QoS Server:\nFAIL\n')
+            transcribe('>>> To QoS Server:\nFAIL\n')
         else:
             reply = qosupdate.prepare(self.feeds)
         self.QoS_server.send(reply)
