@@ -44,7 +44,20 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
 
     //need to get the robots from the controller that just connected
     connections[connEP]->readLock();
-    size_t count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(5), error);
+    size_t count; 
+    try{
+        count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(5), error);
+    }catch(boost::exception &e){
+        std::cerr << "[RH] exception occured: \n" << diagnostic_information(e);
+        connections[connEP]->readUnlock();
+        cleanupConn(connEP);
+        return;
+    }catch(...){        
+        std::cerr << "[RH]unknown exception occured in on connect\n";
+        connections[connEP]->readUnlock();
+        cleanupConn(connEP);
+        return;
+    }
     connections[connEP]->readUnlock();
 
     std::cout<<"[RH] data read(" << count << "), socket released\n";
@@ -93,7 +106,19 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
     //if there are bytes remainging to be read read them
     if(remaining > 0){
         connections[connEP]->readLock();
-        count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining), error);
+        try{
+            count = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining), error);
+        }catch(boost::exception &e){
+            std::cerr << "[RH] exception occured: \n" << diagnostic_information(e);
+            connections[connEP]->readUnlock();
+            cleanupConn(connEP);
+            return;
+        }catch(...){        
+            std::cerr << "[RH]unknown exception occured in on connect\n";
+            connections[connEP]->readUnlock();
+            cleanupConn(connEP);
+            return;
+        }
         connections[connEP]->readUnlock();
 
 
@@ -259,7 +284,19 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
             //locks the socket, reads into the buffer, increases count by the number of
             //bytes read in and then unlocks the socket.
             connections[connEP]->readLock();
-            count += boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(5), error);
+            try{
+                count += boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(5), error);
+            }catch(boost::exception &e){
+                std::cerr << "[RH] exception occured: \n" << diagnostic_information(e);
+                connections[connEP]->readUnlock();
+                cleanupConn(connEP);
+                return;
+            }catch(...){        
+                std::cerr << "[RH]unknown exception occured in listen\n";
+                connections[connEP]->readUnlock();
+                cleanupConn(connEP);
+                return;
+            }
             connections[connEP]->readUnlock();
 
             std::cout<<"[RH] data read, socket released\n";
@@ -314,7 +351,21 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         //if there are bytes remainging to be read read them
         if(remaining > 0 && count < remaining){
             connections[connEP]->readLock();
-            count += boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining - count), error);
+            try{
+                count += boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining - count), error);
+            }catch(boost::exception &e){
+                std::cerr << "[RH] exception occured: \n" << diagnostic_information(e);
+                connections[connEP]->readUnlock();
+                delete[] arr;
+                cleanupConn(connEP);
+                return;
+            }catch(...){        
+                std::cerr << "[RH]unknown exception occured in on connect\n";
+                connections[connEP]->readUnlock();
+                delete[] arr;
+                cleanupConn(connEP);
+                return;
+            }
             connections[connEP]->readUnlock();
 
 

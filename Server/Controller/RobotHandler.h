@@ -9,6 +9,7 @@
 
 #include "TcpServer.h"
 #include <boost/thread.hpp>
+#include <boost/exception/all.hpp>
 #include <map>
 #include <cstdlib>
 #include "VideoHandler.h"
