@@ -128,8 +128,8 @@ class VidControl():
         vfeed.feed_name = settings.FEED_NAME.format(strport)
         vfeed.stream_url = self.get_stream_url(vfeed)
         self.next_port += 1
-        log('Launching feed in_url:{0}, out_url:{1}, config:{2}'.format(
-                vfeed.feed_url, vfeed.stream_name, vfeed.config_file))
+        log('Launching feed in_url:{0}, out_url:{1}'.format(
+                vfeed.feed_url, vfeed.stream_url))
 
         # generate a new config file
         config_data = {
@@ -150,8 +150,8 @@ class VidControl():
         - update data structures
         - update csv files
         """
-        log('Killing feed in_url:{0}, out_url:{1}, config:{2}'.format(
-                vfeed.feed_url, vfeed.stream_name, vfeed.config_file))
+        log('Killing feed in_url:{0}, out_url:{1}'.format(
+                vfeed.feed_url, vfeed.stream_url, vfeed.config_file))
         ffserver.kill(vfeed)
         os.remove(vfeed.config_file)
         self.feeds.remove(vfeed)
