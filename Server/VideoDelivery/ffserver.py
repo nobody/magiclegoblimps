@@ -74,7 +74,9 @@ def capture_screenshot(vfeed, object_id, qos):
     screenshot_file = '{0}-{1}-{2}.jpg'.format(
         str(qos), str(object_id), str(int(time())))
     if not settings.DEBUG:
-        pass # TODO: launch ffmpeg to take a screenshot
+        subprocess.Popen(
+            ['ffmpeg', '-f', 'mjpeg', '-i', vfeed.feed_url,
+             '-f', 'image2', '-t', '0.001', screenshot_file])
     log('took screenshot for feed: {0}, object:{1}, qos: {2}'.format(
         vfeed.feed_url, str(object_id), str(qos)))
     return screenshot_file
