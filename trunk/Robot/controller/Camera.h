@@ -141,6 +141,8 @@ private:
 
 	bool locked_;
 
+	int lastObjectSize_;
+
 	void Scan();
 	void Lock();
 };

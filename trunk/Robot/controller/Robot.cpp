@@ -158,10 +158,14 @@ void Robot::ExecuteCommand(string command)
 	
 	if (tokens[0].compare("target") == 0)
 	{
-		//do what you need to with these
 		int id = atoi(tokens[1].c_str());
-		int startX = atoi(tokens[2].c_str());
-		int startY = atoi(tokens[3].c_str());
+
+		if (tokens.size() > 2)
+		{
+			//do what you need to with these
+			int startX = atoi(tokens[2].c_str());
+			int startY = atoi(tokens[3].c_str());
+		}
 
 		camera_->SetTarget(id);
 	}
@@ -170,6 +174,7 @@ void Robot::ExecuteCommand(string command)
 		//command
 		//=======
 		//pan x
+		//pid x
 		//stop
 		//left
 		//right
@@ -177,6 +182,7 @@ void Robot::ExecuteCommand(string command)
 		//calibrate
 		//forward
 		//forward x
+		//coordinates x y
 
 		nxt_->SendMessage(command);
 	}
@@ -224,10 +230,13 @@ void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, int statu
 
 void Robot::Update()
 {
-	if (camera_->GetTargetVisible())
-		centerCameraOnTarget();
-	else 
-		ExecuteCommand("pan 5");
+	if (nxtConnected_ && camConnected_ && (camera_->GetTargetID() != -1))
+	{
+		if (camera_->GetTargetVisible())
+			centerCameraOnTarget();
+		else 
+			ExecuteCommand("pan 5");
+	}
 }
 
 void Robot::centerCameraOnTarget()

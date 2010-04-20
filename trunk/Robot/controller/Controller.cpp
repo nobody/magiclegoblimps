@@ -181,6 +181,7 @@ void Controller::ClientThread(void* params)
 				for (int i = 0; i < data->size; i++)
 				{
 					//remove output after testing
+					//should target -1 if robot has not target or is admin
 					cout << "Assigning Robot " << assign[i].RID << 
 						" to Object " << assign[i].OID << endl;
 
@@ -340,7 +341,9 @@ void Controller::Disconnect()
 
 		robots_.clear();
 	}
-
+	
+	//vector incompatible
+	/*
 	if (Camera::GetTrackableObjects().size() > 0)
 	{
 		vector<TrackingObject*>::iterator it;
@@ -353,6 +356,7 @@ void Controller::Disconnect()
 
 		Camera::GetTrackableObjects().clear();
 	}
+	*/
 }
 
 void Controller::disconnect()
@@ -378,6 +382,8 @@ void Controller::disconnect()
 		robots_.clear();
 	}
 
+	//vector incompatible
+	/*
 	if (Camera::GetTrackableObjects().size() > 0)
 	{
 		vector<TrackingObject*>::iterator it;
@@ -390,6 +396,7 @@ void Controller::disconnect()
 
 		Camera::GetTrackableObjects().clear();
 	}
+	*/
 }
 
 void Controller::Update()
