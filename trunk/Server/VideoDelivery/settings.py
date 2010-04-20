@@ -22,7 +22,7 @@ MAX_CONNECTION_ATTEMPTS = 10
 CONNECTION_RETRY_INTERVAL = 10
 
 # Video server settings
-CURRENT_IP = getip()
+CURRENT_IP = 'localhost' # getip()
 FEEDER_URLS = 'http://localhost:{0}/{1}.ffm'
 LIVE_FEED_URLS = 'http://{0}:{1}/{2}.flv' # domain, port, filename
 
