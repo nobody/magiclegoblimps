@@ -8,6 +8,7 @@ class VidFeed():
     def __init__(self, vfeed=None):
         self.port = 0
         self.feed_url = '' # input from IP cams
+        self.cam_id = 0 # database id for camera
 
         self.config_file = '' # ffserver config file
         self.feed_name = '' # from ffmpeg
@@ -34,5 +35,5 @@ class VidFeed():
         self.objects = vfeed.objects
 
     def __repr__(self):
-        return "VidFeed(feed:'{0}', stream:'{1}', obj/qos:{2})".format(
-            self.feed_url, self.stream_url, str(self.objects))
+        return "VidFeed(cam:{0} feed:'{1}', stream:'{2}', obj/qos:{3})".format(
+            self.cam_id, self.feed_url, self.stream_url, str(self.objects))
