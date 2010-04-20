@@ -1,5 +1,5 @@
-#!/usr/bin/python
-
+#!/usr/bin/python2.6
+from __future__ import print_function, with_statement
 import os
 import time
 import socket
@@ -88,7 +88,7 @@ def displayTable(conn,tableName):
         sql = 'SELECT * FROM '+tableName
         cursor.execute(sql)
         results = cursor.fetchall()
-        print results
+        print(str(results))
         cursor.close()
     except MySQLdb.Error as e:
         log("Error %d: %s" % (e.args[0], e.args[1]))

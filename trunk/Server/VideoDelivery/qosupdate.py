@@ -1,7 +1,7 @@
 """
 This module handles the details of communicating with the QoS server.
 """
-
+from __future__ import print_function, with_statement
 import settings
 from datetime import datetime
 from VidFeed import VidFeed

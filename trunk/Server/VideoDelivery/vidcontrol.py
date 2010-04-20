@@ -1,11 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/python2.6
 """
 Decides when to start or kill new processes. Maintains a list of active
 processes. Keeps track of all open ports, all generated config files, all
 incoming camera feeds, and all live feed urls. Polls the QoS server for updated
 feed and QoS status.
 """
-
+from __future__ import print_function, with_statement
 import os
 import time
 import socket
@@ -17,6 +17,7 @@ import settings
 from logger import log, transcribe
 import qosupdate
 from VidFeed import VidFeed
+import db
 
 class VidControl():
     """
@@ -34,6 +35,7 @@ class VidControl():
         self.next_port = 8090
         # used to generate configuration files
         self.config_gen = config.Generator()
+        self.conn = db.connect()
 
     def connect_QoS(self, addr=settings.QOS_SERVER_URL,
                     port=settings.QOS_SERVER_PORT):
@@ -139,7 +141,9 @@ class VidControl():
                                vfeed.config_file)
 
         ffserver.launch(vfeed)
-        # TODO: update csv files
+
+        # update client database
+        db.addCameraFeed(self.conn, vfeed.cam_id, vfeed.stream_url)
 
     def kill_feed(self, vfeed):
         """
@@ -153,7 +157,9 @@ class VidControl():
         ffserver.kill(vfeed)
         os.remove(vfeed.config_file)
         self.feeds.remove(vfeed)
-        # TODO: update csv files
+
+        # update client database
+        db.removeCameraFeed(self.conn, vfeed.cam_id, vfeed.stream_url)
 
     def get_stream_url(self, vfeed):
         return settings.LIVE_FEED_URLS.format(settings.CURRENT_IP, vfeed.port,
@@ -197,8 +203,8 @@ class VidControl():
         """
         while len(self.feeds) > 0:
             self.kill_feed(self.feeds[0])
-            # TODO: handle spurious errors when killing feeds
         self.QoS_server.close()
+        db.close(self.conn)
 
 def change_working_directory():
     """
