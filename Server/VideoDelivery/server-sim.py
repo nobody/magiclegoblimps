@@ -115,6 +115,15 @@ def handle_response():
     """
     pass
 
+def get_live_urls():
+    """
+    Reads the contents of the file and encodes them for sending over the
+    socket. Used to test restreaming.
+    """
+    with open('./live-feeds.txt', 'r') as f:
+        txt = f.read()
+    return txt.encode()
+
 def main():
     random.seed()
     init_data()
@@ -127,7 +136,8 @@ def main():
     (conn, caddr) = s.accept()
     while True:
         try:
-            push = get_status()
+            # push = get_status()
+            push = get_live_urls()
             conn.send(push)
             req = conn.recv(4096)
         except socket.error as ex1:
