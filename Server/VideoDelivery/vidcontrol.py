@@ -98,7 +98,6 @@ class VidControl():
         2. Find and launch feeds not in self.feeds that are in vfeeds
         """
         if rmfeeds is not None:
-            print(str(rmfeeds))
             for f in rmfeeds:
                 i = self.feeds.index(f)
                 self.kill_feed(self.feeds[i])
