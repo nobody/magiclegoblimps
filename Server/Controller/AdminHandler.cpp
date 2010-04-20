@@ -233,7 +233,7 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
 
             case P_CMD_RGHT:
             {
-                cmd.cmd = P_CMD_LFT;
+                cmd.cmd = P_CMD_RGHT;
                 
                 token = s.substr(0, s.find('$', 0));
                 s = s.substr(token.size(), std::string::npos);
