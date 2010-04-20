@@ -22,8 +22,8 @@ def connect():
         log('Connecting to MySQL Host: ' + settings.MySQL_HOST +
             ' and Database: ' + settings.MySQL_DATABASE)
     except MySQLdb.Error as e:
-        print "Error %d: %s" % (e.args[0],e.args[1])
-        exit(1)
+        log("Error %d: %s" % (e.args[0], e.args[1]))
+        raise e
     return conn
 
 def close(conn):
@@ -34,8 +34,7 @@ def close(conn):
         conn.close()
         log('Closed connection to Database')
     except MySQLdb.Error as e:
-        print "Error %d: %s" % (e.args[0],e.args[1])
-        exit(1)
+        log("Error %d: %s" % (e.args[0], e.args[1]))
 
 def addCameraFeed(conn,cameraId,cameraFeed):
     """
@@ -43,14 +42,28 @@ def addCameraFeed(conn,cameraId,cameraFeed):
     """
     try:
         cursor = conn.cursor()
-        sql = 'CALL addCameraFeed('+cameraId+',"'+cameraFeed+'")'
+        sql = 'CALL addCameraFeed(' + str(cameraId) + ',"' + cameraFeed + '")'
         cursor.execute(sql)
         conn.commit()
         cursor.close()
-        log('Adding Camera Feeds to Database')
+        log('Added camera feed to db: ' + cameraFeed)
     except MySQLdb.Error as e:
-        print "Error %d: %s" % (e.args[0],e.args[1])
-        exit(1)
+        log("Error %d: %s" % (e.args[0], e.args[1]))
+
+def removeCameraFeed(conn, camId, camFeed):
+    """
+    Remove a live camera feed from the MySQL database.
+    """
+    try:
+        c = conn.cursor()
+        sql = 'update cameras set camera_feed = NULL where camera_id = ' \
+              + str(camId)
+        c.execute(sql)
+        conn.commit()
+        c.close()
+        log('Removed camera feed from db: ' + camFeed)
+    except MySQLdb.Error as e:
+        log("Error %d: %s" % (e.args[0], e.args[1]))
 
 def addArchiveFootage(conn,archiveUrl,objectId,qos,thumbUrl):
     """
@@ -64,8 +77,7 @@ def addArchiveFootage(conn,archiveUrl,objectId,qos,thumbUrl):
         cursor.close()
         log('Adding Archive Footage to Database')
     except MySQLdb.Error as e:
-        print "Error %d: %s" % (e.args[0],e.args[1])
-        exit(1)
+        log("Error %d: %s" % (e.args[0], e.args[1]))
 
 def displayTable(conn,tableName):
     """
@@ -78,14 +90,14 @@ def displayTable(conn,tableName):
         results = cursor.fetchall()
         print results
         cursor.close()
-    except MySQL.Error as e:
-        print "Error %d: %s" % (e.args[0],e.args[1])
-        exit(1)
+    except MySQLdb.Error as e:
+        log("Error %d: %s" % (e.args[0], e.args[1]))
 
 if __name__ == '__main__':
     c = connect()
     addCameraFeed(c,'1','http://something-cooler-than-test.html')
     displayTable(c,'cameras')
+    removeCameraFeed(c, 1, 'http://something-cooler-than-test.html')
     close(c)
     c1 = connect()
     displayTable(c1,'cameras')
