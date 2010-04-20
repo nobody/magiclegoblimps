@@ -49,7 +49,7 @@ public:
 	vector<GridLoc*> getIllMoves();
 
 	void SearchObject(int robotID, int objID, GridLoc* lastKnownLoc);
-	void SpiralSearch(Robot* robot, Camera& camera, GridLoc* loc);
+	void SpiralSearch(Robot* robot, GridLoc* loc);
 
 	void Update();
 

@@ -58,6 +58,7 @@ public:
 	bool getRobotMoving()		{ return robotMoving_; }
 	int getStatus()				{ return status_; }
 	int getHasPath()			{ return hasPath; }
+	int getHasDest()			{ return hasDest; }
 
 	void ExecuteCommand(string command);
 
@@ -82,6 +83,7 @@ private:
 	GridLoc* loc;
 	GridLoc* nextLoc;
 	GridLoc* dest;
+	bool hasDest;
 
 	RobotHeading robotHeading_;
 	int cameraDirection_;
