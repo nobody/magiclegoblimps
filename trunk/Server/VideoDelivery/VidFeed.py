@@ -27,6 +27,7 @@ class VidFeed():
         if not vfeed is None:
             self.feed_url = vfeed.feed_url
             self.objects = vfeed.objects
+            self.cam_id = vfeed.cam_id
 
     def __eq__(self, vfeed):
         return vfeed.feed_url == self.feed_url

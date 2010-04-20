@@ -40,7 +40,7 @@ def addCameraFeed(conn,cameraId,cameraFeed):
         cursor.execute(sql)
         conn.commit()
         cursor.close()
-        log('Added camera feed to db: ' + cameraFeed)
+        log('Added camera ' + str(cameraId) + ' feed to db: ' + cameraFeed)
     except MySQLdb.Error as e:
         log("Error %d: %s" % (e.args[0], e.args[1]))
 
@@ -55,7 +55,7 @@ def removeCameraFeed(conn, camId, camFeed):
         c.execute(sql)
         conn.commit()
         c.close()
-        log('Removed camera feed from db: ' + camFeed)
+        log('Removed camera ' + camId + ' feed from db: ' + camFeed)
     except MySQLdb.Error as e:
         log("Error %d: %s" % (e.args[0], e.args[1]))
 
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     c = connect()
     addCameraFeed(c,'1','http://something-cooler-than-test.html')
     displayTable(c,'cameras')
-    removeCameraFeed(c, 1, 'http://something-cooler-than-test.html')
+    # removeCameraFeed(c, 1, 'http://something-cooler-than-test.html')
     close(c)
     c1 = connect()
     displayTable(c1,'cameras')
