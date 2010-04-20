@@ -1,13 +1,7 @@
 #!/usr/bin/python2.6
 from __future__ import print_function, with_statement
-import os
-import time
-import socket
-import config
-import ffserver
 import settings
 import MySQLdb
-from vidcontrol import change_working_directory
 from logger import log
 
 def connect():
