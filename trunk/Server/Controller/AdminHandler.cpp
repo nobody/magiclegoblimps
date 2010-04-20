@@ -58,7 +58,7 @@ AdminHandler::session::~session()
 void AdminHandler::session::start(){
 
     tcp::socket &sock = conn_->socket();
-    std::string msg = "You've reached the Admin Handler\n";
+/*    std::string msg = "You've reached the Admin Handler\n";
     msg += sock.remote_endpoint().address().to_string();
     msg += ":";
     msg += boost::lexical_cast<std::string>(sock.remote_endpoint().port());
@@ -67,7 +67,7 @@ void AdminHandler::session::start(){
     boost::asio::async_write(sock, boost::asio::buffer(msg), 
         boost::bind(&AdminHandler::session::write_handler, this, 
         boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
-
+*/
     boost::asio::async_read_until(sock, read_message_.buffer(), '\n', 
         boost::bind(&AdminHandler::session::read_handler, this, 
             boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
@@ -83,25 +83,19 @@ void AdminHandler::session::write_handler(const boost::system::error_code& error
 }
 
 void AdminHandler::session::read_handler(const boost::system::error_code& error,  std::size_t bytes_transferred) {
-    tcp::socket &sock = conn_->socket();;
-
-
-    std::cout << "AdminHandler read " << bytes_transferred << " bytes from client " << sock.remote_endpoint().address().to_string() << ":" << sock.remote_endpoint().port() << "\n";
-    std::cout.flush();
-
     if (error == boost::asio::error::eof){
-        conn_->releaseSocket();
         close();
         return;
     } else if (error == boost::asio::error::operation_aborted) {
-        conn_->releaseSocket();
         close();
         return;
     } else if (error) {
-        conn_->releaseSocket();
+        std::cerr << "[AH] unknown error in read handler\n";
         close();
-        throw boost::system::system_error(error);
+        return;
     }
+
+    tcp::socket &sock = conn_->socket();;
 
     std::string s(read_message_.data(bytes_transferred));
     read_message_.consume(bytes_transferred);
@@ -146,10 +140,10 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                 
                 token = s.substr(0, s.find('$', 0));
                 s = s.substr(token.size(), std::string::npos);
-                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
+                //std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 int robotid = atoi(token.c_str());
-                std::cout << "[AH] got RID:" << robotid << "\n";
+                //std::cout << "[AH] got RID:" << robotid << "\n";
 
                 Vector_ts<Robot*>::iterator it;
                 Vector_ts<Robot*>::iterator used_it;
@@ -192,7 +186,7 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                 
                 token = s.substr(0, s.find('$', 0));
                 s = s.substr(token.size(), std::string::npos);
-                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
+                //std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 int robotid = atoi(token.c_str());
 
@@ -237,7 +231,7 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                 
                 token = s.substr(0, s.find('$', 0));
                 s = s.substr(token.size(), std::string::npos);
-                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
+                //std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 int robotid = atoi(token.c_str());
 
@@ -289,14 +283,14 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
                 
                 token = s.substr(0, s.find('$', 0));
                 if (token.size() == s.size()) {
-                    std::cout << "[AH] token:\"" << token << "\" *is* s\n";
+                    //std::cout << "[AH] token:\"" << token << "\" *is* s\n";
                     break;
                 }
                 s = s.substr(token.size() + 1, std::string::npos);
-                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
+                //std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 int robotid = atoi(token.c_str());
-                std::cout << "[AH] camrot: got RID: " << robotid << "\n";
+                //std::cout << "[AH] camrot: got RID: " << robotid << "\n";
 
                 Vector_ts<Robot*>::iterator it;
                 Vector_ts<Robot*>::iterator used_it;
@@ -332,7 +326,7 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
 
                 token = s.substr(0, s.find('$', 0));
                 s = s.substr(token.size(), std::string::npos);
-                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
+                //std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 cmd.arg = atoi(token.c_str());
 
@@ -346,10 +340,11 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
             
                 token = s.substr(0, s.find('$', 0));
                 s = s.substr(token.size(), std::string::npos);
-                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
+                //std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 int robotid = atoi(token.c_str());
 
+                std::cout << "[AH] Marking robot " << robotid << " as not in use\n";
                 Vector_ts<Robot*>::iterator it;
 
                 inUse->lock();
@@ -368,7 +363,7 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
             {
                 token = s.substr(0, s.find('$', 0));
                 s = s.substr(token.size(), std::string::npos);
-                std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
+                //std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
                 int objID = atoi(token.c_str());
                 std::cout << "[AH] deleting object " << objID << "\n";
@@ -386,13 +381,19 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
 
                 objects->unlock();
 
+                // also let the robot controllers know to delete it
+                cmd.cmd = P_CMD_DEL_OBJ;
+                cmd.RID = -1;
+                cmd.arg = objID;
+                robotControl->sendCommand(&cmd);
+
             }
             break;
 
             case P_CMD_SHUTDOWN:
             {
-                cmd.RID = -1;
                 cmd.cmd = P_CMD_SHUTDOWN;
+                cmd.RID = -1;
                 cmd.arg = 0;
                 robotControl->sendCommand(&cmd);
 
@@ -419,18 +420,25 @@ void AdminHandler::session::close() {
         return;
 
     closing = true;
-    tcp::socket &sock = conn_->socket();;
+    try {
+        tcp::socket &sock = conn_->socket();;
 
-    sock.get_io_service().post(boost::bind(&AdminHandler::session::do_close, this));
-     
+        sock.get_io_service().post(boost::bind(&AdminHandler::session::do_close, this));
+    } catch (...) {
+        std::cerr << "[AH] error occurred in close()\n";
+    }
     conn_->releaseSocket();
 }
 
 void AdminHandler::session::do_close() {
-    tcp::socket &sock = conn_->socket();;
+    try {
+        tcp::socket &sock = conn_->socket();;
 
-    std::cout << "Closing socket to " << sock.remote_endpoint().address().to_string() << ":" << sock.remote_endpoint().port() << "\n";
-    sock.close();
+        std::cout << "[AH] Closing socket to " << sock.remote_endpoint().address().to_string() << ":" << sock.remote_endpoint().port() << "\n";
+        conn_->stop();
+    } catch (...) {
+        std::cerr << "[AH] error occurred in do_close()\n";
+    }
 
     conn_->releaseSocket();
 }
