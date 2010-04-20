@@ -69,17 +69,6 @@ class Archive():
         
         log('Updated the Client database with Archived Videos')
 
-    def connect(self):
-        """
-        Connect to the database
-        """
-        try:
-            conn = MySQLdb.connect (host = MySQL_HOST, user = MySQL_USER, passwd = MySQL_PASS, db = MySQL_DATABASE)
-        except MySQLdb.Error, e:
-            print "Error %d: %s" % (e.args[0],e.args[1])
-            sys.exit(1)
-        return conn
-        
 if __name__ == '__main__':
     change_working_directory()
     ar = Archive()
