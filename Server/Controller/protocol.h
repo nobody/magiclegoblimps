@@ -19,6 +19,7 @@
 #define P_OBJECT 3
 #define P_ASSIGNMENT 4
 #define P_COMMAND 5
+#define P_ROBOT_RM 6
 
 //cameras
 #define P_DLINK 1
@@ -129,6 +130,9 @@ struct command{
     int RID;
     int cmd;
     int arg;
+};
+struct robotRm{
+    int RID;
 };
 
 int write_data(int type, void* data_, short number, byteArray* byte_ptr);
