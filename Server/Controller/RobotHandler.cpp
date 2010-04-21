@@ -593,6 +593,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                             break;
                         }   
                     }
+                    robots->unlock();
                 }
             }
 
