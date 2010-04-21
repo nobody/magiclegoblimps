@@ -86,6 +86,7 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
     std::cout.flush();
 
     command cmd;
+    cmd.arg = 0;
     Robot* subject = NULL;
 
     if(!s.compare(std::string("shutdown\n"))){
