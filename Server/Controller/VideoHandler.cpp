@@ -50,6 +50,8 @@ void VideoHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_con
         for (it = robots_->begin(); it < it_end; ++it) {
             (*it)->lock();
 
+            msg_ss << (*it)->getGlobalID();
+            msg_ss << ";";
             msg_ss << (*it)->getVideoURL();
             msg_ss << ";";
             std::map<int, float>* list = (*it)->list;
