@@ -386,7 +386,8 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
                     max_qual = ito->second;
                 }
                 std::stringstream visibility_ss;
-                visibility_ss << "CALL addServiceRecord('" << (*it)->getGlobalID() << "', '" << ito->first << "')";
+                visibility_ss << "CALL addServiceRecord('" << (*it)->getGlobalID() << "', '" << ito->first 
+                    << "', '" << ito->second << "')";
                 cmd = visibility_ss.str();
                 try {
                     stmt->execute(cmd);
