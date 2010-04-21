@@ -1,14 +1,11 @@
 #!/usr/bin/python2.6
 from __future__ import print_function, with_statement
 import os
-import time
-import socket
-import config
+from datetime import datetime
 import ffserver
 import settings
-import MySQLdb
-from vidcontrol import change_working_directory
 from logger import log
+import db
 
 class Archive():
 
@@ -81,6 +78,7 @@ class Archive():
             conn = db.connect()
             for x in range(len(self.filenames)):
                 if checkArchive(conn,settings.ARCHIVE_FEED_URL+self.filenames[x]):
+                    pass
                     # Archive is currently there no need to add
                 else:
                     # Archive is not there need to update database
@@ -91,9 +89,35 @@ class Archive():
         except MySQL.Error as e:
             log("Error %d: %s" % (e.args[0], e.args[1]))
 
+def create_archive(conn, vfeed, obj_i):
+    """
+    Creates and archive video and screen shot for the given VidFeed object. If
+    an archive is currently being captured for this object, then this method
+    does nothing to avoid creating duplicate or really similar archive videos.
+    In case multiple archives exist in the given VidFeed, obj_i specifies which
+    object we are interested in archiving.
+    """
+    # Crude test to see if we're already archiving video for this object
+    if vfeed.last_archived is not None:
+        timediff = datetime.now() - vfeed.last_archived
+        if timediff.seconds < settings.ARCHIVE_DURATION:
+            return
+
+    # create the archives
+    vfeed.last_archived = datetime.now()
+    obj_to_archive = vfeed.objects[obj_i]
+    vfname = ffserver.capture_archive(vfeed, obj_to_archive[0],
+                                     obj_to_archive[1])
+    ssfname = ffserver.capture_screenshot(vfeed, vfname)
+
+    # update client database
+    vfurl = settings.ARCHIVE_FEED_URLS + vfname
+    ssfurl = settings.ARCHIVE_FEED_URLS + ssfname
+    db.addArchiveFootage(conn, vfurl, vfeed.objects[obj_i][0],
+                         vfeed.objects[obj_i][1], ssfurl)
+
 if __name__ == '__main__':
-    change_working_directory()
     ar = Archive()
-    ar.get_Archive()
+    ar.get_ArchiveFeeds()
     ar.create_HTML()
     print(str(ar.objects_qos))
