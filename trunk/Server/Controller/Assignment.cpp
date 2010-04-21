@@ -10,6 +10,7 @@
 #include "Point.h"
 #include "Robot.h"
 #include "Object.h"
+#include "hungarian.h"
 #include <iostream>
 
 Assignment::Assignment(Robot** r, int nr, Object** o,int no,  double* d, Qos* q){
@@ -23,6 +24,18 @@ Assignment::Assignment(Robot** r, int nr, Object** o,int no,  double* d, Qos* q)
 Assignment::~Assignment()
 {
 
+}
+
+int** array_to_matrix(int* m, int rows, int cols) {
+    int i,j;
+    int** r;
+    r = (int**)calloc(rows,sizeof(int*));
+    for(i=0;i<rows;i++) {
+        r[i] = (int*)calloc(cols,sizeof(int));
+        for(j=0;j<cols;j++)
+            r[i][j] = m[i*cols+j];
+     }
+     return r;
 }
 
 std::map<Robot*, int>* Assignment::calcAssignments() {
@@ -89,50 +102,6 @@ while(true){
         break;
     }
 }
-    
-/*  WARNING: Hazardous Code!  Debug at your own risk.
- while(next != -1) { //until all robots have assignments
-    
-    int maxIndex = -1;
-
-    for(int i = 0; i < numObjects; i++){//Find the assignment that most greatly increases the system quality
-        double t = 0;
-        if(objAss[i] != -1){ //If the object is already viewed by something
-            std::cout <<"2" <<"\n";
-            t = quality->calcQos(objects[i],robots[next]);
-            t = t - qual[objAss[i]]-.0001;
-            std::cout <<"3" <<"\n";
-            
-        }else{ //If the object is not already viewed
-            t = quality->calcQos(objects[i],robots[next]);
-        }
-        std::cout << t << "\n";
-        if(t > qual[next] || qual[next]==-1){
-            maxIndex = i;   // The current best object to view
-            qual[next] = t; // The current best quality robot 'next' can contribute is t.
-        }
-    }
-    std::cout << maxIndex << "\n";
-    //
-    // At this point we have a maximum assignment for a the currently considered robot
-    // If there is no conflict (no robot is currently looking at this object) assign it.
-    // If there is a conflict, choose the robot which best contributes to quality.
-    
-    if(objAss[maxIndex]!= -1){ //The object we just chose is assigned already
-           
-        robotAssignments[objAss[maxIndex]] = -1; // Unassign current robot assigned to object
-        qual[objAss[maxIndex]] = -1; // Reset its quality contribution
-    }
-
-    objAss[maxIndex] = next; // current robot is now assigned to object of interest
-    robotAssignments[next] = maxIndex; //current robot is now assigned to object of interest
-
-    std::cout << "Robot " <<next <<" is now assigned to object " <<maxIndex <<"\n";
-        
-    next = isDone(); //Find the next unassigned robot
-    break;
- }
-*/
 
 /*  ASSIGNMENT METHOD: Uninformed Assignment
 for(int i = 0; i < numRobots; i++){
@@ -154,6 +123,52 @@ for(int i = 0; i < numRobots; i++){
         ret->insert(std::pair<Robot*, int>(robots[i],-1));
     }
  }
+
+//Hungarian Method for comparison
+
+
+//matrix of QoS per object and robot
+int* arr;
+int** r;
+int m, n;
+bool normal; //flag for normal configuration of robots/objects or flipped
+hungarian_problem_t prob;
+
+// m must be less than or equal to n.
+if (numObjects >= numRobots) {
+    n = numObjects;
+    m = numRobots;
+    normal = true;
+} else {
+    n = numRobots;
+    m = numObjects;
+    normal = false;
+}
+
+
+arr = new int[m*n];
+
+// fill the array
+for (int i = 0; i < m; i++) {
+    for (int j = 0; j < n; j++) {
+        if(normal) { //m is robots
+            arr[i*n + j] = quality->calcQos(objects[j], robots[i]);
+        } else {
+            arr[i*n+j] = quality->calcQos(objects[i], robots[j]);
+        }
+
+    }
+}
+
+r = array_to_matrix(arr, m, n);
+
+hungarian_init(&prob,r,m,n,HUNGARIAN_MODE_MAXIMIZE_UTIL);
+hungarian_print_costmatrix(&prob);
+hungarian_solve(&prob);
+hungarian_print_assignment(&prob);
+
+hungarian_free(&prob);
+free(r);
 
 //Write the assignments back to the actual objects
 //
@@ -181,7 +196,7 @@ for(int i = 0; i < numRobots; i++){
 
  delete[] qual;
  delete[] objAss;
- 
+ delete[] arr;
  return ret;
     
 }
