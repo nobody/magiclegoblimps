@@ -62,7 +62,7 @@ void LocalInput()
 	else if (tokens[0].compare("testrobot") == 0)
 	{
 		//lazy connection for repeat testing
-		Robot* robot = new Robot(1, "192.168.1.101", true);
+		Robot* robot = new Robot(1, "192.168.1.101:7001", true);
 		robot->Connect();
 		controller->AddRobot(robot);
 	}
@@ -195,7 +195,7 @@ void LocalInput()
 
 int main(int argc, char* argv[])
 {
-	controller = new Controller(2, 2);
+	controller = new Controller(2, 2, "192.168.1.1");
 
 	cout << "ROBOT CONTROLLER" << endl;
 	cout << "----------------" << endl;

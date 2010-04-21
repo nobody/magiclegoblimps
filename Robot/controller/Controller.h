@@ -27,7 +27,7 @@ using namespace std;
 class Controller
 {
 public:
-	Controller(int xDim, int yDim);
+	Controller(int xDim, int yDim, string routerIP);
 
 	bool ConnectToServer(string ip);
 

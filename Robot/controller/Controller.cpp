@@ -4,10 +4,12 @@
 vector<Robot*> Controller::robots_;
 SOCKET Controller::connectSocket_;
 
-Controller::Controller(int xDim, int yDim)
+Controller::Controller(int xDim, int yDim, string routerIP)
 {
 	xMax = xDim;
 	yMax = yDim;
+
+	Camera::SetRouterIP(routerIP);
 
 	timer_= 0;
 	connectSocket_ = NULL;
@@ -105,7 +107,7 @@ bool Controller::ConnectToServer(string ip)
 				init[i].cameraType = P_DLINK;
 			else
 				init[i].cameraType = P_CISCO;
-			init[i].VideoURL = new string((*it)->GetCamera()->GetVideoURL());
+			init[i].VideoURL = new string((*it)->GetCamera()->GetExtURL());
 			init[i].x = (*it)->getLocation()->getX();
 			init[i].y = (*it)->getLocation()->getY();
 
@@ -428,7 +430,7 @@ void Controller::Update()
 					init[i].cameraType = P_DLINK;
 				else
 					init[i].cameraType = P_CISCO;
-				init[i].VideoURL = new string((*it)->GetCamera()->GetVideoURL());
+				init[i].VideoURL = new string((*it)->GetCamera()->GetExtURL());
 				init[i].x = (*it)->getLocation()->getX();
 				init[i].y = (*it)->getLocation()->getY();
 

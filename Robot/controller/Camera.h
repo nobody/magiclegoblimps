@@ -12,6 +12,8 @@
 #include <cv.h>
 #include <highgui.h>
 
+#include "Tokenizer.h"
+
 #include "TrackingObject.h"
 
 //#ifdef _DEBUG
@@ -64,6 +66,9 @@ public:
 	void SetIP(string ip);
 	void SetDLinkCam(bool dLinkCam);
 
+	static void SetRouterIP(string ip);
+	string GetExtURL();
+
 	bool GetDLinkCam() { return dLinkCam_; }
 	string GetVideoURL() { return camUrl_; }
 
@@ -108,11 +113,14 @@ private:
 	float lockTimer_;
 	time_t lastTime_;
 
+	static string routerIP_;
+
 	string ip_;
 	bool dLinkCam_;
 	string user_;
 	string pass_;
 	string camUrl_;
+	string port_;
 
 	//aren't currently used in code, but should replace local versions
 	CvCapture* capture_;

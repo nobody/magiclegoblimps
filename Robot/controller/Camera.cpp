@@ -1,9 +1,8 @@
 #include "Camera.h"
 
-#include <iostream>
-
 //static member variables must be redeclared in source
 vector<TrackingObject*> Camera::trackableObjects_;
+string Camera::routerIP_;
 
 Camera::Camera(string ip, bool dLinkCam)
 {
@@ -15,6 +14,14 @@ Camera::Camera(string ip, bool dLinkCam)
 
 	dLinkUrl_ = "/video.cgi?a=.mjpg";		
 	ciscoUrl_ = "/img/mjpeg.cgi?a=.mjpg";
+
+	vector<string> tokens;
+	tokenize(ip, tokens, ":");
+
+	if (tokens.size() > 1)
+		port_ = tokens[1];
+	else
+		port_ = "80";
 
 	localDisplay_ = false;
 	histDisplay_ = true;		
@@ -47,7 +54,8 @@ bool Camera::Connect()
 
 	if (dLinkCam_)
 		camUrl_ += dLinkUrl_;
-	else camUrl_ += ciscoUrl_;
+	else 
+		camUrl_ += ciscoUrl_;
 
 	//comment this out to disable the camera
 	capture_ = cvCreateFileCapture(camUrl_.c_str());
@@ -75,6 +83,24 @@ void Camera::SetIP(string ip)
 void Camera::SetDLinkCam(bool dLinkCam)
 {
 	dLinkCam_ = dLinkCam;
+}
+
+void Camera::SetRouterIP(string ip)
+{
+	routerIP_ = ip;
+}
+
+string Camera::GetExtURL()
+{
+	string url = "http://" + user_ + ":" + pass_ + "@" + routerIP_ + ":" + 
+		port_;
+
+	if (dLinkCam_)
+		url += dLinkUrl_;
+	else 
+		url += ciscoUrl_;
+
+	return url;
 }
 
 //clean some of this up into member variables/functions
