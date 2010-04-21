@@ -165,13 +165,15 @@ void LocalInput()
 		{
 			vector<TrackingObject*>::iterator it;
 
-			for (it = Camera::GetTrackableObjects().begin(); 
-				it != Camera::GetTrackableObjects().end(); it++)
+			vector<TrackingObject*>::iterator it;
+			vector<TrackingObject*> objects = Camera::GetTrackableObjects();
+
+			for (it = objects.begin(); it != objects.end(); it++)
 			{
 				if ((*it)->GetID() == atoi(tokens[1].c_str()))
 				{
 					delete (*it);
-					Camera::GetTrackableObjects().erase(it);
+					objects.erase(it);
 					break;
 				}
 			}
