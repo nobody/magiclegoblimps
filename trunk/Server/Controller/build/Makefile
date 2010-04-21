@@ -1,7 +1,7 @@
 CC = g++
 
 LIBS = -lboost_system -lboost_thread -lmysqlcppconn
-LIBDIRS = -L ../lib
+LIBDIRS = -L ../lib -L /usr/local/lib/
 
 INCLUDES = -I ../include 
 
