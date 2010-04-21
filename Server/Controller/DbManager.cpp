@@ -273,7 +273,7 @@ bool DbManager::insertCameras( Vector_ts<Robot*>* robots) {
             (*it)->lock();
             std::stringstream ss;
             ss << "INSERT INTO " << tbl_cameras 
-               << " (`camera_id`, `camera_type`, `camera_curr_x`, `camera_curr_y`, `camera_resolution`, `camera_fps`) VALUES ('";
+               << " (`camera_id`, `camera_type`, `camera_curr_x`, `camera_curr_y`, `camera_last_x`, `camera_last_y`, `camera_resolution`, `camera_fps`) VALUES ('";
             ss << (*it)->getGlobalID()
                << "', '";
             if ((*it)->getCamera() < 3 && (*it)->getCamera() >= 0) {
@@ -285,7 +285,7 @@ bool DbManager::insertCameras( Vector_ts<Robot*>* robots) {
                << (*it)->getXCord()
                << "', '"
                << (*it)->getYCord()
-               << "', '";
+               << "', '0', '0', '";
             if ((*it)->getCamera() < 3 && (*it)->getCamera() >= 0) {
                 ss << Robot::camdata[(*it)->getCamera()][0]
                    << " "
