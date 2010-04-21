@@ -173,9 +173,9 @@ int controller::doQOS(demand_t* demand) {
             }
         }
 
-        //if it hasn't, add it to the list to give to the qos and lock it
+        //if it hasn't, unlock it
         if(!used){
-            robots->at(i)->lock();
+            robots->at(i)->unlock();
         }
     }
 
@@ -214,7 +214,7 @@ void controller::controllerThread(){
             db->getRequests(demand);
             db->normalize(demand);
 
-            //doQOS(demand);
+            doQOS(demand);
         }
         dbupdate = (dbupdate + 1) % 2;
 

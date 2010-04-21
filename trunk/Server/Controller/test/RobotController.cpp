@@ -153,6 +153,7 @@ int main() {
     objs[0].box = new char[1];
     objs[0].box[0] = 'x';
 
+    /*
     byteArray objArr;
     if (write_data(P_OBJECT, objs, 1, &objArr)) {
         std::cerr << "Failed to create object array\n";
@@ -165,6 +166,7 @@ int main() {
         printf("%02X ", objArr.array[i]);
     }
     std::cout << std::endl;
+    */
 
     
 
