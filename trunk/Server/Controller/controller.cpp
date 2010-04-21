@@ -157,8 +157,26 @@ int controller::doQOS(demand_t* demand) {
     robo->sendAssignments(assign);
 
     // unlock of the robots
+    /*
     for (int i = 0; i < robots->size(); ++i) {
         r[i]->unlock();
+    }
+    */
+    for (int i = 0; i < robots->size(); ++i) {
+        bool used = false;
+
+        //make sure the robot[i] has not been commendeered by an admin
+        for(int j = 0; j < used_robots->size(); ++j){
+            if(robots->at(i) == robots->at(j)){
+                used = true;
+                break;
+            }
+        }
+
+        //if it hasn't, add it to the list to give to the qos and lock it
+        if(!used){
+            robots->at(i)->lock();
+        }
     }
 
     //unlock all of the objects
