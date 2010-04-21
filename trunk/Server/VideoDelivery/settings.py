@@ -31,6 +31,7 @@ ARCHIVE_CSV_FILE = '/var/www/mlb/archive-feeds.csv'
 ARCHIVE_HTML = './archives/index.html'
 ARCHIVE_DURATION = 30
 ARCHIVE_QOS_THRESHOLD = 0.72
+ARCHIVE_THUMB_SIZE = '60x44'
 
 CONFIG_TEMPLATE = 'config-template.txt'
 CONFIG_FILE_DIR = './'
