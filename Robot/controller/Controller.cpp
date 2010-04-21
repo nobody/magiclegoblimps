@@ -840,51 +840,54 @@ void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
 
 void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 {
-	/*
 	robot->setDestination(loc);
-        robot->setPath(genPath(*robot));
+	robot->setPath(genPath(*robot));
 
 	int x = loc->getX();
 	int y = loc->getY();
+	int xdir = 1;
+	int ydir = 1;
 
-        if (xMax >= yMax) //heading east
-        {   int xdir = 1;
-            int ydir = 1;
-        }
-        else //heading south
-        {
-            int xdir = 1;
-            int ydir = -1;
-        }
+	if (xMax >= yMax) //heading east
+	{  
+		xdir = 1;
+		ydir = 1;
+	}
+	else //heading south
+	{
+		xdir = 1;
+		ydir = -1;
+	}
 
 	int dir = 1; //1 is x, -1 is y
-	
+
 	int countSpirals = 1;
-	
-	while(!(camera.GetTargetVisible()) && (countOrbits < xMax/2) && countOrbits < yMax/2)
+
+	while(!(robot->GetCamera()->GetTargetVisible()) && 
+		(countSpirals < xMax/2 && countSpirals < yMax/2))
 	{
-		for (int countTurns = 0; countTurns < 2; countTurns++) {
-			
-			if (dir == 1) {
+		for (int countTurns = 0; countTurns < 2; countTurns++) 
+		{
+			if (dir == 1) 
+			{
 				x += xdir*countSpirals;
 				xdir *= -1;
 				loc->setX(x);
 				robot->setDestination(loc);
-                                Path* p = robot->getPath();
-                                p->extend(loc);
+				Path* p = robot->getPath();
+				p->extend(loc);
 			}
 			else {
 				y += ydir*countSpirals;
 				ydir *= -1;
 				loc->setY(y);
 				robot->setDestination(loc);
-                                Path* p = robot->getPath();
-                                p->extend(loc);
+				Path* p = robot->getPath();
+				p->extend(loc);
 			}			
 			dir *= -1; //change heading
 		}		
 		countSpirals++;
 	}
-	*/
 }
 
