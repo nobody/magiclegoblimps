@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
     while(rs->next()) {
         int req_obj = rs->getInt("animal_id");
         int count = 100;
-        if (argc > idx + 1) {
+        if (argc > idx) {
             count = atoi(argv[idx++]);
         }
         sum += count;
