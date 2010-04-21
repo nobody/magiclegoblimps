@@ -147,10 +147,14 @@ int controller::doQOS(demand_t* demand) {
     Assignment ass(r, robots->size(), o, objs->size(), dem, &q);
     
     std::cout <<"Start QoS" <<'\n';
+    std::map<Robot*, int>* assign = NULL;
     //Display the Qos at start
     q.calcQos();
-    ass.calcAssignments();
+    assign = ass.calcAssignments();
     q.calcQos();
+
+    // send the assignemnts to the robots
+    robo->sendAssignments(assign);
 
     // unlock of the robots
     for (int i = 0; i < robots->size(); ++i) {
@@ -179,17 +183,22 @@ int controller::doQOS(demand_t* demand) {
 }
 void controller::controllerThread(){
     std::map<int, double > *demand = NULL;
+    int dbupdate = 0;
     while(running){
         std::cout << "[controller] executing the main loop\n";
 
         objfile->write(objs);
 
-        //db->getRequests(demand);
-        //db->normalize(demand);
+        db->getRequests(demand);
+        db->normalize(demand);
 
-        //db->updateCameras(robots);
+        if (dbupdate == 0) {
+            std::cout << "[controller] updating camera locations\n";
+            db->updateCameras(robots);
+        }
+        dbupdate = (dbupdate + 1) % 2;
 
-        //doQOS(demand);
+        doQOS(demand);
 
         boost::asio::deadline_timer timer(io_, boost::posix_time::seconds(C_QOS_INTV));
         timer.wait();

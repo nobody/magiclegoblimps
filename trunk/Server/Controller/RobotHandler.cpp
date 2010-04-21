@@ -431,6 +431,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                 robotData = (robotUpdate*)(message->array);
 
                 //get a readlock on the vector
+                objects->readLock();
                 robots->readLock();
                 for(int i = 0; i < message->size; ++i){
                     for(it = robots->begin(); it < robots->end(); ++it){
@@ -444,6 +445,18 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                             (*it)->setYCord(robotData[i].y);
                             (*it)->setDir(robotData[i].dir);
                             (*it)->setList(robotData[i].objects, robotData[i].qualities, robotData[i].listSize);
+
+                            for (int j = 0; j < robotData[i].listSize; ++j) {
+                                Vector_ts<Object*>::iterator oit;
+                                for (oit = objects->begin(); oit < objects->end(); ++oit) {
+                                    if ((*oit)->getOID() == robotData[i].objects[j]) {
+                                        (*oit)->pos.x = robotData[i].xs[j];
+                                        (*oit)->pos.y = robotData[i].ys[j];
+                                        break;
+                                    }
+                                }
+                            }
+
                             std::cout << "[RH] got robot with listsize: " << robotData[i].listSize << "\n";
 
                             //update the video handeler
@@ -477,6 +490,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                     
                 }
                 robots->readUnlock();
+                objects->readUnlock();
                 delete[] robotData;    
 
             }
@@ -699,6 +713,15 @@ void RobotHandler::sendAssignments(std::map<Robot*, int>* assignments){
         while(((*mapIter).first->getEndpoint()) == ((*connIter).first)){
             current[numForConn].RID = (*mapIter).first->getRID();
             current[numForConn].OID = (*mapIter).second;
+
+            Vector_ts<Object*>::iterator oit;
+            for (oit = objects->begin(); oit < objects->end(); ++oit) {
+                if ((*oit)->getOID() == (*mapIter).second) {
+                    current[numForConn].x = (*oit)->pos.x;
+                    current[numForConn].y = (*oit)->pos.y;
+                    break;
+                }
+            }
             ++numForConn;
 
             mapIter++;

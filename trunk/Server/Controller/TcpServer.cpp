@@ -35,7 +35,6 @@ void TcpServer::shutdown(){
 
 //creates a connection and starts an async listen
 void TcpServer::listen() {
-    std::cout << "In Listen()\n";
     TcpConnection::pointer new_con = TcpConnection::create(acceptor_.io_service());
 
     if(!running)
@@ -48,7 +47,6 @@ void TcpServer::listen() {
 
 //the handler method to accept new asynchronous connections
 void TcpServer::handle_accept(TcpServer::TcpConnection::pointer conn, const boost::system::error_code &error) {
-    std::cout << "Handling a new connection\n";
     if(!running){
         //destroy the connection object
         conn->stop();
@@ -71,7 +69,6 @@ void TcpServer::handle_accept(TcpServer::TcpConnection::pointer conn, const boos
 //returns a boost shared pointer to this object
 TcpServer::TcpConnection::pointer TcpServer::TcpConnection::create(boost::asio::io_service& io_service)
 {
-    std::cout << "Created new TcpConnection\n";
     return pointer(new TcpConnection(io_service));
 }
 
@@ -95,7 +92,7 @@ void TcpServer::TcpConnection::stop(){
         }catch(boost::exception& e){
             std::cerr << diagnostic_information(e);
         }catch(...){
-            std::cerr << "caught unknown exception\n";
+            std::cerr << "[TcpConnection] caught unknown exception in stop()\n";
         }
         socketMutex.unlock();
         closed = true;
