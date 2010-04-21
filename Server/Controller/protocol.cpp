@@ -357,7 +357,7 @@
         array[i] = ref[i-1];
     }
     
-    printf("byte#2: %02X length:%d \n", array[1], length);
+    //printf("byte#2: %02X length:%d \n", array[1], length);
 
     //push number of elements;
     ref = (char*)&number;
