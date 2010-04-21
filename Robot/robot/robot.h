@@ -8,7 +8,8 @@
 #define MOTOR_BOTH OUT_AC
 #define MOTOR_CAMERA OUT_B
 
-#define SPEED 30
+#define SPEED 40
+#define SPEED_CAL 35
 #define SPEED_ADJUST 4
 #define SPD_ADJ_CAL 3
 #define SPEED_CONTROL 15
@@ -29,7 +30,7 @@ int curPan = 0;
 #define SENSOR_RIGHT SENSOR_3
 
 #define THRESHOLD 35 // 1-99
-#define THRESHOLDRAW 350
+#define THRESHOLD_T 65 // 1-99
 #define SENSOR_MAX 1023
 
 // sonar
@@ -81,6 +82,8 @@ int heading;
 int STATUS = 0;
 int CALIBRATED = 0;
 
+mutex mutStatus;
+
 void setLightOn()
 {
  SetSensorType(_SENSOR_LEFT, SENSOR_TYPE_LIGHT_ACTIVE);
@@ -111,29 +114,41 @@ void remStatusIDLE()
 
 void setStatus(int s)
 {
+ Acquire(mutStatus);
+ 
  STATUS |= (1 << s);
-
- remStatusIDLE();
+ 
+ if( STATUS !=  (1<<IDLE) )
+     remStatusIDLE();
+ 
+ Release(mutStatus);
 }
 
 void remStatus(int s)
 {
+ Acquire(mutStatus);
+ 
  STATUS &= -1-(1 << s);
+ 
+ Release(mutStatus);
  
  if( ( STATUS == 0 )
   || ( STATUS == (1<<INTERSECTION) )
-  || ( STATUS != (1<<PAN) ) )
+  /*|| ( STATUS != (1<<PAN) )*/ )
      setStatus(IDLE);
 }
 
 bool checkStatus(int s)
 {
- return ( STATUS & (1<<s) ) > 0;
+ Acquire(mutStatus);
+ bool b = ( STATUS & (1<<s) ) > 0;
+ Release(mutStatus);
+ return b;
 }
 
 int battery()
 {
- return BatteryLevel() / 90;
+ return (BatteryLevel()-6000) / 30;
 }
 
 void motorPower(int left, int right)
@@ -223,23 +238,28 @@ void pan(int deg)
 {
  setStatus(PAN);
  
+ /*
  // normalize input
  while( deg < -360 )
         deg += 360;
  deg %= 360;
+ */
  
  curPan += deg;
  
  RotateMotor(MOTOR_CAMERA,PAN_SPEED,deg*PAN_RATIO);
  
+ /*
  // normalize current
  while( curPan < 0 )
         curPan += 360;
  curPan %= 360;
+ */
  
  remStatus(PAN);
 }
 
+/*
 // angle
 void pid(int angle)
 {
@@ -261,6 +281,7 @@ void pid(int angle)
  
  remStatus(PAN);
 }
+*/
 
 int sensorLeft()
 {
@@ -338,7 +359,7 @@ bool aboveThreshold()
 
 void intersection()
 {
- if( MODE != STOPPED ){
+ if( !checkStatus(STOPPED) ){
      setStatus(INTERSECTION);
 
      switch(heading)
@@ -364,10 +385,11 @@ void lineFollow()
  forwardWait(400);
  lineCorrect();
 
+
  do {
    checkSonar();  // blocking
    adjustLinePosition();
- } while( aboveThreshold() && checkStatus(STOPPED) );
+ } while( aboveThreshold() && !checkStatus(STOPPED) );
 
  stopWheels();
  
@@ -385,10 +407,10 @@ void calibrate()
 
  setLightOn();
 
- motorPower(25,-25);
+ motorPower(SPEED_CAL,-SPEED_CAL);
  repeat(10)
  {
-  Wait(100);
+  Wait(75);
   left = SENSOR_LEFT;
   right = SENSOR_RIGHT;
 
@@ -399,10 +421,10 @@ void calibrate()
   else if(right>RIGHT_MAX) RIGHT_MAX = right;
  }
  stopWheels();
- motorPower(-25,25);
+ motorPower(-SPEED_CAL,SPEED_CAL);
  repeat(20)
  {
-  Wait(100);
+  Wait(75);
   left = SENSOR_LEFT;
   right = SENSOR_RIGHT;
 
@@ -413,22 +435,75 @@ void calibrate()
   else if(right>RIGHT_MAX) RIGHT_MAX = right;
  }
  stopWheels();
- motorPower(25,-25);
+ motorPower(SPEED_CAL,-SPEED_CAL);
  repeat(10)
  {
-  Wait(100);
-  left = SENSOR_LEFT;
-  right = SENSOR_RIGHT;
+  Wait(75);
 
-  if(left<LEFT_MIN) LEFT_MIN = left;
-  else if(left>LEFT_MAX) LEFT_MAX = left;
-
-  if(right<RIGHT_MIN) RIGHT_MIN = right;
-  else if(right>RIGHT_MAX) RIGHT_MAX = right;
  }
  stopWheels();
 
  CALIBRATED = true;
  
  remStatus(CALIBRATING);
+}
+
+void calibrate2()
+{
+ int left,right;
+ setStatus(CALIBRATING);
+ 
+ setLightOn();
+ Wait(50);
+ 
+ motorPower(SPEED,-SPEED);
+ do{
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ } while( SENSOR_RIGHT > 400 );
+ 
+ Wait(50);
+ lineCorrect();
+ Wait(50);
+
+ motorPower(-SPEED,SPEED);
+ do{
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ } while( SENSOR_LEFT > 400 );
+ 
+ Wait(50);
+ lineCorrect();
+ Wait(50);
+ 
+ stopWheels();
+ remStatus(CALIBRATING);
+}
+
+void turnRight2()
+{
+ forwardWait(300);
+ Wait(50);
+ lineCorrect();
+ setLightOn();
+ Wait(50);
+ motorPower(SPEED,-SPEED);
+ until(SENSOR_RIGHT<THRESHOLD);
+ stopWheels();
+ Wait(50);
+ lineCorrect();
+ // forwardWait(150);
+ // lineCorrect();
 }
