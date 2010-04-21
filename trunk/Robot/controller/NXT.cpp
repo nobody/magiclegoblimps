@@ -49,6 +49,11 @@ void NXT::SendMessage(string message)
 	brick_->write_msg(message, OUT_MAILBOX, false);
 }
 
+void NXT::SendMessage(string message, int box)
+{
+	brick_->write_msg(message, box, false);
+}
+
 string NXT::ReadMessage()
 {
 	return brick_->read_msg(IN_MAILBOX, true); 

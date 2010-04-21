@@ -169,6 +169,10 @@ void Robot::ExecuteCommand(string command)
 
 		camera_->SetTarget(id);
 	}
+	else if (tokens[0].compare("pan") == 0 || tokens[0].compare("pid") == 0)
+	{
+		nxt_->SendMessage(command, 3);
+	}
 	else
 	{
 		//command
@@ -235,7 +239,7 @@ void Robot::Update()
 		if (camera_->GetTargetVisible())
 			centerCameraOnTarget();
 		else 
-			ExecuteCommand("pan 5");
+			ExecuteCommand("pan 1");
 	}
 }
 
@@ -244,15 +248,18 @@ void Robot::centerCameraOnTarget()
 	string cmd = "pan ";
 	int width = camera_->GetImageWidth();
 	bool cam = camera_->GetDLinkCam();
-	
+	int d = 0;
+
 	vector<TrackingObject*> visObjs = camera_->GetVisibleObjects();
 	vector<TrackingObject*>::iterator voIter;
 	for(voIter = visObjs.begin(); voIter != visObjs.end(); voIter++)
 	{
-		if(camera_->GetTargetID() == (*voIter)->GetID())
+		if (voIter == visObjs.end())
 			break;
+
+		if(camera_->GetTargetID() == (*voIter)->GetID())
+			d = (*voIter)->CenterDistanceToDegrees(width, cam) / 5;
 	}
-	int d = (*voIter)->CenterDistanceToDegrees(width, cam);
 
 	stringstream oss;
 	oss << "pan " << d;
@@ -263,11 +270,7 @@ void Robot::centerCameraOnTarget()
 string Robot::newCmd()
 {
 	string cmd;
-	if(!(robPath->getStart()))
-	{
-		return cmd;
-	}
-	else if(camera_->GetTargetVisible())
+	if(camera_->GetTargetVisible())
 	{
 		hasDest = false;
 		if(cameraDirection_ <= 45 || cameraDirection_ > 315)
@@ -281,6 +284,10 @@ string Robot::newCmd()
 			cmd = "turnaround";
 		else if(cameraDirection_ <= 315 && cameraDirection_ > 225)
 			cmd = "right";
+	}
+	else if(!hasPath)
+	{
+		return cmd;
 	}
 	else if(loc->getX() < robPath->getStart()->getX())
 	{
