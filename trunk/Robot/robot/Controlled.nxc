@@ -1,5 +1,9 @@
 #include "robot.h"
 
+#define CAMBOX 3
+
+mutex mailbox;
+
 bool testCommand(string msg, string cmd)
 {
  int len = StrLen(cmd);
@@ -14,23 +18,34 @@ task receiveCommand()
  {
   setLightOff();
 
+  Acquire(mailbox);
   ReceiveMessage(INBOX,false,msg);
-
+  Release(mailbox);
+  
   if(StrLen(msg)>0)
   {
-   if( testCommand(msg,"pan")
-    || testCommand(msg,"stop")
+  /*
+   if( testCommand(msg,"stop")
+    || testCommand(msg,"pan")
     || testCommand(msg,"pid") )
    {
     continue;
    }
+   */
    
+   Acquire(mailbox);
    ReceiveMessage(INBOX,true,msg);
+   Release(mailbox);
 
    if( testCommand(msg,"left" ) )
    {
     turnLeftWait( 400, 300 );
     lineCorrect();
+    stopWheels();
+   }
+   else if( testCommand(msg,"right2") )
+   {
+    turnRight();
     stopWheels();
    }
    else if( testCommand(msg,"right" ) )
@@ -48,6 +63,10 @@ task receiveCommand()
    {
     calibrate();
    }
+   else if( testCommand(msg,"cal") )
+   {
+    calibrate2();
+   }
    //*/
    else if( testCommand(msg,"correct") )
    {
@@ -57,6 +76,7 @@ task receiveCommand()
    {
      lineFollow();
    }
+   /*
    else if( testCommand(msg,"coordinates") )
    {
     int i,x,y,len=StrLen(msg);
@@ -95,9 +115,11 @@ task receiveCommand()
     }
     else
     {
-     PlayTone(1000,50);
+     PlayTone(10000,50);
     }
+
    }
+   */
    else
    {
     PlayTone(1000,50);
@@ -113,16 +135,17 @@ task cmdPan()
 
  FOREVER
  {
-  ReceiveMessage(INBOX,false,msg);
+  ReceiveMessage(CAMBOX,false,msg);
 
-  if( testCommand(msg,"pan") )
+  if( StrLen(msg)>0 && testCommand(msg,"pan") )
   {
-   ReceiveMessage(INBOX,true,msg);
+   ReceiveMessage(CAMBOX,true,msg);
 
    msg = SubStr( msg, 4, StrLen(msg) );
 
    pan( StrToNum( msg ) ); // send deg
   }
+  /*
   else if( testCommand(msg,"pid") )
   {
    ReceiveMessage(INBOX,true,msg);
@@ -131,8 +154,10 @@ task cmdPan()
    
    pid( StrToNum(msg) ); // send angle
   }
+  */
  }
 }
+
 
 // only stops forward command
 task cmdStop()
@@ -141,19 +166,22 @@ task cmdStop()
 
  FOREVER
  {
+  Acquire(mailbox);
   ReceiveMessage(INBOX,false,msg);
-
+  Release(mailbox);
 
   if( StrLen(msg)>0 && testCommand(msg,"stop") )
   {
+   Acquire(mailbox);
    ReceiveMessage(INBOX,true,msg);
+   Release(mailbox);
 
 //   StopTask(receiveCommand); // requires Enhanced Firmware
 //   StartTask(receiveCommand);
 
     setStatus(STOPPED);
     
-    repeat(100)
+    repeat(10)
      stopWheels();
   }
  }
@@ -187,9 +215,15 @@ task sendFeedBack()
    }
 }
 
+
 task main()
 {
  Precedes(receiveCommand,cmdPan,cmdStop,sendFeedBack);
+ 
+ string msg;
+ do{
+    ReceiveMessage(INBOX,true,msg);
+ } while(StrLen(msg)>0);
 
  setSonarRaw();
  setLightRaw();
