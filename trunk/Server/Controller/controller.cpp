@@ -187,18 +187,18 @@ void controller::controllerThread(){
     while(running){
         std::cout << "[controller] executing the main loop\n";
 
-        objfile->write(objs);
-
-        db->getRequests(demand);
-        db->normalize(demand);
+        std::cout << "[controller] updating camera locations\n";
+        db->updateCameras(robots);
 
         if (dbupdate == 0) {
-            std::cout << "[controller] updating camera locations\n";
-            db->updateCameras(robots);
+            objfile->write(objs);
+
+            db->getRequests(demand);
+            db->normalize(demand);
+
+            doQOS(demand);
         }
         dbupdate = (dbupdate + 1) % 2;
-
-        doQOS(demand);
 
         boost::asio::deadline_timer timer(io_, boost::posix_time::seconds(C_QOS_INTV));
         timer.wait();

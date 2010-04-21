@@ -9,7 +9,7 @@
 #include "Robot.h"
 
 int Robot::counter = 1;
-const int Robot::camdata[][3] = { {640, 480, 15}, {640 ,480, 30}, {0, 0, 0} };
+const int Robot::camdata[][3] = { {160, 120, 15}, {160 ,120, 15}, {0, 0, 0} };
 
 Robot::Robot() : xCord(0), yCord(0) {
     // TODO Auto-generated constructor stub
