@@ -723,6 +723,8 @@ void RobotHandler::sendAssignments(std::map<Robot*, int>* assignments){
                 ++numForConn;
 
                 mapIter++;
+                if (mapIter == assignments->end())
+                    break;
             }
         }
 
