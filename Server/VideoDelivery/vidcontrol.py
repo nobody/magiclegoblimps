@@ -194,7 +194,14 @@ class VidControl():
                 self.update_feeds(feed_updates[1], feed_updates[2])
 
             # TODO: QoS and archiving
-
+            """
+            Code:
+                Check if the QoS is above settings.ARCHIVE_QOS_THRESHOLD
+                    Start recording the feed for time set settings.ARCHIVE_DURATION
+                    Create the thumbnail for the feed
+                    Add to database using conn calling
+                    db.addArchiveFeed(conn,archiveUrl, objectId, qos, thumbUrl)
+            """
             self.reply_to_QoS()
 
     def killserver(self):
