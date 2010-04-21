@@ -34,14 +34,9 @@ void AdminHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection) {
 
 void AdminHandler::threaded_on_connect(TcpServer::TcpConnection::pointer tcp_connection){
 
-
-    //TcpServer::TcpConnection::pointer tcp_connection(connections[conn]);
-    //tcp::socket &sock = tcp_connection->socket();
-
     boost::shared_ptr<session> sess(new session(tcp_connection, robots, inUse,  robotControl, objects, cont));
     sessions.push_back(sess);
     sess->start();
-
 
     std::cout << "[AH] thread exiting\n";
 }
@@ -58,16 +53,6 @@ AdminHandler::session::~session()
 void AdminHandler::session::start(){
 
     tcp::socket &sock = conn_->socket();
-/*    std::string msg = "You've reached the Admin Handler\n";
-    msg += sock.remote_endpoint().address().to_string();
-    msg += ":";
-    msg += boost::lexical_cast<std::string>(sock.remote_endpoint().port());
-    msg += "\n\n";
-
-    boost::asio::async_write(sock, boost::asio::buffer(msg), 
-        boost::bind(&AdminHandler::session::write_handler, this, 
-        boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
-*/
     boost::asio::async_read_until(sock, read_message_.buffer(), '\n', 
         boost::bind(&AdminHandler::session::read_handler, this, 
             boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
@@ -77,9 +62,6 @@ void AdminHandler::session::start(){
 }
 
 void AdminHandler::session::write_handler(const boost::system::error_code& error,  std::size_t bytes_transferred) {
-    std::cout << "AdminHandler wrote " << bytes_transferred << " bytes to a client\n";
-    std::cout.flush();
-    
 }
 
 void AdminHandler::session::read_handler(const boost::system::error_code& error,  std::size_t bytes_transferred) {
@@ -100,7 +82,7 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
     std::string s(read_message_.data(bytes_transferred));
     read_message_.consume(bytes_transferred);
 
-    std::cout << "Got string \"" << s << "\"\n";
+    std::cout << "[AH] Got string \"" << s.substr(0, s.size() - 1) << "\"\n";
     std::cout.flush();
 
     command cmd;
@@ -126,7 +108,7 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
         //parse the command id
         std::string token = s.substr(0, s.find('$', 0));
         s =  s.substr( token.size() + 1, std::string::npos);
-        std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
+        //std::cout << "[AH] token:\"" << token << "\" s:\"" << s << "\"\n";
 
         robots->readLock();
         int switchvar = atoi(token.c_str());
