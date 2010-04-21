@@ -707,7 +707,7 @@ void RobotHandler::sendAssignments(std::map<Robot*, int>* assignments){
         //we don't know how many robots will be on each connection
         //so we will loop as long as the connection endpoint matches 
         //the one in the outer loop
-        if ((*mapIter).first != NULL) {
+        if ((*mapIter).first != NULL && mapIter != assignments->end()) {
             while(((*mapIter).first->getEndpoint()) == ((*connIter).first)){
                 current[numForConn].RID = (*mapIter).first->getRID();
                 current[numForConn].OID = (*mapIter).second;
