@@ -214,7 +214,7 @@ void controller::controllerThread(){
             db->getRequests(demand);
             db->normalize(demand);
 
-            doQOS(demand);
+            //doQOS(demand);
         }
         dbupdate = (dbupdate + 1) % 2;
 
