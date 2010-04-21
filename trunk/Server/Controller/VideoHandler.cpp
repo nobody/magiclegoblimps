@@ -83,9 +83,6 @@ void VideoHandler::read_handler(const boost::system::error_code& error,  std::si
     //std::cout << "[VH] VideoHandler read " << bytes_transferred << " bytes \n";
     //std::cout.flush();
 
-    if (bytes_transferred == 0)
-        return;
-
     if (error == boost::asio::error::eof){
         close();
         return;
@@ -96,6 +93,9 @@ void VideoHandler::read_handler(const boost::system::error_code& error,  std::si
         std::cerr << "[VH] unknown error in read handler\n";
         return;
     }
+
+    if (bytes_transferred == 0)
+        return;
 
     std::string s(read_message_.data(bytes_transferred));
     read_message_.consume(bytes_transferred);
