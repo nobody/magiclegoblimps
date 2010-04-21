@@ -71,11 +71,11 @@ double Qos::calcQos(Object* o, Robot* r) {
     
     delete rPoint;
 
-    if(camBasedQuality == 0){
-        return 0.0;
-    }else{
+   // if(camBasedQuality == 0){
+   //     return 0.0;
+   // }else{
         return distBasedQuality * .75 + camBasedQuality * .25;
-    }
+   // }
 }
 
 //Returns decimal on [0,1] representing difference from optimal
