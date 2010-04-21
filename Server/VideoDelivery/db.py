@@ -87,6 +87,24 @@ def displayTable(conn,tableName):
     except MySQLdb.Error as e:
         log("Error %d: %s" % (e.args[0], e.args[1]))
 
+def checkArchive(conn,archiveUrl):
+    """
+    Checks if there is already a object with the given information
+    Returns a boolean
+    """
+    try:
+        cursor = conn.cursor()
+        sql = 'SELECT * FROM archives WHERE archives.archive_url="'+archiveUrl
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        if results == ():
+            return False
+        else:
+            return True
+        cursor.close()
+    except MySQLdb.Error as e:
+        log("Error %d: %s" % (e.args[0], e.args[1]))
+
 if __name__ == '__main__':
     c = connect()
     addCameraFeed(c,'1','http://something-cooler-than-test.html')

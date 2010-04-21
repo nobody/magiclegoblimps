@@ -19,9 +19,10 @@ class Archive():
         self.filenames = []
         self.objects = []
         self.qos = []
+        self.thumb = []
         self.objects_qos = {}
 
-    def get_Archive(self):
+    def get_ArchiveFeeds(self):
         """
         Grabs all of the filenames in the archive directory
         Splits out the information in the filenames
@@ -39,6 +40,16 @@ class Archive():
             self.qos.append(qos)
             obj = parts[1]
             self.objects.append(obj)
+        
+        for x in tmpfilenames:
+            parts = x.split('.')
+
+            # make sure this is a valid archive video entry
+            if not x.endswith('.flv') or len(parts) != 2:
+                continue
+
+            thumb = parts[0]
+            self.thumb.append(thumb)
 
         for x in range(len(self.filenames)):
             self.objects_qos[self.objects[x]] = self.qos[x]
@@ -61,13 +72,24 @@ class Archive():
             f.write('</html>\n')
         log('Created HTML page with latest archives')
 
-    def update(self):
+    def updateInital(self):
         """
         -update the SQL database, with the current information
         -using there stored procedure
         """
-        
-        log('Updated the Client database with Archived Videos')
+        try:
+            conn = db.connect()
+            for x in range(len(self.filenames)):
+                if checkArchive(conn,settings.ARCHIVE_FEED_URL+self.filenames[x]):
+                    # Archive is currently there no need to add
+                else:
+                    # Archive is not there need to update database
+                    db.addArchiveFootage(conn,settings.ARCHIVE_FEED_URL+self.filenames[x],
+                                        self.objects[x],self.qos[x],
+                                        settings.ARCHIVE_FEED_URL+'images/'+self.thumb[x]+'.jpg')
+            log('Updated the Client database with Archived Videos')
+        except MySQL.Error as e:
+            log("Error %d: %s" % (e.args[0], e.args[1]))
 
 if __name__ == '__main__':
     change_working_directory()

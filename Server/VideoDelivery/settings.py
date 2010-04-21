@@ -26,10 +26,11 @@ FEEDER_URLS = 'http://localhost:{0}/{1}.ffm'
 LIVE_FEED_URLS = 'http://{0}:{1}/{2}.flv' # domain, port, filename
 
 # archive settings
-ARCHIVE_FEED_URLS = 'http://{0}/{2}.flv' # domain, filename
+ARCHIVE_FEED_URLS = 'http://'+CURRENT_IP+'/archives/' # domain, filename
 ARCHIVE_CSV_FILE = '/var/www/mlb/archive-feeds.csv'
 ARCHIVE_HTML = './archives/index.html'
 ARCHIVE_DURATION = 30
+ARCHIVE_QOS_THRESHOLD = 0.72
 
 CONFIG_TEMPLATE = 'config-template.txt'
 CONFIG_FILE_DIR = './'
