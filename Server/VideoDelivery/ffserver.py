@@ -88,7 +88,8 @@ def capture_screenshot(vfeed, arch_video_url):
     if not settings.DEBUG:
         subprocess.Popen(
             ['ffmpeg', '-f', 'mjpeg', '-i', vfeed.feed_url,
-             '-f', 'image2', '-t', '0.001', get_full_path(screenshot_file)],
+             '-f', 'image2', '-t', '0.001', '-s',
+             settings.ARCHIVES_THUMB_SIZE, get_full_path(screenshot_file)],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE)
     log('took screenshot for feed: ' + screenshot_file)
