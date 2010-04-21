@@ -65,7 +65,9 @@ def addArchiveFootage(conn,archiveUrl,objectId,qos,thumbUrl):
     """
     try:
         cursor = conn.cursor()
-        sql = 'CALL addArchiveFootage("'+archiveUrl+'",'+objectId+','+qos+',"'+thumbUrl+'")'
+        sql = """insert into archives set archive_url='{0}', archive_obj_id={1},
+                 archive_qos={2}, archive_thumb_url='{3}'""".format(
+                archiveUrl, str(objectId), str(qos), thumbUrl)
         cursor.execute(sql)
         conn.commit()
         cursor.close()

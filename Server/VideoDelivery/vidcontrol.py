@@ -17,6 +17,7 @@ import settings
 from logger import log, transcribe
 import qosupdate
 from VidFeed import VidFeed
+import archives
 import db
 
 class VidControl():
@@ -35,7 +36,9 @@ class VidControl():
         self.next_port = 8090
         # used to generate configuration files
         self.config_gen = config.Generator()
+        log('waiting to connect to database')
         self.conn = db.connect()
+        log('done waiting')
 
     def connect_QoS(self, addr=settings.QOS_SERVER_URL,
                     port=settings.QOS_SERVER_PORT):
@@ -165,6 +168,17 @@ class VidControl():
         return settings.LIVE_FEED_URLS.format(settings.CURRENT_IP, vfeed.port,
                                               vfeed.stream_name)
 
+    def do_archives(self):
+        """
+        Test feeds to see if any should be archived (the QoS for an object in
+        view exceeds a certain threshold) and archives the feed if necessary.
+        """
+        for vf in self.feeds:
+            for i in range(len(vf.objects)):
+                if vf.objects[i][1] > settings.ARCHIVE_QOS_THRESHOLD:
+                    archives.create_archive(self.conn, vf, i)
+                    break # archive max. of 1 object per feed at a given time
+
     def runserver(self):
         """
         1. poll QoS
@@ -193,15 +207,7 @@ class VidControl():
             else:
                 self.update_feeds(feed_updates[1], feed_updates[2])
 
-            # TODO: QoS and archiving
-            """
-            Code:
-                Check if the QoS is above settings.ARCHIVE_QOS_THRESHOLD
-                    Start recording the feed for time set settings.ARCHIVE_DURATION
-                    Create the thumbnail for the feed
-                    Add to database using conn calling
-                    db.addArchiveFeed(conn,archiveUrl, objectId, qos, thumbUrl)
-            """
+            self.do_archives()
             self.reply_to_QoS()
 
     def killserver(self):

@@ -52,6 +52,13 @@ def ffmpeg_args(vfeed):
         settings.FEEDER_URLS.format(vfeed.port, vfeed.feed_name)
     ]
 
+def get_full_path(arch_fname):
+    """
+    Returns the complete path (may be absolute or relative) in which to store
+    the archive file.
+    """
+    return settings.ARCHIVE_DIR + '/' + arch_fname
+
 def capture_archive(vfeed, object_id, qos):
     """
     Saves 30 seconds of the given feed to the archives directory.
@@ -64,7 +71,7 @@ def capture_archive(vfeed, object_id, qos):
         subprocess.Popen(
             ['ffmpeg', '-f', 'mjpeg', '-i', vfeed.feed_url,
              '-t', str(settings.ARCHIVE_DURATION), '-f', 'flv',
-             archive_file],
+             get_full_path(archive_file)],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE)
     vfeed.last_archived = datetime.now()
@@ -72,22 +79,19 @@ def capture_archive(vfeed, object_id, qos):
         vfeed.feed_url, str(object_id), str(qos)))
     return archive_file
 
-def capture_screenshot(vfeed, object_id, qos):
+def capture_screenshot(vfeed, arch_video_url):
     """
     Creates a screenshot for the specified feed.
     Returns the filename for the screenshot.
     """
-    # ffmpeg -f mjpeg -i http://10.176.14.66/video.cgi -t 30 -f flv clip.flv
-    screenshot_file = '{0}-{1}-{2}.jpg'.format(
-        str(qos), str(object_id), str(int(time())))
+    screenshot_file = arch_video_url.replace('.flv', '.jpg')
     if not settings.DEBUG:
         subprocess.Popen(
             ['ffmpeg', '-f', 'mjpeg', '-i', vfeed.feed_url,
-             '-f', 'image2', '-t', '0.001', screenshot_file],
+             '-f', 'image2', '-t', '0.001', get_full_path(screenshot_file)],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE)
-    log('took screenshot for feed: {0}, object:{1}, qos: {2}'.format(
-        vfeed.feed_url, str(object_id), str(qos)))
+    log('took screenshot for feed: ' + screenshot_file)
     return screenshot_file
 
 def dummy_launch(vfeed):
@@ -106,5 +110,5 @@ def dummy_launch(vfeed):
 if __name__ == '__main__':
     vf = VidFeed()
     vf.feed_url = 'http://fake-url/video.cgi'
-    capture_archive(vf, 3, 0.76)
-    capture_screenshot(vf, 3, 0.76)
+    fname = capture_archive(vf, 3, 0.76)
+    capture_screenshot(vf, fname)
