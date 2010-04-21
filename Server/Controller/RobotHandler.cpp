@@ -578,6 +578,24 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                 db->insertCameras(robots);
             }
             break;
+            
+            case P_ROBOT_RM:
+            {
+                robotRm* robot = new robotRm[message->size];
+                robot = (robotRm*)(message->array);
+                for( int i = 0; i < message->size; ++i){
+                    Robot* temp = new Robot(connEP, robot[i].RID);
+                    robots->lock();
+                    Vector_ts<Robot*>::iterator robot_it;
+                    for(robot_it = robots->begin(); robot_it != robots->end(); ++robot_it){
+                        if(*(*robot_it) == *temp){
+                            robots->erase(robot_it);
+                            break;
+                        }   
+                    }
+                }
+            }
+
             default:
             //its broken if it gets here, need to figure out what to do.
             std::cerr<<"[RH] message was not of correct type\n[RH] type was: "<<message->type<<std::endl;
