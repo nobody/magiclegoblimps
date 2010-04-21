@@ -40,11 +40,7 @@ int main(int argc, char** argv) {
 #endif
 
     int total = 1000;
-    if (argc > 1) {
-        total = atoi(argv[1]);
-    }
-    boost::uniform_int<> range(0, total);
-    boost::variate_generator<boost::random_device&, boost::uniform_int<> > rnd(dev, range);
+    int* arr = new int[argc + 1];
 
     sql::mysql::MySQL_Driver *driver = sql::mysql::get_mysql_driver_instance();
     sql::Connection *con;
@@ -79,9 +75,13 @@ int main(int argc, char** argv) {
     }
 
     int sum = 0;
+    int idx = 1;
     while(rs->next()) {
         int req_obj = rs->getInt("animal_id");
-        int count = rnd();
+        int count = 100;
+        if (argc > idx + 1) {
+            count = atoi(argv[idx++]);
+        }
         sum += count;
         //std::cout << "rnd() returned: " << count << " for Object:" << req_obj << "\n";
         std::cout << count <<  "\n";
