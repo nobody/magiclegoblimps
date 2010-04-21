@@ -20,6 +20,7 @@ public:
 	string GetAddress();
 
 	void SendMessage(string message);
+	void SendMessage(string message, int box);
 	string ReadMessage();
 
 	void StartProgram(string name);

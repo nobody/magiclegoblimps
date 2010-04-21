@@ -55,14 +55,15 @@ void LocalInput()
 	//testconnect
 	else if (tokens[0].compare("testconnect") == 0)
 	{
-		controller->ConnectToServer("129.110.116.66");
+		controller->ConnectToServer("10.176.14.94");
 	}
 
 	//testrobot
 	else if (tokens[0].compare("testrobot") == 0)
 	{
 		//lazy connection for repeat testing
-		Robot* robot = new Robot(1, "192.168.1.101:7001", true);
+		//Robot* robot = new Robot(6, "10.176.14.89:7001", true);
+		Robot* robot = new Robot(6, "192.168.1.101:7001", true);
 		robot->Connect();
 		controller->AddRobot(robot);
 	}
@@ -159,6 +160,7 @@ void LocalInput()
 	//removeobject id
 	else if (tokens[0].compare("removeobject") == 0)
 	{
+		//there is a bug here
 		if (tokens.size() == 2)
 		{
 			vector<TrackingObject*>::iterator it;
@@ -195,7 +197,7 @@ void LocalInput()
 
 int main(int argc, char* argv[])
 {
-	controller = new Controller(2, 2, "192.168.1.1");
+	controller = new Controller(3, 3, "10.176.14.89");
 
 	cout << "ROBOT CONTROLLER" << endl;
 	cout << "----------------" << endl;

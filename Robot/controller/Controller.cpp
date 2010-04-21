@@ -183,7 +183,6 @@ void Controller::ClientThread(void* params)
 				for (int i = 0; i < data->size; i++)
 				{
 					//remove output after testing
-					//should target -1 if robot has not target or is admin
 					cout << "Assigning Robot " << assign[i].RID << 
 						" to Object " << assign[i].OID << endl;
 
@@ -231,7 +230,7 @@ bool Controller::Command(int id, int command, int arg)
 {
 	if (command == P_CMD_FWD)
 	{
-		getRobot(id)->ExecuteCommand("forward " + arg);
+		getRobot(id)->ExecuteCommand("forward");
 	}
 	else if(command == P_CMD_LFT)
 	{
@@ -243,7 +242,11 @@ bool Controller::Command(int id, int command, int arg)
 	}
 	else if (command == P_CMD_CAMROT)
 	{
-		getRobot(id)->ExecuteCommand("pan " + arg);
+		string cmd = "";
+		stringstream oss;
+		oss << "pan " << arg;
+		cmd = oss.str();
+		getRobot(id)->ExecuteCommand(cmd);
 	}
 	else if (command == P_CMD_DEL_OBJ)
 	{
@@ -344,21 +347,18 @@ void Controller::Disconnect()
 		robots_.clear();
 	}
 	
-	//vector incompatible
-	/*
 	if (Camera::GetTrackableObjects().size() > 0)
 	{
 		vector<TrackingObject*>::iterator it;
+		vector<TrackingObject*> objects = Camera::GetTrackableObjects();
 
-		for (it = Camera::GetTrackableObjects().begin(); it != 
-			Camera::GetTrackableObjects().end(); it++)
+		for (it = objects.begin(); it != objects.end(); it++)
 		{
 			delete (*it);
 		}
 
-		Camera::GetTrackableObjects().clear();
+		objects.clear();
 	}
-	*/
 }
 
 void Controller::disconnect()
@@ -384,21 +384,18 @@ void Controller::disconnect()
 		robots_.clear();
 	}
 
-	//vector incompatible
-	/*
 	if (Camera::GetTrackableObjects().size() > 0)
 	{
 		vector<TrackingObject*>::iterator it;
+		vector<TrackingObject*> objects = Camera::GetTrackableObjects();
 
-		for (it = Camera::GetTrackableObjects().begin(); it != 
-			Camera::GetTrackableObjects().end(); it++)
+		for (it = objects.begin(); it != objects.end(); it++)
 		{
 			delete (*it);
 		}
 
-		Camera::GetTrackableObjects().clear();
+		objects.clear();
 	}
-	*/
 }
 
 void Controller::Update()
@@ -476,7 +473,8 @@ void Controller::Update()
 						atoi(tokens[4].c_str()),
 						atoi(tokens[5].c_str()));
 
-					cout << (*it)->getLocation()->getX() << ", " << (*it)->getLocation()->getY() << endl;
+					cout << (*it)->getLocation()->getX() << ", " << (*it)->getLocation()->getY() << 
+						(*it)->getStatus() << endl;
 
 					(*it)->setRobotMoving(false);
 
@@ -531,8 +529,6 @@ void Controller::Update()
 				update[i].y = (*it)->getLocation()->getY();
 				update[i].listSize = 
 					(int)(*it)->GetCamera()->GetVisibleObjects().size();
-
-				cout << "LISTSIZE: " << update[i].listSize << endl;
 
 				if (update[i].listSize > 0)
 				{
@@ -597,9 +593,9 @@ void Controller::Update()
 			int i = 0;
 
 			vector<TrackingObject*>::iterator it;
+			vector<TrackingObject*> tobjects = Camera::GetTrackableObjects();
 
-			for (it = Camera::GetTrackableObjects().begin(); 
-				it != Camera::GetTrackableObjects().end(); it++)
+			for (it = tobjects.begin(); it != tobjects.end(); it++)
 			{
 				string name = "Animal" + (*it)->GetID();
 
@@ -844,6 +840,7 @@ void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
 
 void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 {
+	/*
 	robot->setDestination(loc);
         robot->setPath(genPath(*robot));
 
@@ -888,6 +885,6 @@ void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 		}		
 		countSpirals++;
 	}
-	
+	*/
 }
 
