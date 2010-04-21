@@ -56,7 +56,7 @@ while(true){
 //Find the object with highest demand that has not yet been assigned.  If all 
     int maxObject = -1;
     for(int j = 0; j < numObjects; ++j){
-        //std::cout << "[AS] DEBUG: " << j << " " << numObjects << " " << maxObject << " " << demand[j] << " " << objAss[j] << " " << objects[j]->getOID() << "\n";
+        std::cout << "[AS] DEBUG: " << j << " " << numObjects << " " << maxObject << " " << demand[j] << " " << objAss[j] << " " << objects[j]->getOID() << "\n";
         if(maxObject == -1 && objAss[j]==-1){
             maxObject = j;
         }
@@ -160,8 +160,24 @@ for(int i = 0; i < numRobots; i++){
  for(int i = 0; i < numObjects; i++) {
     if(objAss[i] != -1) {
         objects[i]->setViewedFrom(robots[objAss[i]]);
-    }
- }
+    }else{//If no robot is pursuing the object, look through the objects to find the best view 
+        int maxIndex = -1;
+        double qu = -1.0;
+        for(int j = 0; j < numRobots; j++){ //Assign view of unseen object to cam with best view of it.
+            if(maxIndex==-1 || quality->calcQos(objects[i],robots[j])>qu){
+                maxIndex = j;
+                qu = quality->calcQos(objects[i],robots[j]);
+            }
+        }
+        if(qu<=0){
+            std::cout << "[AS] No cameras can see the object, use archive video" << "\n";
+            objects[i]->setViewedFrom(NULL);
+        }else{
+            objects[i]->setViewedFrom(robots[maxIndex]);   
+        }
+     }
+  }
+ 
 
  delete[] qual;
  delete[] objAss;

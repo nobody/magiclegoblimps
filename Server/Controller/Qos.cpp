@@ -56,7 +56,7 @@ double Qos::calcQos(Object* o, Robot* r) {
     Point* rPoint = new Point(r->getXCord(), r->getYCord());
 
     double distBasedQuality = dist(*rPoint, o->pos) * Qos::CAM_VALUES[r->getCamera()];
-    double camBasedQuality;
+    double camBasedQuality = 0;
 
     if (r->list->find(o->getOID()) != r->list->end()) { //verify the robot can see the item
         camBasedQuality = (*r->list)[o->getOID()] * Qos::CAM_VALUES[r->getCamera()];
@@ -71,8 +71,11 @@ double Qos::calcQos(Object* o, Robot* r) {
     
     delete rPoint;
 
-    return distBasedQuality;
-
+    if(camBasedQuality == 0){
+        return 0.0;
+    }else{
+        return distBasedQuality * .75 + camBasedQuality * .25;
+    }
 }
 
 //Returns decimal on [0,1] representing difference from optimal
