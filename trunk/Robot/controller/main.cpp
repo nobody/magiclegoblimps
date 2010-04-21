@@ -160,11 +160,8 @@ void LocalInput()
 	//removeobject id
 	else if (tokens[0].compare("removeobject") == 0)
 	{
-		//there is a bug here
 		if (tokens.size() == 2)
 		{
-			vector<TrackingObject*>::iterator it;
-
 			vector<TrackingObject*>::iterator it;
 			vector<TrackingObject*> objects = Camera::GetTrackableObjects();
 
