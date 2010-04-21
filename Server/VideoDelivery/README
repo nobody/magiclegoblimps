@@ -4,3 +4,9 @@ To run this program:
 	2) python vidcontrol.py
 	   This will run the process management and config file generator program
 	   for the video delivery server.
+
+To run for the demo:
+	1) Make sure the url is correct for the QoS Server in the settings.py
+	2) python vidcontrol.py
+	   This will run the process management and config file generator program for the video delivry server. 
+	   To Kill just interrupt the process via keyboard and it will clean up after itself.
