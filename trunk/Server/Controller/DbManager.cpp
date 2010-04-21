@@ -375,7 +375,7 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
                << (*it)->getXCord()
                << "', '"
                << (*it)->getYCord()
-               << "', '";
+               << "', ";
             float max_qual = -1;
             int max_qual_id = -1;
             std::map<int, float>* list = (*it)->list;
@@ -398,11 +398,11 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
                 //std::cout << "[db] Succeeded query: " << cmd << "\n";
             }
             if (max_qual_id > -1)
-                ss << max_qual_id;
+                ss << << "'" << max_qual_id << "'";
             else 
                 ss << "NULL";
 
-            ss << "', '"
+            ss << ", '"
                << (*it)->getDir()
                << "')";
             cmd = ss.str();
@@ -410,13 +410,13 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
             try {
                 stmt->execute(cmd);
             } catch(...){
-                //std::cout << "[db] Failed query: " << cmd << "\n";
+                std::cout << "[db] Failed query: " << cmd << "\n";
                 
                 (*it)->unlock();
                 ret = false;
                 continue;
             }
-            //std::cout << "[db] Succeeded query: " << cmd << "\n";
+            std::cout << "[db] Succeeded query: " << cmd << "\n";
             (*it)->unlock();
         }
     }
