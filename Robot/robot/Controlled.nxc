@@ -26,6 +26,8 @@ task receiveCommand()
  FOREVER
  {
   setLightOff();
+  
+  //TextOut(0,0,NumToStr(STATUS),true);
 
   msg = readInbox(false);
   
