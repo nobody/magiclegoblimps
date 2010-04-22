@@ -358,7 +358,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
             connections[connEP]->readLock();
             int blargh = 0;
             try{
-                blargh = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining - count), error);
+                blargh = boost::asio::read(connections[connEP]->socket(), boost::asio::buffer(arr, total), boost::asio::transfer_at_least(total - remaining), error);
                 count += blargh;
                 remaining = total - count;
             }catch(boost::exception &e){
@@ -393,7 +393,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                 return;
             }
 
-            data = inputBuffer.data();
+            /*data = inputBuffer.data();
             iter = boost::asio::buffers_begin(data);
             for(size_t i = start; i < start + blargh; ++i){
                 arr[i] = *iter;
@@ -406,14 +406,20 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
             //wasn't quite sure how to deal with the size_t issue...
             inputBuffer.consume(blargh);
             start += blargh;
+            */
         }
 
         std::cout << "remaining: " << remaining << "  count: " << count << "\n";
 
 
         std::cout<<"[RH] Recieved a message (" << count << " of " << total << " bytes):\n";
-        std::string tmp__(boost::asio::buffers_begin(data), boost::asio::buffers_end(data));
-        std::cout << tmp__ << "\n\n";
+        for (int x = 0; x < total; ++x) {
+            printf("%02X ", arr[x]);
+            fflush(stdout);
+        }
+        std::cout << "\n\n";
+        //std::string tmp__(boost::asio::buffers_begin(data), boost::asio::buffers_end(data));
+        //std::cout << tmp__ << "\n\n";
         //reset all the varibles with the new data in the buffer
 
         //remove the number of bytes consumed from count so that we 
