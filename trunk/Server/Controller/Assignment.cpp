@@ -152,9 +152,9 @@ arr = new int[m*n];
 for (int i = 0; i < m; i++) {
     for (int j = 0; j < n; j++) {
         if(normal) { //m is robots
-            arr[i*n + j] = quality->calcQos(objects[j], robots[i]);
+            arr[i*n + j] = quality->calcQos(objects[j], robots[i]) * demand[j];
         } else {
-            arr[i*n+j] = quality->calcQos(objects[i], robots[j]);
+            arr[i*n+j] = quality->calcQos(objects[i], robots[j]) * demand[i];
         }
 
     }
