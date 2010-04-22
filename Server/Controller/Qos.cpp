@@ -62,7 +62,7 @@ double Qos::calcQos(Object* o, Robot* r) {
     double distBasedQuality = dist(*rPoint, o->pos) * Qos::CAM_VALUES[camVal];
     double camBasedQuality = 0;
 
-    if (r->list->find(o->getOID()) != r->list->end()) { //verify the robot can see the item
+    if (r->list && r->list->find(o->getOID()) != r->list->end()) { //verify the robot can see the item
         camBasedQuality = (*r->list)[o->getOID()] * Qos::CAM_VALUES[r->getCamera()];
     }
     else {
