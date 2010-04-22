@@ -350,7 +350,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         size_t remaining = total - count;
 
         //if there are bytes remainging to be read read them
-        while (remaining > 0 && count < remaining){
+        while (remaining > 0 && count < total){
             std::cout << "remaining: " << remaining << "  count: " << count << "\n";
             connections[connEP]->readLock();
             try{
