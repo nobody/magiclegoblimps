@@ -88,8 +88,7 @@ void Robot::setVideoURL(std::string url) {
 }
 
 void Robot::setList(int* objects, float* qualities, int size){
-    delete list;
-    list = new std::map<int, float>;
+    list.clear();
 
     for(int i = 0; i < size; ++i){
        (*list)[objects[i]] = qualities[i];
