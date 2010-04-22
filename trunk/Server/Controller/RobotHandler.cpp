@@ -389,9 +389,9 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         }
 
 
-        std::cout<<"[RH] Recieved a message:\n";
+        std::cout<<"[RH] Recieved a message (" << count << " bytes):\n";
         std::string tmp__(boost::asio::buffers_begin(data), boost::asio::buffers_end(data));
-        std::cout << tmp__ << "\n";
+        std::cout << tmp__ << "\n\n";
         //reset all the varibles with the new data in the buffer
         delete[] arr;
         arr = new char[total];
