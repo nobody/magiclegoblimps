@@ -54,7 +54,7 @@ double Qos::calcQos(Object* o, Robot* r) {
 
     //Manually create points until/if we use point class
     Point* rPoint = new Point(r->getXCord(), r->getYCord());
-    double camVal = 0;
+    int camVal = 0;
     std::cout << "[QS] CamQual" << r->getCamera() << "\n";
     if(r->getCamera() != 0){
         camVal = 1;
