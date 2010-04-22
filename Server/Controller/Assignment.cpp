@@ -12,6 +12,7 @@
 #include "Object.h"
 #include "hungarian.h"
 #include <iostream>
+#include <string>
 
 Assignment::Assignment(Robot** r, int nr, Object** o,int no,  double* d, Qos* q){
     demand = d;
@@ -20,7 +21,22 @@ Assignment::Assignment(Robot** r, int nr, Object** o,int no,  double* d, Qos* q)
     numObjects = no;
     numRobots = nr;
     quality = q;
+
+    //Verify and output what we get.
+
+    std::cout   <<"[AS] Initializing Robot Assigner." <<"\n"
+                <<"[AS] Robots: " <<numRobots <<" Objects: " <<numObjects <<"\n"
+                <<"[AS] Demand: [";
+                
+    for (int i = 0; i < numObjects; i++) {
+        std::cout <<demand[i]; 
+        if (i != numObjects - 1) 
+            std::cout <<",";
+    }
+
+    std::cout <<"]\n";               
 }
+
 Assignment::~Assignment()
 {
 
@@ -69,8 +85,10 @@ while(true){
 //Find the object with highest demand that has not yet been assigned.  If all 
     int maxObject = -1;
     for(int j = 0; j < numObjects; ++j){
-        std::cout << "[AS] DEBUG: " << j << " " << numObjects << " " << maxObject << " " << demand[j] << " " << objAss[j] << " " << objects[j]->getOID() << "\n";
-        if(maxObject == -1 && objAss[j]==-1){
+        std::cout   << "[AS] OID: "  <<objects[j]->getOID() <<" index: " <<j 
+                    <<" Demand of: " <<demand[j]  <<" Cur max demand: " << maxObject 
+                    << " robot assigned: " << objAss[j] << "\n";
+        if(maxObject == -1 && objAss[j] == -1){
             maxObject = j;
         }
         else if(demand[j] > demand[maxObject] && objAss[j] == -1){
@@ -88,17 +106,19 @@ while(true){
 
     for(int j = 0; j < numRobots; j++){
         double t = quality -> calcQos(objects[maxObject],robots[j]);
-        if(t>tQos && robotAssignments[j]==-1){
+        if(t>tQos && robotAssignments[j] == -1){
             tQos = t;
             maxRobot = j;
         }
     }
+    std::cout <<"[AS] Robot " <<maxRobot <<" assigned to object " <<maxObject <<"\n";
 //Store the assignment
     robotAssignments[maxRobot] = maxObject;
     objAss[maxObject] = maxRobot;
     
 //Continue until done
-    if(isDone()==-1){
+    if(isDone() == -1){
+        std::cout <<"[AS] All robots assigned.\n";
         break;
     }
 }
@@ -193,10 +213,10 @@ free(r);
      }
   }
  
-
  delete[] qual;
  delete[] objAss;
  delete[] arr;
+
  return ret;
     
 }

@@ -37,8 +37,8 @@ Qos::~Qos() {
 
 double Qos::calcQos(){
     double ret = 0;
-    int i = 0;
-    for(i = 0; i < numObjects; i++){ 
+
+    for(int i = 0; i < numObjects; i++){ 
         ret += demand[i]*calcQos(objects[i], objects[i]->getViewedFrom() );
     }
         std::cout <<"[QS] System Qos: " << ret <<"\n";
@@ -80,14 +80,17 @@ double Qos::calcQos(Object* o, Robot* r) {
    // if(camBasedQuality == 0){
    //     return 0.0;
    // }else{
-        return distBasedQuality * .75 + camBasedQuality * .25;
+
+        return distBasedQuality;  // * .75 + camBasedQuality * .25;
    // }
 }
 
 //Returns decimal on [0,1] representing difference from optimal
 double Qos::dist(Point p1, Point p2){
-    double d = sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y));
-    std::cout <<"[QS] Dist (" <<p1.x <<", " <<p1.y <<"), (" <<p2.x <<", " <<p2.y <<") = " <<d <<"\n";
+    //double d = sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y));
+    int d = abs(p1.x - p2.x) + abs(p1.y - p2.y);
+
+    std::cout <<"[QS] Manhattan Dist (" <<p1.x <<", " <<p1.y <<"), (" <<p2.x <<", " <<p2.y <<") = " <<d <<"\n";
     if(d >= Qos::OPTIMAL_DIST){
         return Qos::OPTIMAL_DIST / (double)d; //Optimal / Actual if D > optimal
     }else{
