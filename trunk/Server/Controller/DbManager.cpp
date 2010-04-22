@@ -459,16 +459,15 @@ bool DbManager::deleteCam( int id ) {
     cmd += DbManager::db_database;
     stmt->execute(cmd);
 
+    bool ret = true;
     try{
         std::stringstream ss;
         ss << "DELETE FROM service WHERE `service_camera_id`='" << id << "'";
         cmd = ss.str();
         stmt->execute(cmd);
     } catch(...){
-        delete stmt;
-        delete con;
-
-        return false;
+        std::cout << "[db] Failed query: " << cmd << "\n";
+        ret = false;
     }
     try{
         std::stringstream ss;
@@ -476,12 +475,13 @@ bool DbManager::deleteCam( int id ) {
         cmd = ss.str();
         stmt->execute(cmd);
     } catch(...){
-        delete stmt;
-        delete con;
+        std::cout << "[db] Failed query: " << cmd << "\n";
 
-        return false;
+        ret = false;
     }
-    return true;
+    delete stmt;
+    delete con;
+    return ret;
 }
 
 bool DbManager::insertObject( Object* obj ) {
