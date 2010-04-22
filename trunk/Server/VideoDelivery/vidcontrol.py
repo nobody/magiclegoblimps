@@ -14,7 +14,7 @@ import sys
 import config
 import ffserver
 import settings
-from logger import log, transcribe
+from logger import log, transcribe, clearlogs
 import qosupdate
 from VidFeed import VidFeed
 import archives
@@ -36,9 +36,9 @@ class VidControl():
         self.next_port = 8090
         # used to generate configuration files
         self.config_gen = config.Generator()
-        log('waiting to connect to database')
+        log('Attempting to connect to database: ' + settings.MySQL_DATABASE)
         self.conn = db.connect()
-        log('done waiting')
+        log('Connected to database: ' + settings.MySQL_DATABASE)
 
     def connect_QoS(self, addr=settings.QOS_SERVER_URL,
                     port=settings.QOS_SERVER_PORT):
@@ -49,14 +49,15 @@ class VidControl():
         specified in the settings file.
         """
         self.QoS_addr = (addr, port)
-        for i in range(0, settings.MAX_CONNECTION_ATTEMPTS):
+        # for i in range(0, settings.MAX_CONNECTION_ATTEMPTS):
+        while True:
             try:
+                log('Attempting to connect to QoS server at '
+                    + addr + ':' + str(port))
                 self.QoS_server = socket.socket()
                 self.QoS_server.connect(self.QoS_addr)
             except socket.error as ex: # connection failed, retry
-                log(ex)
-                log('Attempt ' + str(i) + ' to connect to the QoS server '
-                    + ' failed miserably.')
+                log('Failed to connect to QoS server: ' + str(ex))
                 time.sleep(settings.CONNECTION_RETRY_INTERVAL)
             else: # we have a valid connection
                 log('Connected to QoS server at ' + addr + ':' + str(port))
@@ -65,6 +66,22 @@ class VidControl():
         log('Could not connect to QoS server at ' + addr + ':' + str(port))
         return False
 
+    def reconnect_QoS(self, addr=settings.QOS_SERVER_URL,
+                      port=settings.QOS_SERVER_PORT):
+        """
+        If we think we've lost the connection to the QoS server, this function
+        makes sure that the connection is either really dropped or closed (in
+        the case that the connection was still good) before attempting to
+        establish a new connection.
+        """
+        log('Lost connection to QoS server, attempting to reconnect')
+        try:
+            self.Qos_server.close()
+        except Exception as e: # probably already closed
+            log('Error closing connection to QoS server: ' + str(e))
+        finally:
+            return self.connect_QoS()
+
     def poll_QoS(self):
         """
         Gets the latest camera/object metrics from the QoS server. This
@@ -72,6 +89,9 @@ class VidControl():
         was invalid.
         """
         response = self.QoS_server.recv(self.BUFFER_SIZE)
+        if not response: # assume dropped connection
+            raise socket.error('No data received from QoS server')
+
         try:
             lines = response.decode('utf-8').splitlines()
             pr = qosupdate.parse(lines)
@@ -86,11 +106,17 @@ class VidControl():
         data and that we are ready to receive more updates.
         """
         if fail:
-            reply = 'FAIL'.encode()
+            reply = 'FAIL\n'.encode()
             transcribe('>>> To QoS Server:\nFAIL\n')
         else:
-            reply = qosupdate.prepare(self.feeds)
-        self.QoS_server.send(reply)
+            reply = 'OK\n'.encode()
+            transcribe('>>> To QoS Server:\nOK\n')
+
+        try:
+            self.QoS_server.send(reply)
+        except socket.error as e:
+            log('socket.error sending reply to server: ' + str(e))
+            self.reconnect_QoS()
 
     def update_feeds(self, addfeeds, rmfeeds):
         """
@@ -196,12 +222,12 @@ class VidControl():
                 feed_updates = self.poll_QoS()
             except socket.error as ex:
                 log('Lost connection to QoS server: ' + str(ex))
-                if not self.connect_QoS():
+                if not self.reconnect_QoS():
                     break
                 else:
                     continue
             except Exception as e:
-                log('weird error: ' + str(e))
+                log('Weird error: ' + str(e))
                 continue
                 
             if feed_updates is None:
@@ -210,7 +236,11 @@ class VidControl():
             else:
                 self.update_feeds(feed_updates[1], feed_updates[2])
 
-            self.do_archives()
+            try:
+                self.do_archives()
+            except Exception as e:
+                log('Archiving failed: ' + str(e))
+
             self.reply_to_QoS()
 
     def killserver(self):
@@ -238,6 +268,7 @@ def change_working_directory():
 
 if __name__ == '__main__':
     change_working_directory()
+    clearlogs()
     try:
         vc = VidControl()
         vc.runserver()
