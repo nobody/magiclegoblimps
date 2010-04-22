@@ -350,11 +350,16 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         size_t remaining = total - count;
 
         //if there are bytes remainging to be read read them
-        while (remaining > 0 /*&& count < total*/){
+        delete[] arr;
+        arr = new char[total];
+        int start = 0;
+        while (remaining > 0){
             std::cout << "remaining: " << remaining << "  count: " << count << "\n";
             connections[connEP]->readLock();
+            int blargh = 0;
             try{
-                count += boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining - count), error);
+                blargh = boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining - count), error);
+                count += blargh;
                 remaining = total - count;
             }catch(boost::exception &e){
                 std::cerr << "[RH] exception occured: \n" << diagnostic_information(e);
@@ -387,7 +392,22 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                 cleanupConn(connEP);
                 return;
             }
+
+            data = inputBuffer.data();
+            iter = boost::asio::buffers_begin(data);
+            for(size_t i = start; i < start + blargh; ++i){
+                arr[i] = *iter;
+                if (iter != buffers_end(data))
+                    iter++;
+                else
+                    arr[i] = 0;
+            }
+            //consume the stuff in the buffer, we're done with it now;
+            //wasn't quite sure how to deal with the size_t issue...
+            inputBuffer.consume(blargh);
+            start += blargh;
         }
+
         std::cout << "remaining: " << remaining << "  count: " << count << "\n";
 
 
@@ -395,21 +415,6 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         std::string tmp__(boost::asio::buffers_begin(data), boost::asio::buffers_end(data));
         std::cout << tmp__ << "\n\n";
         //reset all the varibles with the new data in the buffer
-        delete[] arr;
-        arr = new char[total];
-        data = inputBuffer.data();
-        iter = boost::asio::buffers_begin(data);
-        for(size_t i = 0; i < total; ++i){
-            arr[i] = *iter;
-            if (iter != buffers_end(data))
-                iter++;
-            else
-                arr[i] = 0;
-        }
-
-        //consume the stuff in the buffer, we're done with it now;
-        //wasn't quite sure how to deal with the size_t issue...
-        inputBuffer.consume(total);
 
         //remove the number of bytes consumed from count so that we 
         //keep acurate track of how much is in the buffer
