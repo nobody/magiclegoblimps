@@ -76,10 +76,11 @@ class VidControl():
         """
         log('Lost connection to QoS server, attempting to reconnect')
         try:
-            self.Qos_server.close()
+            self.QoS_server.close()
         except Exception as e: # probably already closed
             log('Error closing connection to QoS server: ' + str(e))
         finally:
+            time.sleep(1)
             return self.connect_QoS()
 
     def poll_QoS(self):
