@@ -3,6 +3,7 @@
 #define CAMBOX 3
 
 mutex mailbox;
+//mutex mutpan;
 
 bool testCommand(string msg, string cmd)
 {
@@ -33,14 +34,13 @@ task receiveCommand()
   
   if(StrLen(msg)>0)
   {
-  /*
+
    if( testCommand(msg,"stop")
-    || testCommand(msg,"pan")
-    || testCommand(msg,"pid") )
+    /*|| testCommand(msg,"pan")
+    || testCommand(msg,"pid")*/ )
    {
     continue;
    }
-   */
    
    msg = readInbox(true);
 
@@ -80,7 +80,7 @@ task receiveCommand()
 
    else if( testCommand(msg,"coordinates") )
    {
-    int i,x,y,len=StrLen(msg);
+    int i,x,y,h,len=StrLen(msg);
     
     // get first space
     for( i=0; i<len; i++)
@@ -98,6 +98,13 @@ task receiveCommand()
       y=i+1;
      }
     }
+    for(; i<len; i++)
+    {
+     if( SubStr(msg,i,1) == " " )
+     {
+      h=i+1;
+     }
+    }
     // test for extra space
     for(; i<len; i++)
     {
@@ -107,12 +114,14 @@ task receiveCommand()
      }
     }
     //get new curX and curY
-    if( x<y && y<i )
+    if( x<y && y<h && h<i )
     {
      string t = SubStr(msg,x,y-x-1);
      curX = StrToNum(t);
-     t = SubStr(msg,y,i-y);
-     curY = StrToNum(t); // might need to i-y+1
+     t = SubStr(msg,y,h-y-1);
+     curY = StrToNum(t);
+     t = SubStr(msg,h,i-h);  // might need to i-h+1
+     heading = StrToNum(t);
     }
     else
     {
@@ -166,8 +175,8 @@ task cmdStop()
   {
     msg = readInbox(true);
 
-//   StopTask(receiveCommand); // requires Enhanced Firmware
-//   StartTask(receiveCommand);
+   //StopTask(receiveCommand); // requires Enhanced Firmware
+   //StartTask(receiveCommand);
 
     setStatus(STOPPED);
     
@@ -209,7 +218,8 @@ task sendFeedBack()
 task main()
 {
  Precedes(receiveCommand,cmdPan,cmdStop,sendFeedBack);
- 
+
+ // empty mailbox
  string msg;
  do{
     ReceiveMessage(INBOX,true,msg);
@@ -217,4 +227,7 @@ task main()
 
  setSonarRaw();
  setLightRaw();
+ 
+ curX = 0;
+ curY = -1;
 }
