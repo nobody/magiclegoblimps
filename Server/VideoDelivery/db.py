@@ -42,7 +42,7 @@ def addCameraFeed(conn,cameraId,cameraFeed):
         cursor.close()
         log('Added camera ' + str(cameraId) + ' feed to db: ' + cameraFeed)
     except MySQLdb.Error as e:
-        log("Error %d: %s" % (e.args[0], e.args[1]))
+        log("Error in add %d: %s" % (e.args[0], e.args[1]))
 
 def removeCameraFeed(conn, camId, camFeed):
     """
