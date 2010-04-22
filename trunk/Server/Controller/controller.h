@@ -9,7 +9,7 @@
 #ifndef CONTROLLER_H_
 #define CONTROLLER_H_
 
-#define C_QOS_INTV 15
+#define C_QOS_INTV 5
 
 #include <map>
 
