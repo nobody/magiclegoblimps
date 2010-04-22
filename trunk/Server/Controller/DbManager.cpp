@@ -60,7 +60,7 @@ bool DbManager::normalize(demand_t*& d ) {
 
     if (old) {
         for (it = old->begin(); it != old->end(); ++it) {
-            it->second /= 4;
+            it->second /= 2;
             (*d)[it->first];
         }
     }
