@@ -58,16 +58,17 @@ bool DbManager::normalize(demand_t*& d ) {
     }
     objs_->readUnlock();
 
+    /*
     if (old) {
         for (it = old->begin(); it != old->end(); ++it) {
             it->second /= 4;
             (*d)[it->first];
         }
     }
-    
+    */
     for (it = d->begin(); it != d->end(); ++it) {
-        if (old && (*old)[it->first] > 0.00000001)
-            it->second += (*old)[it->first];
+        //if (old && (*old)[it->first] > 0.00000001)
+        //    it->second += (*old)[it->first];
         total_demand += it->second;
     }
 

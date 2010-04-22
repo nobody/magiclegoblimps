@@ -267,6 +267,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
     //declare loop  varibles
     bool connected = true;
     boost::asio::streambuf inputBuffer;
+    inputBuffer.prepare(2048);
     boost::system::error_code error;
     size_t count = 0;
 
@@ -339,7 +340,8 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         for(int i = 0; i < 5; ++i){
             arr[i] = *iter;
             //printf("[RH] hex: %02X\n", *iter);
-            iter++;
+            if (iter != buffers_end(data))
+                iter++;
         }
         
         //compute the total and the bytes that need to be pulled from the socket 
@@ -348,10 +350,11 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         size_t remaining = total - count;
 
         //if there are bytes remainging to be read read them
-        if(remaining > 0 && count < remaining){
+        while (remaining > 0 && count < remaining){
             connections[connEP]->readLock();
             try{
                 count += boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining - count), error);
+                remaining = total - count;
             }catch(boost::exception &e){
                 std::cerr << "[RH] exception occured: \n" << diagnostic_information(e);
                 connections[connEP]->readUnlock();
@@ -386,7 +389,9 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         }
 
 
-        //std::cout<<"[RH] Recieved a message"<<std::endl;
+        std::cout<<"[RH] Recieved a message:\n";
+        std::string tmp__(boost::asio::buffers_begin(data), boost::asio::buffers_end(data));
+        std::cout << tmp__ << "\n";
         //reset all the varibles with the new data in the buffer
         delete[] arr;
         arr = new char[total];
@@ -394,7 +399,10 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         iter = boost::asio::buffers_begin(data);
         for(size_t i = 0; i < total; ++i){
             arr[i] = *iter;
-            iter++;
+            if (iter != buffers_end(data))
+                iter++;
+            else
+                arr[i] = 0;
         }
 
         //consume the stuff in the buffer, we're done with it now;
