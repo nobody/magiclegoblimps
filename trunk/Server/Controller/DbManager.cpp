@@ -65,7 +65,7 @@ bool DbManager::normalize(demand_t*& d ) {
     }
     
     for (it = d->begin(); it != d->end(); ++it) {
-        if (old)
+        if (old && (*old)[it->first] > 0.00000001)
             it->second += (*old)[it->first];
         total_demand += it->second;
     }
