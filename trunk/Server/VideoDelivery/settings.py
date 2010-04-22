@@ -18,7 +18,7 @@ QOS_SERVER_PORT = 20000
 # QOS_SERVER_URL = 'localhost'
 # QOS_SERVER_PORT = 5678
 MAX_CONNECTION_ATTEMPTS = 10
-CONNECTION_RETRY_INTERVAL = 10
+CONNECTION_RETRY_INTERVAL = 30
 
 # Video server settings
 CURRENT_IP = '10.176.14.65' # 'localhost'
@@ -31,7 +31,7 @@ ARCHIVE_FEED_URLS = 'http://'+CURRENT_IP+'/archives/' # domain, filename
 ARCHIVE_CSV_FILE = '/var/www/mlb/archive-feeds.csv'
 ARCHIVE_HTML = './archives/index.html'
 ARCHIVE_DURATION = 30
-ARCHIVE_QOS_THRESHOLD = 0.72
+ARCHIVE_QOS_THRESHOLD = 0.49
 ARCHIVE_THUMB_SIZE = '60x44'
 
 CONFIG_TEMPLATE = 'config-template.txt'
