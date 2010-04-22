@@ -809,33 +809,14 @@ void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
 	{
 		robot->setDestination(lastKnownLoc);
 		robot->setPath(genPath(*robot));
+                robot->centerCameraOnTarget();
 	}
 	else
 	{
 		robot->setDestination(robot->GetObjectLocation(objID));
 		robot->setPath(genPath(*robot));
+                robot->centerCameraOnTarget();
 	}
-
-	//if (!(camera->GetTargetVisible()))
-	//{
-	//	//send to last known location
-	//	robot->setDestination(lastKnownLoc);
-	//	//genPath(robot);
-	//	
-	//	//while () {
-	//	//	//wait until travel is complete
-	//	//}
-	//}
-	//
-	//if (!(camera->GetTargetVisible()))
-	//{
-	//	//SpiralSearch(robot, center); //TODO: need to set center coordinates for grid
-	//}
-	//else
-	//{
-	//	robot->GetObjectLocation(objID);
-	//}
-	
 }
 
 void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
@@ -873,7 +854,6 @@ void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 				x += xdir*countSpirals;
 				xdir *= -1;
 				loc->setX(x);
-				robot->setDestination(loc);
 				Path* p = robot->getPath();
 				p->extend(loc);
 			}
@@ -881,7 +861,6 @@ void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 				y += ydir*countSpirals;
 				ydir *= -1;
 				loc->setY(y);
-				robot->setDestination(loc);
 				Path* p = robot->getPath();
 				p->extend(loc);
 			}			
