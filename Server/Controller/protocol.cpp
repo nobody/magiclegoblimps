@@ -365,11 +365,28 @@
         array[i] = ref[i-5];
     }
 
+    int counter__ = 0;
+    if (type == P_OBJECT) {
+        std::cout << "[protocol] Writing objects:\n";
+        for (int j = counter__; j < 7; ++j) {
+            printf("%02X ", array[j]);
+            fflush(stdout);
+        }
+        counter__ += 7;
+    }
+
     //push each array onto the array
     int position = 7;
     for(int i = 0; i < number; ++i){
-             memcpy(&array[position], structs[i], sizes[i]);
-             position += sizes[i];
+        memcpy(&array[position], structs[i], sizes[i]);
+        position += sizes[i];
+        if (type == P_OBJECT) {
+            for (int j = counter__; j < counter__ + sizes[i]; ++j) {
+                printf("%02X ", array[j]);
+                fflush(stdout);
+            }
+            counter__ += sizes[i];
+        }
     }
     //clean up
     delete[] sizes;
@@ -584,6 +601,14 @@ int readObject(void* array, object* &objs) {
     ref[0] = current[0]; current++;
     ref[1] = current[0]; current++;
 
+    int counter__ = 0;
+    std::cout << "[protocol] Reading objects:\n";
+    for (int j = counter__; j < 7; ++j) {
+        printf("%02X ", arr[j]);
+        fflush(stdout);
+    }
+    counter__ += 7;
+
     objs = new object[overall_size];
 
     for (int i = 0; i < overall_size; ++i) {
@@ -603,6 +628,12 @@ int readObject(void* array, object* &objs) {
         ref[1] = current[0]; current++;
         ref[2] = current[0]; current++;
         ref[3] = current[0]; current++;
+
+        for (int j = counter__; j < counter__ + size; ++j) {
+                printf("%02X ", arr[j]);
+                fflush(stdout);
+        }
+        counter__ += size;
 
         // retrieve OID
         ref = (char*)&oid;
