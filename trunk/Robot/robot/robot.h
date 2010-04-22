@@ -245,6 +245,7 @@ void turnAround()
 // degrees
 void pan(int deg)
 {
+  deg = -deg; // moved motor from front to back
  setStatus(PAN);
  
  /*
