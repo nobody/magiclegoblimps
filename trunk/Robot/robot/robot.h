@@ -8,8 +8,9 @@
 #define MOTOR_BOTH OUT_AC
 #define MOTOR_CAMERA OUT_B
 
-#define SPEED 40
-#define SPEED_CAL 40
+#define SPEED 25
+#define TURN_SPEED 30
+#define SPEED_CAL 25
 #define SPEED_ADJUST 4
 #define SPD_ADJ_CAL 3
 #define SPEED_CONTROL 15
@@ -109,16 +110,16 @@ void setSonarRaw()
 
 void remStatusIDLE()
 {
- STATUS &= -1-(1<<IDLE);
+ STATUS &= -1-(1<<(IDLE-1));
 }
 
 void setStatus(int s)
 {
  Acquire(mutStatus);
  
- STATUS |= (1 << s);
+ STATUS |= (1 << (s-1));
  
- if( STATUS !=  (1<<IDLE) )
+ if( STATUS !=  (1<<(IDLE-1)) )
      remStatusIDLE();
  
  Release(mutStatus);
@@ -128,7 +129,7 @@ void remStatus(int s)
 {
  Acquire(mutStatus);
  
- STATUS &= -1-(1 << s);
+ STATUS &= -1-(1 << (s-1));
  
  Release(mutStatus);
  
@@ -141,14 +142,14 @@ void remStatus(int s)
 bool checkStatus(int s)
 {
  Acquire(mutStatus);
- bool b = ( STATUS & (1<<s) ) > 0;
+ bool b = ( STATUS & (1<<(s-1)) ) > 0;
  Release(mutStatus);
  return b;
 }
 
 int battery()
 {
- return (BatteryLevel()-6000) / 30;
+ return (BatteryLevel()-6600) / 30;
 }
 
 void motorPower(int left, int right)
@@ -177,19 +178,7 @@ void forwardWait(int ms)
 {
  forward();
  Wait(ms);
- stopMotors();
-}
-
-void reverse()
-{
- motorPower(-SPEED,-SPEED);
-}
-
-void reverseWait(int ms)
-{
- reverse();
- Wait(ms);
- stopMotors();
+ stopWheels();
 }
 
 void turnRight()
@@ -244,6 +233,7 @@ void turnAround()
  
  remStatus(TURNAROUND);
 }
+
 
 // degrees
 void pan(int deg)
@@ -309,6 +299,7 @@ int sensorRight()
  return ( value*100 / range);
 }
 
+
 void lineCorrect22()
 {
  int left, right;
@@ -369,15 +360,8 @@ void checkSonar()
  if( SONAR <= NEAR )
  {
   setStatus(SONARBLOCK);
-  
-  int last = MODE;
-  MODE = SONAR;
-  
   stopWheels();
   while( SONAR <= NEAR );
-
-  MODE = last;
-  
   remStatus(SONARBLOCK);
  }
 }
@@ -427,7 +411,6 @@ void lineFollow()
 
  forwardWait(400);
  lineCorrect();
-
 
  do {
    checkSonar();  // blocking
@@ -540,75 +523,73 @@ void calibrateLine()
 
 void turnRightLine()
 {
+ setStatus(TURNRIGHT);
+ 
  setLightOn();
  Wait(50);
- motorPower(SPEED+10,-SPEED-10);
- TextOut(0,0,"1",true);
+ motorPower(TURN_SPEED+10,-TURN_SPEED-10);
  Wait(500);
- TextOut(0,0,"2",true);
  until(sensorRight()<THRESHOLD);
- TextOut(0,0,"3",true);
  stopWheels();
  Wait(50);
  forwardWait(75);
  lineCorrect();
- TextOut(0,0,"4",true);
  forwardWait(25);
  lineCorrect();
- TextOut(0,0,"5",true);
  forwardWait(25);
  lineCorrect();
- TextOut(0,0,"6",true);
+ 
+ heading = (heading + 1) % 4;
+ remStatus(TURNRIGHT);
 }
 
 void turnLeftLine()
 {
+ setStatus(TURNLEFT);
+ 
  setLightOn();
  Wait(50);
- motorPower(-SPEED-10,SPEED+10);
- TextOut(0,0,"1",true);
+ motorPower(-TURN_SPEED-10,TURN_SPEED+10);
  Wait(500);
- TextOut(0,0,"2",true);
  until(sensorLeft()<THRESHOLD);
- TextOut(0,0,"3",true);
  stopWheels();
  Wait(50);
  forwardWait(75);
  lineCorrect();
- TextOut(0,0,"4",true);
  forwardWait(25);
  lineCorrect();
- TextOut(0,0,"5",true);
  forwardWait(25);
  lineCorrect();
- TextOut(0,0,"6",true);
+ 
+ heading = (heading) ? (heading - 1) : 3;
+ 
+ remStatus(TURNLEFT);
 }
 
 void turnaroundLine()
 {
+ setStatus(TURNAROUND);
+ 
  setLightOn();
  Wait(50);
- motorPower(SPEED+10,-SPEED-10);
- TextOut(0,0,"1",true);
+ motorPower(TURN_SPEED+10,-TURN_SPEED-10);
  Wait(500);
- TextOut(0,0,"2",true);
  until(sensorRight()<THRESHOLD);
  Wait(50);
- motorPower(SPEED+10,-SPEED-10);
- TextOut(0,0,"1",true);
+ motorPower(TURN_SPEED+10,-TURN_SPEED-10);
  Wait(500);
- TextOut(0,0,"2",true);
  until(sensorRight()<THRESHOLD);
- TextOut(0,0,"3",true);
  stopWheels();
  Wait(50);
  forwardWait(75);
  lineCorrect();
- TextOut(0,0,"4",true);
  forwardWait(25);
  lineCorrect();
- TextOut(0,0,"5",true);
  forwardWait(25);
  lineCorrect();
- TextOut(0,0,"5",true);
+ 
+  heading = (heading + 2) % 4;
+ 
+ remStatus(TURNAROUND);
 }
+
