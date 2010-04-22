@@ -62,12 +62,14 @@ double Qos::calcQos(Object* o, Robot* r) {
     double distBasedQuality = dist(*rPoint, o->pos) * Qos::CAM_VALUES[camVal];
     double camBasedQuality = 0;
 
+    /*
     if (r->list && r->list->find(o->getOID()) != r->list->end()) { //verify the robot can see the item
         camBasedQuality = (*r->list)[o->getOID()] * Qos::CAM_VALUES[r->getCamera()];
     }
     else {
+    */
         camBasedQuality = 0; //If it is not visible, it is not contributing to QoS
-    }
+    //}
         
     //std::cout <<"[QS] Robot: " <<r->getRID() <<" Object: " <<o->getOID() <<" :: QoS: " <<q <<"\n"; 
     //return (r ? dist(r->pos, o->pos) * Qos::CAM_VALUES[r->getCamera()] : 0);
