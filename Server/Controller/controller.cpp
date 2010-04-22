@@ -142,19 +142,24 @@ int controller::doQOS(demand_t* demand) {
         dem[i] =(*demand)[o[i]->getOID()];
     }
 
-    //set up the qos stuff and wait for it to comput
-    Qos q(r, robots->size(), o, objs->size(), dem);
-    Assignment ass(r, robots->size(), o, objs->size(), dem, &q);
-    
-    std::cout <<"Start QoS" <<'\n';
     std::map<Robot*, int>* assign = NULL;
-    //Display the Qos at start
-    q.calcQos();
-    assign = ass.calcAssignments();
-    q.calcQos();
+    //set up the qos stuff and wait for it to comput
+    if ( !r || !o || !dem ) {
+        Qos q(r, robots->size(), o, objs->size(), dem);
+        Assignment ass(r, robots->size(), o, objs->size(), dem, &q);
+        
+        std::cout <<"Start QoS" <<'\n';
+        //Display the Qos at start
+        q.calcQos();
+        assign = ass.calcAssignments();
+        q.calcQos();
 
-    // send the assignemnts to the robots
-    robo->sendAssignments(assign);
+        // send the assignemnts to the robots
+        robo->sendAssignments(assign);
+    } else {
+        std::cerr << "[controller] skipping QOS this round\n";
+    }
+
 
     // unlock of the robots
     /*
