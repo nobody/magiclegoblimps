@@ -2,6 +2,12 @@ from __future__ import print_function, with_statement
 from datetime import datetime
 import settings
 
+def clearlogs():
+    with open(settings.LOGFILE, 'w') as f:
+        pass
+    with open(settings.TRANSCRIPT_FILE, 'w') as f:
+        pass
+
 def timestamp():
     return str(datetime.today())
 
