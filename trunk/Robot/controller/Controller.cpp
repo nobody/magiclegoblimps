@@ -471,31 +471,34 @@ void Controller::Update()
 						atoi(tokens[4].c_str()),
 						atoi(tokens[5].c_str()));
 
-					cout << (*it)->getLocation()->getX() << ", " << (*it)->getLocation()->getY() << 
-						" " << (*it)->getStatus() << " " << (*it)->getHeading() << endl;
+					cout << "Robot: " << (*it)->getID();
+					cout << " Loc: " << (*it)->getLocation()->getX() << ", " << (*it)->getLocation()->getY(); 
+					cout << " Status: " << (*it)->getStatus();
+					cout << " Heading: " << (*it)->getHeading();
+					cout << " Batt: " << (*it)->getBatt() << endl;
 
 					(*it)->setRobotMoving(false);
 
 					if(!((*it)->getStatus() & (INTERSECTION | IDLE | STOP)))
-					{it + 1;}
+					{it+1;}
 					else if((*it)->GetCamera()->GetTargetVisible())
-						(*it)->GetNXT()->SendMessage((*it)->newCmd());
+						(*it)->GetNXT()->SendMessage(newCmd((*it)));
 					else if(*((*it)->getLocation()) == *((*it)->getDestination())
 						|| !(*it)->getHasDest())
-					{it + 1;}
+					{}
 					else if(!(*it)->getHasPath())
 					{
 						(*it)->setPath(genPath(*(*it)));
-						(*it)->GetNXT()->SendMessage((*it)->newCmd());
+						(*it)->GetNXT()->SendMessage(newCmd((*it)));
 					}
 					else if((*it)->getLocation()->calcDist(*(*it)->getPath()->getStart()) != 1)
 					{
 						(*it)->setPath(genPath(*(*it)));
-						(*it)->GetNXT()->SendMessage((*it)->newCmd());
+						(*it)->GetNXT()->SendMessage(newCmd((*it)));
 					}
 					else
 					{
-						(*it)->GetNXT()->SendMessage((*it)->newCmd());
+						(*it)->GetNXT()->SendMessage(newCmd((*it)));
 					}
 				}
 				catch (Nxt_exception& e)
@@ -601,15 +604,18 @@ void Controller::Update()
 
 			byteArray sendArray;
 
-			object* objects = new object[lastObjectSize_];
+			//object* objects = new object[lastObjectSize_];
 
 			int i = 0;
+			int iResult = 0;
 
 			vector<TrackingObject*>::iterator it;
 			vector<TrackingObject*> tobjects = Camera::GetTrackableObjects();
 
 			for (it = tobjects.begin(); it != tobjects.end(); it++)
 			{
+				//really only one object
+				object* objects = new object;
 				string n = "";
 				stringstream oss;
 				oss << "Animal" << (*it)->GetID();
@@ -619,12 +625,18 @@ void Controller::Update()
 				char* barr;
 				int bsize;
 
-				objects[i].OID = (*it)->GetID();
+				/*objects[i].OID = (*it)->GetID();
 				objects[i].name = name;
 
 				barr = TrackingObject::BoxToArray((*it)->GetOriginalBox(), &bsize);
 				objects[i].box = barr;
-				objects[i].box_size = bsize;
+				objects[i].box_size = bsize;*/
+				objects->OID = (*it)->GetID();
+				objects->name = name;
+
+				barr = TrackingObject::BoxToArray((*it)->GetOriginalBox(), &bsize);
+				objects->box = barr;
+				objects->box_size = bsize;
 
 				cout << bsize << endl;
 
@@ -632,21 +644,26 @@ void Controller::Update()
 				int hsize;
 
 				harr = TrackingObject::HistogramToArray((*it)->GetHistogram(), &hsize);
-				objects[i].color = harr;
-				objects[i].color_size = hsize;
+				objects->color = harr;
+				objects->color_size = hsize;
 
 				cout << hsize << endl;
 
 				i++;
+
+				write_data(P_OBJECT, objects, 1, &sendArray);
+
+
+
+				iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
 			}
 
-			write_data(P_OBJECT, objects, (short)lastObjectSize_, &sendArray);
+			//write_data(P_OBJECT, objects, (short)lastObjectSize_, &sendArray);
 
-			delete[] objects;
+			////int iResult = 0;
 
-			int iResult = 0;
-
-			iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
+			//iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
+			//delete[] objects;
 			if (iResult == SOCKET_ERROR) 
 			{
 				printf("send failed: %d\n", WSAGetLastError());
@@ -902,13 +919,23 @@ string Controller::newCmd(Robot* rob)
 		{
 			cmd = "forward";
 			rob->setRobotMoving(true);
+			cout << "forward-tracking" << endl;
 		}
 		else if(rob->getCamDir() <= 135 && rob->getCamDir() > 45)
+		{
 			cmd = "left";
+			cout << "left-turn-tracking" << endl;
+		}
 		else if(rob->getCamDir() <= 225 && rob->getCamDir() > 135)
+		{
 			cmd = "turnaround";
+			cout << "turnaround-tracking" << endl;
+		}
 		else if(rob->getCamDir() <= 315 && rob->getCamDir() > 225)
+		{
 			cmd = "right";
+			cout << "right-turn-tracking" << endl;
+		}
 	}
 	else if(!rob->getHasPath())
 	{
@@ -922,12 +949,11 @@ string Controller::newCmd(Robot* rob)
 		case NORTH:
 			cmd = "right";
 			printf("Turning right\n");
-			rob->setHeading(EAST);// = EAST;
+			rob->setHeading(EAST);
 			break;
 		case EAST:
 			cmd = "forward";
 			printf("Moving forward\n");
-			//robPath->advPath();
 			rob->setRobotMoving(true);
 			rob->updateLocation();
 			break;
@@ -935,13 +961,11 @@ string Controller::newCmd(Robot* rob)
 			cmd = "left";
 			printf("Turning left\n");
 			rob->setHeading(EAST);
-			//robotHeading_ = EAST;
 			break;
 		case WEST:
 			cmd = "turnaround";
 			printf("Turning around\n");
 			rob->setHeading(EAST);
-//			robotHeading_ = EAST;
 			break;
 		}
 	}
@@ -952,21 +976,17 @@ string Controller::newCmd(Robot* rob)
 		case NORTH:
 			cmd = "left";
 			printf("Turning left\n");
-			rob->setHeading(WEST);// = EAST;
+			rob->setHeading(WEST);
 			break;
 		case EAST:
 			cmd = "turnaround";
 			printf("turnaround\n");
-			//robPath->advPath();
 			rob->setHeading(WEST);
-			//rob->setRobotMoving(true);
-			//rob->updateLocation();
 			break;
 		case SOUTH:
 			cmd = "right";
 			printf("Turning right\n");
 			rob->setHeading(WEST);
-			//robotHeading_ = EAST;
 			break;
 		case WEST:
 			cmd = "forward";
@@ -985,28 +1005,21 @@ string Controller::newCmd(Robot* rob)
 			printf("moving forward\n");
 			rob->setRobotMoving(true);
 			rob->updateLocation();
-			//rob->setHeading(WEST);// = EAST;
 			break;
 		case EAST:
 			cmd = "left";
 			printf("turn left\n");
-			//robPath->advPath();
 			rob->setHeading(NORTH);
-			//rob->setRobotMoving(true);
-			//rob->updateLocation();
 			break;
 		case SOUTH:
 			cmd = "turnaround";
 			printf("turnaround\n");
 			rob->setHeading(NORTH);
-			//robotHeading_ = EAST;
 			break;
 		case WEST:
 			cmd = "right";
 			printf("turn right\n");
 			rob->setHeading(NORTH);
-//			rob->setRobotMoving(true);
-//			rob->updateLocation();
 			break;
 		}
 	}
@@ -1044,63 +1057,7 @@ string Controller::newCmd(Robot* rob)
 			break;
 		}
 	}
-	//else if(loc->getY() < robPath->getStart()->getY())
-	//{
-	//	switch(robotHeading_)
-	//	{
-	//	case NORTH:
-	//		cmd = "forward";
-	//		printf("Moving forward\n");
-	//		//robPath->advPath();
-	//		setRobotMoving(true);
-	//		updateLocation();
-	//		break;
-	//	case EAST:
-	//		cmd = "left";
-	//		printf("Turning left\n");
-	//		robotHeading_ = NORTH;
-	//		break;
-	//	case SOUTH:
-	//		cmd = "turnaround";
-	//		printf("Turning around\n");
-	//		robotHeading_ = NORTH;
-	//		break;
-	//	case WEST:
-	//		cmd = "right";
-	//		printf("Turning right\n");
-	//		robotHeading_ = NORTH;
-	//		break;
-	//	}
-	//}
-	//else if(loc->getY() > robPath->getStart()->getY())
-	//{
-	//	switch(robotHeading_)
-	//	{
-	//	case NORTH:
-	//		cmd = "turnaround";
-	//		printf("Turning around\n");
-	//		robotHeading_ = SOUTH;
-	//		break;
-	//	case EAST:
-	//		cmd = "right";
-	//		printf("Turning right\n");
-	//		robotHeading_ = SOUTH;
-	//		break;
-	//	case SOUTH:
-	//		cmd = "forward";
-	//		printf("Moving forward\n");
-	//		//robPath->advPath();
-	//		setRobotMoving(true);
-	//		updateLocation();
-	//		break;
-	//	case WEST:
-	//		cmd = "left";
-	//		printf("Turning left\n");
-	//		robotHeading_ = SOUTH;
-	//		break;
-	//	}
-	//}
-
+	
 	return cmd;
 }
 

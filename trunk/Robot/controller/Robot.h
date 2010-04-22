@@ -62,6 +62,7 @@ public:
 	int getHasPath()			{ return hasPath; }
 	int getHasDest()			{ return hasDest; }
 	int getCamDir()				{ return cameraDirection_; }
+	int getBatt()				{ return batteryLevel_; }
 
 	GridLoc* getSearchLoc()		{ return searchLoc; }
 
