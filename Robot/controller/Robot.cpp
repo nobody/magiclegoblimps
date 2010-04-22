@@ -230,12 +230,28 @@ void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, int statu
 	//stop 1024
 
 	//example
-	/*
+	if (status_ & 1)
+		cout << "Idle ";
+	if (status_ & 2)
+		cout << "Dest" << endl;
+	if (status_ & 4)
+		cout << "Lf" << endl;
+	if (status_ & 8)
+		cout << "intersec" << endl;
+	if (status_ & 16)
+		cout << "left" << endl;
+	if (status_ & 32)
+		cout << "right" << endl;
+	if (status_ & 64)
+		cout << "uturn" << endl;
 	if (status_ & 128)
-	{
 		cout << "Sonar Block" << endl;
-	}
-	*/
+	if (status_ & 256)
+		cout << "calib" << endl;
+	if (status_ & 512)
+		cout << "pan" << endl;
+	if (status_ & 1024)
+		cout << "stop" << endl;
 }
 
 void Robot::Update()
@@ -276,6 +292,7 @@ void Robot::centerCameraOnTarget()
 string Robot::newCmd()
 {
 	string cmd;
+	
 	if(camera_->GetTargetVisible())
 	{
 		hasDest = false;
