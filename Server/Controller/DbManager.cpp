@@ -489,7 +489,7 @@ bool DbManager::insertObject( Object* obj ) {
         try{
             stmt->execute(cmd);
         }catch(...){
-            //std::cout << "[db] Failed query: " << cmd << "\n";
+            std::cout << "[db] Failed query: " << cmd << "\n";
             
             delete rs;
             delete stmt;
@@ -499,7 +499,7 @@ bool DbManager::insertObject( Object* obj ) {
             obj->unlock();
             return false;
         }
-        //std::cout << "[db] Succeeded query: " << cmd << "\n";
+        std::cout << "[db] Succeeded query: " << cmd << "\n";
 
     }
 
