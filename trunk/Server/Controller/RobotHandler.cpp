@@ -353,12 +353,12 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         delete[] arr;
         arr = new char[total];
         int start = 0;
-        while (remaining > 0){
+        while (remaining > 0 && count < total){
             std::cout << "remaining: " << remaining << "  count: " << count << "\n";
             connections[connEP]->readLock();
             int blargh = 0;
             try{
-                blargh = boost::asio::read(connections[connEP]->socket(), boost::asio::buffer(arr, total), boost::asio::transfer_at_least(total - remaining), error);
+                blargh = boost::asio::read(connections[connEP]->socket(), boost::asio::buffer(arr, total), boost::asio::transfer_at_least(remaining), error);
                 count += blargh;
                 remaining = total - count;
             }catch(boost::exception &e){
