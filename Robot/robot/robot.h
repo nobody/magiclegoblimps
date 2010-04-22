@@ -8,9 +8,9 @@
 #define MOTOR_BOTH OUT_AC
 #define MOTOR_CAMERA OUT_B
 
-#define SPEED 25
+#define SPEED 35
 #define TURN_SPEED 30
-#define SPEED_CAL 25
+#define SPEED_CAL 35
 #define SPEED_ADJUST 4
 #define SPD_ADJ_CAL 3
 #define SPEED_CONTROL 15
@@ -169,6 +169,13 @@ void stopWheels()
  motorPower(0,0);
 }
 
+void forwardRot(int angle)
+{
+ RotateMotorPID(MOTOR_BOTH,SPEED,angle,PGAIN,IGAIN,DGAIN);
+}
+
+
+
 void forward()
 {
  motorPower(SPEED,SPEED);
@@ -251,12 +258,12 @@ void pan(int deg)
  
  RotateMotor(MOTOR_CAMERA,PAN_SPEED,deg*PAN_RATIO);
  
- /*
+
  // normalize current
- while( curPan < 0 )
-        curPan += 360;
+ //while( curPan < 0 )
+ curPan += 360;
  curPan %= 360;
- */
+
  
  remStatus(PAN);
 }
@@ -422,6 +429,7 @@ void lineFollow()
  intersection();
  
  forwardWait(350);
+ //forwardRot(90);
  lineCorrect();
 
  stopWheels();
@@ -485,7 +493,9 @@ void calibrateLine()
  setLightOn();
  Wait(50);
  
- motorPower(SPEED_CAL,-SPEED_CAL);
+ //motorPower(SPEED_CAL,-SPEED_CAL);
+ OnFwd(MOTOR_LEFT,SPEED_CAL);
+ OnRev(MOTOR_RIGHT,SPEED_CAL);
  do{
   left = SENSOR_LEFT;
   right = SENSOR_RIGHT;
@@ -500,7 +510,9 @@ void calibrateLine()
  stopWheels();
  Wait(50);
 
- motorPower(-SPEED_CAL,SPEED_CAL);
+ //motorPower(-SPEED_CAL,SPEED_CAL);
+ OnFwd(MOTOR_RIGHT,SPEED_CAL);
+ OnRev(MOTOR_LEFT,SPEED_CAL);
  do{
   left = SENSOR_LEFT;
   right = SENSOR_RIGHT;
