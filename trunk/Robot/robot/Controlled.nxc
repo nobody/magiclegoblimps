@@ -10,6 +10,15 @@ bool testCommand(string msg, string cmd)
  return (StrLen(msg) >= len && SubStr(msg,0,len) == cmd);
 }
 
+string readInbox(bool clear)
+{
+ Acquire(mailbox);
+ string msg;
+ ReceiveMessage(INBOX,clear,msg);
+ Release(mailbox);
+ return msg;
+}
+
 task receiveCommand()
 {
  string msg = "";
@@ -18,9 +27,7 @@ task receiveCommand()
  {
   setLightOff();
 
-  Acquire(mailbox);
-  ReceiveMessage(INBOX,false,msg);
-  Release(mailbox);
+  msg = readInbox(false);
   
   if(StrLen(msg)>0)
   {
@@ -33,50 +40,42 @@ task receiveCommand()
    }
    */
    
-   Acquire(mailbox);
-   ReceiveMessage(INBOX,true,msg);
-   Release(mailbox);
+   msg = readInbox(true);
 
-   if( testCommand(msg,"left" ) )
+   if( testCommand(msg,"left" ) || testCommand(msg,"4") )
    {
-    turnLeftWait( 400, 300 );
-    lineCorrect();
+    /*turnLeftWait( 400, 300 );
+    lineCorrect();*/
+    turnLeftLine();
     stopWheels();
    }
-   else if( testCommand(msg,"right2") )
+   else if( testCommand(msg,"right" ) || testCommand(msg,"6") )
    {
-    turnRight();
+    /*turnRightWait( 400, 300 );
+    lineCorrect();*/
+    turnRightLine();
     stopWheels();
    }
-   else if( testCommand(msg,"right" ) )
+   else if( testCommand(msg,"turnaround" ) || testCommand(msg,"2") )
    {
-    turnRightWait( 400, 300 );
-    lineCorrect();
-    stopWheels();
+    //turnAround();
+    turnaroundLine();
    }
-   else if( testCommand(msg,"turnaround" ) )
+   else if( testCommand(msg,"calibrate" ) || testCommand(msg,"5") )
    {
-    turnAround();
+    //calibrate();
+    calibrateLine();
    }
-   //*
-   else if( testCommand(msg,"calibrate" ) )
-   {
-    calibrate();
-   }
-   else if( testCommand(msg,"cal") )
-   {
-    calibrate2();
-   }
-   //*/
+
    else if( testCommand(msg,"correct") )
    {
     lineCorrect();
    }
-   else if( testCommand(msg,"forward") )
+   else if( testCommand(msg,"forward") || testCommand(msg,"8") )
    {
      lineFollow();
    }
-   /*
+
    else if( testCommand(msg,"coordinates") )
    {
     int i,x,y,len=StrLen(msg);
@@ -119,7 +118,7 @@ task receiveCommand()
     }
 
    }
-   */
+   //*/
    else
    {
     PlayTone(1000,50);
@@ -137,24 +136,17 @@ task cmdPan()
  {
   ReceiveMessage(CAMBOX,false,msg);
 
-  if( StrLen(msg)>0 && testCommand(msg,"pan") )
+  if( StrLen(msg)>0 )
   {
    ReceiveMessage(CAMBOX,true,msg);
+   
+   if( !(testCommand(msg,"pan")) )
+       continue;
 
    msg = SubStr( msg, 4, StrLen(msg) );
 
    pan( StrToNum( msg ) ); // send deg
   }
-  /*
-  else if( testCommand(msg,"pid") )
-  {
-   ReceiveMessage(INBOX,true,msg);
-   
-   msg = SubStr( msg, 4, StrLen(msg) );
-   
-   pid( StrToNum(msg) ); // send angle
-  }
-  */
  }
 }
 
@@ -166,15 +158,11 @@ task cmdStop()
 
  FOREVER
  {
-  Acquire(mailbox);
-  ReceiveMessage(INBOX,false,msg);
-  Release(mailbox);
+  msg = readInbox(false);
 
   if( StrLen(msg)>0 && testCommand(msg,"stop") )
   {
-   Acquire(mailbox);
-   ReceiveMessage(INBOX,true,msg);
-   Release(mailbox);
+    msg = readInbox(true);
 
 //   StopTask(receiveCommand); // requires Enhanced Firmware
 //   StartTask(receiveCommand);
