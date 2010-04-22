@@ -471,7 +471,7 @@ bool DbManager::deleteCam( int id ) {
     }
     try{
         std::stringstream ss;
-        ss << "DELETE FROM camera WHERE `camera_id`='" << id << "'";
+        ss << "DELETE FROM cameras WHERE `camera_id`='" << id << "'";
         cmd = ss.str();
         stmt->execute(cmd);
     } catch(...){
