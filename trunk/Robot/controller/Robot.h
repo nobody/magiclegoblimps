@@ -47,6 +47,8 @@ public:
 	void setNextLoc(GridLoc* newNextLoc);
 	void setPath(Path* newPath);
 	void setRobotMoving(bool moving) { robotMoving_ = moving; }
+	void setHasDest(bool dest) { hasDest = dest; }
+	void setHeading(RobotHeading head) { robotHeading_ = head; }
 	void updateLocation();
 
 	GridLoc* getLocation()		{ return loc; }
@@ -59,6 +61,9 @@ public:
 	int getStatus()				{ return status_; }
 	int getHasPath()			{ return hasPath; }
 	int getHasDest()			{ return hasDest; }
+	int getCamDir()				{ return cameraDirection_; }
+
+	GridLoc* getSearchLoc()		{ return searchLoc; }
 
 	void ExecuteCommand(string command);
 
@@ -84,6 +89,8 @@ private:
 	GridLoc* nextLoc;
 	GridLoc* dest;
 	bool hasDest;
+
+	GridLoc* searchLoc;
 
 	RobotHeading robotHeading_;
 	int cameraDirection_;

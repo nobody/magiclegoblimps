@@ -311,7 +311,34 @@
                     overall_size += size;
                 }
             }
-            break;
+        break;
+        case P_ROBOT_RM:
+            {
+                robotRm* data = (robotRm*)data_;
+                short size = sizeof(int) + sizeof(short);
+                for(int i = 0; i < number; ++i){
+                    structs[i] = new char[size];
+                    int startpos = 0;
+
+                    //push size
+                    char* ref = (char*)(&size);
+                    for(int j = startpos; j < startpos + sizeof(short); ++j){
+                        structs[i][j] = ref[j - startpos];
+                    }
+                    
+                    startpos += sizeof(short);
+
+                    //push robot id
+                     ref = (char*)(data[i].RID);
+                    for(int j = startpos; j < startpos + sizeof(int); ++j){
+                        structs[i][j] = ref[j - startpos];
+                    }
+
+                    sizes[i] = size;
+                    overall_size += size;
+                    
+                }
+            }
         default:
             return P_INVD_TYPE;
 
@@ -330,7 +357,7 @@
         array[i] = ref[i-1];
     }
     
-    printf("byte#2: %02X length:%d \n", array[1], length);
+    //printf("byte#2: %02X length:%d \n", array[1], length);
 
     //push number of elements;
     ref = (char*)&number;
@@ -741,8 +768,45 @@ int readCommand(void* array, command* &com){
         com[i].arg = args;
     }
     return overall_size;
-}   
+}
 
+
+int readRobotRm(void* array, robotRm* &rrm){
+
+    char* arr = (char*)array;
+    char* current = arr+5;
+    char* ref;
+
+    // overall size
+    short overall_size;
+    ref = (char*)&overall_size;
+    ref[0] = current[0]; current++;
+    ref[1] = current[0]; current++;
+
+    rrm = new robotRm[overall_size];
+
+    
+    for (int i = 0; i < overall_size; ++i) {
+        short size;
+        int rid;
+        
+        // retreive size
+        ref = (char*)&size;
+        ref[0] = current[0]; current++;
+        ref[1] = current[0]; current++;
+
+        // retrieve RID
+        ref = (char*)&rid;
+        for (int j = 0; j < (int)sizeof(int); ++j) {
+            ref[j] = current[0]; current++;
+        }
+
+        rrm[i].RID = rid;
+
+    }
+
+    return overall_size;
+}
 // takes a void pointer to the data as output from write_data and a readReturn struct to put the array and its type in.
 int read_data(void* array, readReturn* ret){
     
@@ -809,6 +873,16 @@ int read_data(void* array, readReturn* ret){
                 ret->array = (void*)arr;
                 ret->size = count;
                 ret->type = P_COMMAND;
+
+                return count;
+            }
+        case P_ROBOT_RM:
+            {
+                robotRm* arr;
+                int count = readRobotRm(array, arr);
+                ret->array = (void*)arr;
+                ret->size = count;
+                ret->type = P_ROBOT_RM;
 
                 return count;
             }

@@ -20,6 +20,8 @@ Robot::Robot(int port, string ip, bool dLink)
 
 	loc = new GridLoc();
 	dest = new GridLoc();
+	searchLoc = new GridLoc();
+
 	robotHeading_ = NORTH;
 	cameraDirection_ = 0;
 }
@@ -87,8 +89,9 @@ GridLoc* Robot::GetObjectLocation(int id)
 	int center = 0;
 
 	vector<TrackingObject*>::iterator it;
+	vector<TrackingObject*> visobjects = camera_->GetVisibleObjects();
 
-	for (it = camera_->GetVisibleObjects().begin(); it != camera_->GetVisibleObjects().end(); it++)
+	for (it = visobjects.begin(); it != visobjects.end(); it++)
 	{
 		if ((*it)->GetID() == id)
 			center = (*it)->CenterDistanceToDegrees(camera_->GetImageWidth(), camera_->GetDLinkCam());
@@ -165,6 +168,9 @@ void Robot::ExecuteCommand(string command)
 			//do what you need to with these
 			int startX = atoi(tokens[2].c_str());
 			int startY = atoi(tokens[3].c_str());
+
+			searchLoc->setX(startX);
+			searchLoc->setY(startY);
 		}
 
 		camera_->SetTarget(id);
@@ -239,7 +245,7 @@ void Robot::Update()
 		if (camera_->GetTargetVisible())
 			centerCameraOnTarget();
 		else 
-			ExecuteCommand("pan 1");
+			ExecuteCommand("pan 2");
 	}
 }
 
@@ -258,7 +264,7 @@ void Robot::centerCameraOnTarget()
 			break;
 
 		if(camera_->GetTargetID() == (*voIter)->GetID())
-			d = (*voIter)->CenterDistanceToDegrees(width, cam) / 5;
+			d = (*voIter)->CenterDistanceToDegrees(width, cam) / 7;
 	}
 
 	stringstream oss;
@@ -287,6 +293,7 @@ string Robot::newCmd()
 	}
 	else if(!hasPath)
 	{
+
 		return cmd;
 	}
 	else if(loc->getX() < robPath->getStart()->getX())
