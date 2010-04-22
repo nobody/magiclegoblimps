@@ -86,35 +86,37 @@ int main(int argc, char** argv) {
         //std::cout << "rnd() returned: " << count << " for Object:" << req_obj << "\n";
         std::cout << count <<  "\n";
 
-        std::stringstream ss;
-        ss << "INSERT INTO "
-           << tbl_requests
-           << " (`request_ip`, `request_time`, `request_zone`, `request_animal`) ";
-        ss << "SELECT "
-           << "'1.1.1.1', CURRENT_TIMESTAMP, '1', '"
-           << req_obj
-           << "' ";
-        while (--count > 0) {
-            ss << "UNION ALL SELECT "
+        if (count > 0) {
+            std::stringstream ss;
+            ss << "INSERT INTO "
+               << tbl_requests
+               << " (`request_ip`, `request_time`, `request_zone`, `request_animal`) ";
+            ss << "SELECT "
                << "'1.1.1.1', CURRENT_TIMESTAMP, '1', '"
                << req_obj
                << "' ";
-        }
+            while (--count > 0) {
+                ss << "UNION ALL SELECT "
+                   << "'1.1.1.1', CURRENT_TIMESTAMP, '1', '"
+                   << req_obj
+                   << "' ";
+            }
 
-        cmd = ss.str();
+            cmd = ss.str();
 
-        //std::cout << "Executing query: " << cmd << "\n";
-        try{
-             stmt->execute(cmd);
-        }catch(...){
-            std::cout << "Failed query: " << cmd << "\n";
-            
-            delete rs;
-            delete stmt;
-            delete con;
+            //std::cout << "Executing query: " << cmd << "\n";
+            try{
+                 stmt->execute(cmd);
+            }catch(...){
+                std::cout << "Failed query: " << cmd << "\n";
+                
+                delete rs;
+                delete stmt;
+                delete con;
 
-            sum -= count;
-            break;
+                sum -= count;
+                break;
+            }
         }
     }
 
