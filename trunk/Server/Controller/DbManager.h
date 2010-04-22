@@ -46,6 +46,7 @@ class DbManager {
         bool truncateCameras( );
         bool insertCameras( Vector_ts<Robot*>* );
         bool updateCameras( Vector_ts<Robot*>* );
+        bool deleteCam( int );
 
         bool insertObject( Object* );
 

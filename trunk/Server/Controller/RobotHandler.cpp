@@ -646,12 +646,15 @@ void RobotHandler::cleanupConn(boost::asio::ip::tcp::endpoint connEP){
             //std::cout<<"[RH] have endpoint: " << (*it)->getEndpoint() << std::endl;
             if ((*it)->getEndpoint() == connEP){
                 
-                //notifie the video server its dying
+                //notify the video server its dying
                 std::stringstream msg_ss;
                 boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
                 msg_ss << now << "\n\n";
                 msg_ss << "DELETE " << (*it)->getGlobalID() << ";" << (*it)->getVideoURL() << "\n";
                 vidHandler->write(msg_ss.str());
+                
+                // delete camera from db
+                db->deleteCam((*it)->getGlobalID());
 
                 //delet the robot and remove the pointer from the vector
                 delete (*it);

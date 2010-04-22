@@ -226,6 +226,16 @@ bool DbManager::truncateCameras() {
     stmt->execute(cmd);
 
     try{                    
+        cmd = "TRUNCATE service";
+        stmt->execute(cmd);
+    } catch(...){
+        delete stmt;
+        delete con;
+
+        return false;
+    }
+
+    try{                    
         cmd = "TRUNCATE ";
         cmd += DbManager::tbl_cameras;
         stmt->execute(cmd);
@@ -428,6 +438,50 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
     delete con;
 
     return ret;
+}
+
+bool DbManager::deleteCam( int id ) {
+    sql::Connection *con;
+    sql::Statement *stmt;
+    std::string cmd;
+    
+    try {
+        con = driver->connect(db_uri, db_user, db_pass);
+    } catch (...) {
+        std::cerr << "[db] Failed to connect to database\n";
+        return false;
+    }
+
+    con->setAutoCommit(0);
+    stmt = con->createStatement();
+
+    cmd = "USE ";
+    cmd += DbManager::db_database;
+    stmt->execute(cmd);
+
+    try{
+        std::stringstream ss;
+        ss << "DELETE FROM service WHERE `service_camera_id`='" << id << "'";
+        cmd = ss.str();
+        stmt->execute(cmd);
+    } catch(...){
+        delete stmt;
+        delete con;
+
+        return false;
+    }
+    try{
+        std::stringstream ss;
+        ss << "DELETE FROM camera WHERE `camera_id`='" << id << "'";
+        cmd = ss.str();
+        stmt->execute(cmd);
+    } catch(...){
+        delete stmt;
+        delete con;
+
+        return false;
+    }
+    return true;
 }
 
 bool DbManager::insertObject( Object* obj ) {
