@@ -74,7 +74,9 @@ bool DbManager::normalize(demand_t*& d ) {
     }
 
     for (it = d->begin(); it != d->end(); ++it) {
-        if (it->second > 0.00000001)
+        if (it->second < 0.00000001)
+            it->second = 0;
+        else
             it->second = it->second / total_demand;
         std::cout << "[db] noramlized demand for " << it->first << ":" << it->second << "\n"; 
     }
