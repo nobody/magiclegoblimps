@@ -12,7 +12,8 @@ ROOT_DIR = [
 LIVE_CSV_FILE = '/var/www/mlb/live-feeds.csv'
 
 # QoS server settings
-QOS_SERVER_URL = '10.21.1.110'
+#QOS_SERVER_URL = '10.21.1.110'
+QOS_SERVER_URL = '10.176.14.94'
 QOS_SERVER_PORT = 20000
 # QOS_SERVER_URL = 'localhost'
 # QOS_SERVER_PORT = 5678
@@ -35,7 +36,7 @@ ARCHIVE_THUMB_SIZE = '60x44'
 
 CONFIG_TEMPLATE = 'config-template.txt'
 CONFIG_FILE_DIR = './'
-ARCHIVE_DIR = './archives'
+ARCHIVE_DIR = '/var/www/mlb/archives'
 
 CONFIG_FNAME = 'ffserver-{0}.conf'
 STREAM_NAME = 'live-{0}'

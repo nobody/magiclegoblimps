@@ -200,6 +200,9 @@ class VidControl():
                     break
                 else:
                     continue
+            except Exception as e:
+                log('weird error: ' + str(e))
+                continue
                 
             if feed_updates is None:
                 self.reply_to_QoS(fail=True)
