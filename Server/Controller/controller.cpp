@@ -144,7 +144,7 @@ int controller::doQOS(demand_t* demand) {
 
     std::map<Robot*, int>* assign = NULL;
     //set up the qos stuff and wait for it to comput
-    if ( !r || !o || !dem ) {
+    if ( r && o && dem ) {
         Qos q(r, robots->size(), o, objs->size(), dem);
         Assignment ass(r, robots->size(), o, objs->size(), dem, &q);
         
@@ -221,7 +221,7 @@ void controller::controllerThread(){
 
             doQOS(demand);
         }
-        dbupdate = (dbupdate + 1) % 2;
+        dbupdate = (dbupdate + 1) % 6;
 
         boost::asio::deadline_timer timer(io_, boost::posix_time::seconds(C_QOS_INTV));
         timer.wait();
