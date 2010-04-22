@@ -351,6 +351,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 
         //if there are bytes remainging to be read read them
         while (remaining > 0 && count < remaining){
+            std::cout << "remaining: " << remaining << "  count: " << count << "\n";
             connections[connEP]->readLock();
             try{
                 count += boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining - count), error);
@@ -387,6 +388,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                 return;
             }
         }
+        std::cout << "remaining: " << remaining << "  count: " << count << "\n";
 
 
         std::cout<<"[RH] Recieved a message (" << count << " of " << total << " bytes):\n";
