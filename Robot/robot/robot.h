@@ -9,13 +9,13 @@
 #define MOTOR_CAMERA OUT_B
 
 #define SPEED 40
-#define SPEED_CAL 35
+#define SPEED_CAL 40
 #define SPEED_ADJUST 4
 #define SPD_ADJ_CAL 3
 #define SPEED_CONTROL 15
 #define TURN90 160
 #define TURN180 320
-#define PAN_RATIO 7 / 3
+#define PAN_RATIO 17 / 12
 #define PGAIN 50
 #define IGAIN 50
 #define DGAIN 50
@@ -180,6 +180,18 @@ void forwardWait(int ms)
  stopMotors();
 }
 
+void reverse()
+{
+ motorPower(-SPEED,-SPEED);
+}
+
+void reverseWait(int ms)
+{
+ reverse();
+ Wait(ms);
+ stopMotors();
+}
+
 void turnRight()
 {
  setStatus(TURNRIGHT);
@@ -297,7 +309,7 @@ int sensorRight()
  return ( value*100 / range);
 }
 
-void lineCorrect()
+void lineCorrect22()
 {
  int left, right;
   
@@ -317,6 +329,37 @@ void lineCorrect()
      motorPower(SPEED,-SPEED);
     }
  } while( abs(right-left) > 5 );
+ 
+ stopWheels();
+}
+
+void lineCorrect()
+{
+ int left, right;
+ 
+ setLightOn();
+ Wait(50);
+ 
+ left = sensorLeft();
+ right = sensorRight();
+
+ if( left<right )
+ {
+  while( abs(right-left) > 5 )
+  {
+     motorPower(-SPEED,SPEED);
+     left = sensorLeft();
+     right = sensorRight();
+  }
+ }
+ else
+ {
+  while( abs(right-left) > 5 ){
+     motorPower(SPEED,-SPEED);
+     left = sensorLeft();
+     right = sensorRight();
+  }
+ }
  
  stopWheels();
 }
@@ -394,6 +437,9 @@ void lineFollow()
  stopWheels();
  
  intersection();
+ 
+ forwardWait(350);
+ lineCorrect();
 
  stopWheels();
  remStatus(LINE_FOLLOW);
@@ -448,7 +494,7 @@ void calibrate()
  remStatus(CALIBRATING);
 }
 
-void calibrate2()
+void calibrateLine()
 {
  int left,right;
  setStatus(CALIBRATING);
@@ -456,23 +502,7 @@ void calibrate2()
  setLightOn();
  Wait(50);
  
- motorPower(SPEED,-SPEED);
- do{
-  left = SENSOR_LEFT;
-  right = SENSOR_RIGHT;
-
-  if(left<LEFT_MIN) LEFT_MIN = left;
-  else if(left>LEFT_MAX) LEFT_MAX = left;
-
-  if(right<RIGHT_MIN) RIGHT_MIN = right;
-  else if(right>RIGHT_MAX) RIGHT_MAX = right;
- } while( SENSOR_RIGHT > 400 );
- 
- Wait(50);
- lineCorrect();
- Wait(50);
-
- motorPower(-SPEED,SPEED);
+ motorPower(SPEED_CAL,-SPEED_CAL);
  do{
   left = SENSOR_LEFT;
   right = SENSOR_RIGHT;
@@ -483,7 +513,23 @@ void calibrate2()
   if(right<RIGHT_MIN) RIGHT_MIN = right;
   else if(right>RIGHT_MAX) RIGHT_MAX = right;
  } while( SENSOR_LEFT > 400 );
- 
+
+ stopWheels();
+ Wait(50);
+
+ motorPower(-SPEED_CAL,SPEED_CAL);
+ do{
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ } while( SENSOR_RIGHT > 400 );
+
+ stopWheels();
  Wait(50);
  lineCorrect();
  Wait(50);
@@ -492,18 +538,77 @@ void calibrate2()
  remStatus(CALIBRATING);
 }
 
-void turnRight2()
+void turnRightLine()
 {
- forwardWait(300);
- Wait(50);
- lineCorrect();
  setLightOn();
  Wait(50);
- motorPower(SPEED,-SPEED);
- until(SENSOR_RIGHT<THRESHOLD);
+ motorPower(SPEED+10,-SPEED-10);
+ TextOut(0,0,"1",true);
+ Wait(500);
+ TextOut(0,0,"2",true);
+ until(sensorRight()<THRESHOLD);
+ TextOut(0,0,"3",true);
  stopWheels();
  Wait(50);
+ forwardWait(75);
  lineCorrect();
- // forwardWait(150);
- // lineCorrect();
+ TextOut(0,0,"4",true);
+ forwardWait(25);
+ lineCorrect();
+ TextOut(0,0,"5",true);
+ forwardWait(25);
+ lineCorrect();
+ TextOut(0,0,"6",true);
+}
+
+void turnLeftLine()
+{
+ setLightOn();
+ Wait(50);
+ motorPower(-SPEED-10,SPEED+10);
+ TextOut(0,0,"1",true);
+ Wait(500);
+ TextOut(0,0,"2",true);
+ until(sensorLeft()<THRESHOLD);
+ TextOut(0,0,"3",true);
+ stopWheels();
+ Wait(50);
+ forwardWait(75);
+ lineCorrect();
+ TextOut(0,0,"4",true);
+ forwardWait(25);
+ lineCorrect();
+ TextOut(0,0,"5",true);
+ forwardWait(25);
+ lineCorrect();
+ TextOut(0,0,"6",true);
+}
+
+void turnaroundLine()
+{
+ setLightOn();
+ Wait(50);
+ motorPower(SPEED+10,-SPEED-10);
+ TextOut(0,0,"1",true);
+ Wait(500);
+ TextOut(0,0,"2",true);
+ until(sensorRight()<THRESHOLD);
+ Wait(50);
+ motorPower(SPEED+10,-SPEED-10);
+ TextOut(0,0,"1",true);
+ Wait(500);
+ TextOut(0,0,"2",true);
+ until(sensorRight()<THRESHOLD);
+ TextOut(0,0,"3",true);
+ stopWheels();
+ Wait(50);
+ forwardWait(75);
+ lineCorrect();
+ TextOut(0,0,"4",true);
+ forwardWait(25);
+ lineCorrect();
+ TextOut(0,0,"5",true);
+ forwardWait(25);
+ lineCorrect();
+ TextOut(0,0,"5",true);
 }
