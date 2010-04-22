@@ -394,7 +394,11 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         iter = boost::asio::buffers_begin(data);
         for(size_t i = 0; i < total; ++i){
             arr[i] = *iter;
-            iter++;
+            if (iter != boost::asio::buffers_end(data))
+                iter++;
+            else
+                arr[i] = 0;
+
         }
 
         //consume the stuff in the buffer, we're done with it now;
