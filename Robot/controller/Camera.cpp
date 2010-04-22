@@ -483,7 +483,7 @@ void Camera::Update()
 
 int Camera::GetNextAvailableID()
 {
-	int id = 0;
+	int id = 1;
 
 	vector<TrackingObject*>::iterator it;
 

@@ -51,6 +51,8 @@ public:
 	void SearchObject(int robotID, int objID, GridLoc* lastKnownLoc);
 	void SpiralSearch(Robot* robot, GridLoc* loc);
 
+	string newCmd(Robot* rob);
+
 	void Update();
 
 private:

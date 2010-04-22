@@ -187,6 +187,17 @@ void LocalInput()
 		controller->GetRobot(atoi(tokens[1].c_str()))->setPath(controller->genPath(*controller->GetRobot(atoi(tokens[1].c_str()))));
 	}
 
+	//testhist
+	else if (tokens[0].compare("testhist") == 0)
+	{
+		char* arr;
+		int size;
+		CvHistogram* precv = Camera::GetTrackableObjects()[0]->GetHistogram();
+		arr = TrackingObject::HistogramToArray(Camera::GetTrackableObjects()[0]->GetHistogram(), &size);
+		CvHistogram* cv = TrackingObject::ArrayToHistogram(arr);
+		int i = 0;
+	}
+
 	//default
 	else
 	{
