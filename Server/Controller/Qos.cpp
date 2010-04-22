@@ -54,8 +54,12 @@ double Qos::calcQos(Object* o, Robot* r) {
 
     //Manually create points until/if we use point class
     Point* rPoint = new Point(r->getXCord(), r->getYCord());
-
-    double distBasedQuality = dist(*rPoint, o->pos) * Qos::CAM_VALUES[r->getCamera()];
+    double camVal = 0;
+    std::cout << "[QS] CamQual" << r->getCamera() << "\n";
+    if(r->getCamera() != 0){
+        camVal = 1;
+    }
+    double distBasedQuality = dist(*rPoint, o->pos) * Qos::CAM_VALUES[camVal];
     double camBasedQuality = 0;
 
     if (r->list->find(o->getOID()) != r->list->end()) { //verify the robot can see the item
