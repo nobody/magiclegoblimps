@@ -64,7 +64,7 @@ public:
 	static void Stop() { running_ = false; }
 
 private:
-	static const int POLL_INTERVAL = 5;
+	static const int SEND_INTERVAL = 5;
 	static const int BUFFER_LENGTH = 512;
 
 	static char* port_;

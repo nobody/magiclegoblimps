@@ -62,8 +62,11 @@ void LocalInput()
 	else if (tokens[0].compare("testrobot") == 0)
 	{
 		//lazy connection for repeat testing
-		Robot* robot = new Robot(1, "10.176.14.89:7001", true);
+		Robot* robot = new Robot(9, "10.176.14.89:7001", true);
 		//Robot* robot = new Robot(6, "192.168.1.101:7001", true);
+		controller->AddRobot(robot);
+
+		robot = new Robot(6, "10.176.14.89:7003", true);
 		controller->AddRobot(robot);
 	}
 

@@ -23,6 +23,9 @@ Camera::Camera(string ip, bool dLinkCam)
 	else
 		port_ = "80";
 
+	image_ = 0;
+	capture_ = 0;
+
 	localDisplay_ = false;
 	histDisplay_ = true;		
 	showTracking_ = true;		
@@ -34,6 +37,19 @@ Camera::Camera(string ip, bool dLinkCam)
 	lastObjectSize_ = 0;
 	
 	displayWindowName_ = "";
+
+	//wall of member variables/functions
+	hsv = 0, hue = 0, mask = 0, backProject = 0, histImage = 0;
+	hist = 0;
+	selectObject = false;
+	trackObject = false;
+	showHist = false;
+	histCreated = false;
+	histDivs = 32;
+	histRangesArray[0] = 0;
+	histRangesArray[1] = 180;
+	histRanges = histRangesArray;
+	vMin = 10, vMax = 256, sMin = 30;
 }
 
 bool Camera::Connect()
@@ -100,62 +116,47 @@ string Camera::GetExtURL()
 	return url;
 }
 
-//clean some of this up into member variables/functions
-IplImage *image = 0, *hsv = 0, *hue = 0, *mask = 0, *backProject = 0, 
-	*histImage = 0;
-CvHistogram *hist = 0;
-bool selectObject = false;
-bool trackObject = false;
-bool showHist = false;
-bool histCreated = false;
-CvPoint origin;
-CvRect selection;
-CvRect trackWindow;
-CvBox2D trackBox;
-CvConnectedComp trackComp;
-int histDivs = 32;
-float histRangesArray[] = {0, 180};
-float* histRanges = histRangesArray;
-int vMin = 10, vMax = 256, sMin = 30;
-
-void onMouse(int event, int x, int y, int flags, void* param)
+static void onMouse(int event, int x, int y, int flags, void* param)
 {
-	if (!image)
+	MouseParams* mp = (MouseParams*)param;
+
+	if (!mp->image)
 		return;
 
-	if (image->origin)
-		y = image->height - y;
+	if (mp->image->origin)
+		y = mp->image->height - y;
 
-	if (selectObject)
+	if (mp->selectObject)
 	{
-		selection.x = MIN(x, origin.x);
-		selection.y = MIN(y, origin.y);
-		selection.width = selection.x + CV_IABS(x - origin.x);
-		selection.height = selection.y + CV_IABS(y - origin.y);
+		mp->selection->x = MIN(x, mp->origin->x);
+		mp->selection->y = MIN(y, mp->origin->y);
+		mp->selection->width = mp->selection->x + CV_IABS(x - mp->origin->x);
+		mp->selection->height = mp->selection->y + CV_IABS(y - mp->origin->y);
 
-		selection.x = MAX(selection.x, 0);
-		selection.y = MAX(selection.y, 0);
-		selection.width = MIN(selection.width, image->width);
-		selection.height = MIN(selection.height, image->height);
-		selection.width -= selection.x;
-		selection.height -= selection.y;
+		mp->selection->x = MAX(mp->selection->x, 0);
+		mp->selection->y = MAX(mp->selection->y, 0);
+		mp->selection->width = MIN(mp->selection->width, mp->image->width);
+		mp->selection->height = MIN(mp->selection->height, mp->image->height);
+		mp->selection->width -= mp->selection->x;
+		mp->selection->height -= mp->selection->y;
 	}
 
 	switch (event)
 	{
 	case CV_EVENT_LBUTTONDOWN:
-		origin = cvPoint(x, y);
-		selection = cvRect(x, y, 0, 0);
-		selectObject = true;
-		trackObject = false;
-		histCreated = false;
+		*mp->origin = cvPoint(x, y);
+		*mp->selection = cvRect(x, y, 0, 0);
+		*mp->selectObject = true;
+		*mp->trackObject = false;
+		*mp->histCreated = false;
 		break;
 	case CV_EVENT_LBUTTONUP:
-		selectObject = false;
-		if (selection.width > 0 && selection.height > 0)
+		*mp->selectObject = false;
+		if (mp->selection->width > 0 && mp->selection->height > 0)
 		{
-			trackObject = true;
-			trackWindow = selection;
+			*mp->trackObject = true;
+			//mp->trackWindow = mp->selection;
+			memcpy(mp->trackWindow, mp->selection, sizeof(CvRect));
 		}
 		break;
 	}
@@ -180,14 +181,22 @@ CvScalar hsv2rgb(float hue)
 
 int Camera::GetImageWidth()
 {
-	return image->width;
+	return image_->width;
 }
 
 void Camera::StartDisplay()
 {
 	displayWindowName_ = "RobotView " + ip_;
 	cvNamedWindow(displayWindowName_.c_str(), CV_WINDOW_AUTOSIZE);
-	cvSetMouseCallback(displayWindowName_.c_str(), onMouse, 0);
+	MouseParams* mp = new MouseParams;
+	mp->image = image_;
+	mp->selectObject = &selectObject;
+	mp->trackObject = &trackObject;
+	mp->histCreated = &histCreated;
+	mp->origin = &origin;
+	mp->selection = &selection;
+	mp->trackWindow = &trackWindow;
+	cvSetMouseCallback(displayWindowName_.c_str(), onMouse, mp);
 	//uncomment these if we need to more finely adjust color values
 	//cvCreateTrackbar("VMin", displayWindowName_.c_str(), &vMin, 256, 0);
 	//cvCreateTrackbar("VMax", displayWindowName_.c_str(), &vMax, 256, 0);
@@ -201,10 +210,10 @@ void Camera::StartDisplay()
 
 void Camera::DisplayFrame()
 {
-	if (capture_ == 0 || !image)
+	if (capture_ == 0 || !image_)
 		return;
 
-	cvShowImage(displayWindowName_.c_str(), image);
+	cvShowImage(displayWindowName_.c_str(), image_);
 	cvShowImage(histWindowName_.c_str(), histImage);
 }
 
@@ -230,7 +239,7 @@ int Camera::SaveObject()
 		color);
 
 	newObject->SetTrackingWindow(cvRect(0, 0, 
-		image->width, image->height));
+		image_->width, image_->height));
 
 	int id = GetNextAvailableID();
 
@@ -290,10 +299,10 @@ void Camera::Update()
 		return;
 	}		
 
-	if (!image)
+	if (!image_)
     {
-    	image = cvCreateImage(cvGetSize(frame), 8, 3);
-    	image->origin = frame->origin;
+    	image_ = cvCreateImage(cvGetSize(frame), 8, 3);
+    	image_->origin = frame->origin;
     	hsv = cvCreateImage(cvGetSize(frame), 8, 3);
     	hue = cvCreateImage(cvGetSize(frame), 8, 1);
     	mask = cvCreateImage(cvGetSize(frame), 8, 1);
@@ -303,8 +312,8 @@ void Camera::Update()
     	cvZero(histImage);
     }
 
-    cvCopy(frame, image, 0);
-    cvCvtColor(image, hsv, CV_BGR2HSV);
+    cvCopy(frame, image_, 0);
+    cvCvtColor(image_, hsv, CV_BGR2HSV);
 
 	int _vMin = vMin, _vMax = vMax;
 
@@ -347,10 +356,10 @@ void Camera::Update()
 			CV_TERMCRIT_ITER, 10, 1), &trackComp, &trackBox);
 		trackWindow = trackComp.rect;
 
-		if (!image->origin)
+		if (!image_->origin)
 			trackBox.angle = -trackBox.angle;
 
-		cvEllipseBox(image, trackBox, CV_RGB(255, 0, 0), 3, CV_AA, 0);
+		cvEllipseBox(image_, trackBox, CV_RGB(255, 0, 0), 3, CV_AA, 0);
 	}
 
 	vector<TrackingObject*>::iterator it;
@@ -368,7 +377,7 @@ void Camera::Update()
 			(*it)->SetTrackingBox(trackBox);
 			(*it)->SetTrackingWindow(trackComp.rect);
 
-			if (!image->origin)
+			if (!image_->origin)
 				trackBox.angle = -trackBox.angle;
 		}
 	}
@@ -386,19 +395,19 @@ void Camera::Update()
 			(*it)->SetTrackingBox(trackBox);
 			(*it)->SetTrackingWindow(trackComp.rect);
 
-			if (!image->origin)
+			if (!image_->origin)
 				trackBox.angle = -trackBox.angle;
 
 			if (showTracking_)
 			{
 				if ((*it)->GetID() == target_)
 				{
-					cvEllipseBox(image, (*it)->GetTrackingBox(), 
+					cvEllipseBox(image_, (*it)->GetTrackingBox(), 
 						CV_RGB(0, 255, 0), 3, CV_AA, 0);
 				}
 				else
 				{
-					cvEllipseBox(image, (*it)->GetTrackingBox(), 
+					cvEllipseBox(image_, (*it)->GetTrackingBox(), 
 						CV_RGB(0, 0, 255), 3, CV_AA, 0);
 				}
 			}
@@ -423,9 +432,9 @@ void Camera::Update()
 
 	if (selectObject && selection.width > 0 && selection.height > 0)
 	{
-		cvSetImageROI(image, selection);
-		cvXorS(image, cvScalarAll(255), image, 0);
-		cvResetImageROI(image);
+		cvSetImageROI(image_, selection);
+		cvXorS(image_, cvScalarAll(255), image_, 0);
+		cvResetImageROI(image_);
 	}
 }
 
@@ -492,7 +501,7 @@ void Camera::Scan()
 
 	for (it = possibleObjects_.begin(); it != possibleObjects_.end(); it++)
 	{
-		(*it)->SetTrackingWindow(cvRect(0, 0, image->width, image->height));
+		(*it)->SetTrackingWindow(cvRect(0, 0, image_->width, image_->height));
 	}
 
 	lockTimer_ = 0;

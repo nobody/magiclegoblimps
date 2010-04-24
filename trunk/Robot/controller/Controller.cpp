@@ -459,7 +459,7 @@ void Controller::UpdateThread(void* params)
 
 		timer_ += interval;
 
-		if (timer_ > POLL_INTERVAL)
+		if (timer_ > SEND_INTERVAL)
 		{
 			vector<Robot*>::iterator it;
 
@@ -562,6 +562,8 @@ void Controller::RobotThread(void* params)
 
 	robot->Connect();
 
+	int outCounter = 0;
+
 	while (robot->GetRunning())
 	{
 		robot->Update();
@@ -584,11 +586,17 @@ void Controller::RobotThread(void* params)
 					atoi(tokens[4].c_str()),
 					atoi(tokens[5].c_str()));
 
-				cout << "Robot: " << robot->getID();
-				cout << " Loc: " << robot->getLocation()->getX() << ", " << robot->getLocation()->getY(); 
-				cout << " Status: " << robot->getStatus();
-				cout << " Heading: " << robot->getHeading();
-				cout << " Batt: " << robot->getBatt() << endl;
+				if (outCounter > 15)
+				{
+					cout << "Robot: " << robot->getID();
+					cout << " Loc: " << robot->getLocation()->getX() << ", " << robot->getLocation()->getY(); 
+					cout << " Status: " << robot->getStatus();
+					cout << " Heading: " << robot->getHeading();
+					cout << " Batt: " << robot->getBatt() << endl;
+					outCounter = 0;
+				}
+
+				outCounter++;
 
 				robot->setRobotMoving(false);
 
