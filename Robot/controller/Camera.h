@@ -55,6 +55,17 @@
 
 using namespace std;
 
+struct MouseParams
+{
+	IplImage* image;
+	bool* selectObject;
+	bool* trackObject;
+	bool* histCreated;
+	CvPoint* origin;
+	CvRect* selection;
+	CvRect* trackWindow;
+};
+
 class Camera
 {
 public:
@@ -153,6 +164,23 @@ private:
 
 	void Scan();
 	void Lock();
+
+	//wall of member variables/functions
+	IplImage *hsv, *hue, *mask, *backProject, *histImage;
+	CvHistogram *hist;
+	bool selectObject;
+	bool trackObject;
+	bool showHist;
+	bool histCreated;
+	CvPoint origin;
+	CvRect selection;
+	CvRect trackWindow;
+	CvBox2D trackBox;
+	CvConnectedComp trackComp;
+	int histDivs;
+	float histRangesArray[2];
+	float* histRanges;
+	int vMin, vMax, sMin;
 };
 
 #endif
