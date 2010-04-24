@@ -187,10 +187,12 @@ free(r);
 //
  for(int i = 0; i < numObjects; i++) {
     if(objAss[i] != -1) {
+        std::cout <<"[AS] Assigning Robot " <<robots[objAss[i]]->getRID() <<" to object " <<objects[i]->getOID() <<".\n";
         objects[i]->setViewedFrom(robots[objAss[i]]);
     }else{//If no robot is pursuing the object, look through the objects to find the best view 
         int maxIndex = -1;
         double qu = -1.0;
+
         for(int j = 0; j < numRobots; j++){ //Assign view of unseen object to cam with best view of it.
             if(maxIndex==-1 || quality->calcQos(objects[i],robots[j])>qu){
                 maxIndex = j;
@@ -201,6 +203,7 @@ free(r);
             std::cout << "[AS] No cameras can see the object, use archive video" << "\n";
             objects[i]->setViewedFrom(NULL);
         }else{
+            std::cout <<"[AS] Robot " <<robots[maxIndex]->getRID() <<" sees object " <<objects[i]->getOID() <<" but is not targeting it.\n";
             objects[i]->setViewedFrom(robots[maxIndex]);   
         }
      }
