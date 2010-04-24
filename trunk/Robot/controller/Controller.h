@@ -22,6 +22,11 @@
 #define INTERSECTION	8
 #define STOP			1024
 
+struct RobotParams
+{
+	Robot* robot;
+};
+
 using namespace std;
 
 class Controller
@@ -29,57 +34,57 @@ class Controller
 public:
 	Controller(int xDim, int yDim, string routerIP);
 
-	bool ConnectToServer(string ip);
+	bool Connect(string ip);
+	static void Disconnect();
 
 	static void ClientThread(void* params);
 
 	static bool Command(int id, int command, int arg);
 
-	void AddRobot(Robot* robot);
-	Robot* GetRobot(int id);
-	void RemoveRobot(int id);
+	static void AddRobot(Robot* robot);
+	static Robot* GetRobot(int id);
+	static void RemoveRobot(int id);
 
-	vector<Robot*> GetRobotVector();
+	static void SendRobot(int id);
+	static void SendObject(int id);
 
-	void Disconnect();
-
-	Path* genPath(Robot& robot);
-	vector<GridLoc*> getValidMoves(GridLoc loc, 
+	static Path* genPath(Robot& robot);
+	static vector<GridLoc*> getValidMoves(GridLoc loc, 
 		vector<GridLoc*> illMoves);
-	vector<GridLoc*> getIllMoves();
+	static vector<GridLoc*> getIllMoves();
 
-	void SearchObject(int robotID, int objID, GridLoc* lastKnownLoc);
-	void SpiralSearch(Robot* robot, GridLoc* loc);
+	static void SearchObject(int robotID, int objID, GridLoc* lastKnownLoc);
+	static void SpiralSearch(Robot* robot, GridLoc* loc);
 
-	string newCmd(Robot* rob);
+	static string newCmd(Robot* rob);
 
-	void Update();
+	static void UpdateThread(void* params);
+	static void RobotThread(void* params);
+
+	static void Stop() { running_ = false; }
 
 private:
 	static const int POLL_INTERVAL = 5;
 	static const int BUFFER_LENGTH = 512;
 
-	char* port_;
-	int xMax;
-	int yMax;
+	static char* port_;
+	static int xMax;
+	static int yMax;
 
-	bool connected_;
+	static bool connected_;
 
-	vector<GridLoc*> permIllegalLocs;
+	static vector<GridLoc*> permIllegalLocs;
 
 	static vector<Robot*> robots_;
 
-	int lastObjectSize_;
-	int lastRobotSize_;
-
-	float timer_;
-	time_t lastTime_;
+	static float timer_;
+	static time_t lastTime_;
 
 	static SOCKET connectSocket_;
 
-	//internal static versions for use in static thread
-	static Robot* getRobot(int id);
-	static void disconnect();
+	static HANDLE robotSemaphore_;
+
+	static bool running_;
 };
 
 #endif

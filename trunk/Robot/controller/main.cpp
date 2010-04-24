@@ -48,23 +48,22 @@ void LocalInput()
 		if (tokens.size() == 2)
 		{
 			string ip = tokens[1];
-			controller->ConnectToServer(ip);
+			controller->Connect(ip);
 		}
 	}
 
 	//testconnect
 	else if (tokens[0].compare("testconnect") == 0)
 	{
-		controller->ConnectToServer("10.176.14.94");
+		controller->Connect("10.176.14.94");
 	}
 
 	//testrobot
 	else if (tokens[0].compare("testrobot") == 0)
 	{
 		//lazy connection for repeat testing
-		//Robot* robot = new Robot(6, "10.176.14.89:7001", true);
-		Robot* robot = new Robot(6, "192.168.1.101:7001", true);
-		robot->Connect();
+		Robot* robot = new Robot(1, "10.176.14.89:7001", true);
+		//Robot* robot = new Robot(6, "192.168.1.101:7001", true);
 		controller->AddRobot(robot);
 	}
 
@@ -81,13 +80,11 @@ void LocalInput()
 			if (tokens[3].compare("true") == 0)
 			{
 				robot = new Robot(port, ip, true);
-				robot->Connect();
 				controller->AddRobot(robot);
 			}
 			else if (tokens[3].compare("false") == 0)
 			{
 				robot = new Robot(port, ip, false);
-				robot->Connect();
 				controller->AddRobot(robot);
 			}
 		}
@@ -114,8 +111,11 @@ void LocalInput()
 			for (int i = 3; i < (int)tokens.size(); i++)
 				command += " " + tokens[i];
 
-			controller->GetRobot(
-				atoi(tokens[1].c_str()))->ExecuteCommand(command);
+			Robot* robot = controller->GetRobot(atoi(tokens[1].c_str()));
+
+			WaitForSingleObject(robot->GetSemaphore(), INFINITE);
+			robot->ExecuteCommand(command);
+			ReleaseSemaphore(robot->GetSemaphore(), 1, NULL);
 		}
 	}
 
@@ -157,23 +157,22 @@ void LocalInput()
 			controller->GetRobot(atoi(tokens[1].c_str()))->GetNXT()->StopPrograms();
 	}
 
+	//saveobject port/id
+	else if (tokens[0].compare("saveobject") == 0)
+	{
+		int id = 0;
+		if (tokens.size() == 2)
+			id = controller->GetRobot(atoi(tokens[1].c_str()))->GetCamera()->SaveObject();
+
+		controller->SendObject(id);
+	}
+	
 	//removeobject id
 	else if (tokens[0].compare("removeobject") == 0)
 	{
 		if (tokens.size() == 2)
 		{
-			vector<TrackingObject*>::iterator it;
-			vector<TrackingObject*> objects = Camera::GetTrackableObjects();
-
-			for (it = objects.begin(); it != objects.end(); it++)
-			{
-				if ((*it)->GetID() == atoi(tokens[1].c_str()))
-				{
-					delete (*it);
-					objects.erase(it);
-					break;
-				}
-			}
+			Camera::RemoveTrackingObject(atoi(tokens[1].c_str()));
 		}
 	}
 
@@ -185,17 +184,6 @@ void LocalInput()
 
 		controller->GetRobot(atoi(tokens[1].c_str()))->setDestination(loc);
 		controller->GetRobot(atoi(tokens[1].c_str()))->setPath(controller->genPath(*controller->GetRobot(atoi(tokens[1].c_str()))));
-	}
-
-	//testhist
-	else if (tokens[0].compare("testhist") == 0)
-	{
-		char* arr;
-		int size;
-		CvHistogram* precv = Camera::GetTrackableObjects()[0]->GetHistogram();
-		arr = TrackingObject::HistogramToArray(Camera::GetTrackableObjects()[0]->GetHistogram(), &size);
-		CvHistogram* cv = TrackingObject::ArrayToHistogram(arr);
-		int i = 0;
 	}
 
 	//default
@@ -214,33 +202,13 @@ int main(int argc, char* argv[])
 
 	while (running)
 	{       
-		//this might need threading so it doesn't block
-		//we're not inputting much, but it halts pretty much everything
-		//until input is completed
 		if (_kbhit())
 			LocalInput();
 
-		controller->Update();
-
-		int c = cvWaitKey(10);
-
-		vector<Robot*> robots = controller->GetRobotVector();
-		vector<Robot*>::iterator it;
-
-		for (it = robots.begin(); it != robots.end(); it++)
-		{
-			(*it)->GetCamera()->Update();
-
-			if ((*it)->GetCamera()->GetLocalDisplay())
-			{
-				if (c != -1)
-					(*it)->GetCamera()->SendKey(c);
-
-				(*it)->GetCamera()->DisplayFrame();
-			}
-		}
+		cvWaitKey(10);
 	}
 
+	controller->Stop();
 	controller->Disconnect();
 
 	delete controller;

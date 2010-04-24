@@ -63,6 +63,8 @@ int TrackingObject::CenterDistanceToDegrees(int width, bool cam)
 	float centered = GetCenteredPercentage(width);
 	centered /= 100.0f;
 
+	centered = -centered;
+
 	if (abs(centered) > 0.15f)
 	{
 		if (cam == true)

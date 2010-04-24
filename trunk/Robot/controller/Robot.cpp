@@ -24,12 +24,18 @@ Robot::Robot(int port, string ip, bool dLink)
 
 	robotHeading_ = NORTH;
 	cameraDirection_ = 0;
+
+	updateSemaphore_ = CreateSemaphore(NULL, 1, 1, NULL);
+	
+	running_ = false;
 }
 
 Robot::~Robot()
 {
 	delete nxt_;
 	delete camera_;
+
+	CloseHandle(updateSemaphore_);
 }
 
 void Robot::Connect()
@@ -256,13 +262,22 @@ void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, int statu
 
 void Robot::Update()
 {
+	WaitForSingleObject(updateSemaphore_, INFINITE);
+
+	camera_->Update();
+
+	if (camera_->GetLocalDisplay())
+		camera_->DisplayFrame();
+
 	if (nxtConnected_ && camConnected_ && (camera_->GetTargetID() != -1))
 	{
 		if (camera_->GetTargetVisible())
 			centerCameraOnTarget();
 		else 
-			ExecuteCommand("pan 2");
+			ExecuteCommand("pan 1");
 	}
+
+	ReleaseSemaphore(updateSemaphore_, 1, NULL);
 }
 
 void Robot::centerCameraOnTarget()

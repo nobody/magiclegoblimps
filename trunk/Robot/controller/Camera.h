@@ -15,6 +15,7 @@
 #include "Tokenizer.h"
 
 #include "TrackingObject.h"
+#include "Server/Vector_ts.h"
 
 //#ifdef _DEBUG
 //#pragma comment(lib, "cv210d.lib")
@@ -80,16 +81,18 @@ public:
 	void DisplayFrame();
 	void StopDisplay();
 
+	int SaveObject();
+
 	void SetTarget(int id)	{ target_ = id; }
 	int GetTargetID()		{ return target_; }
 	bool GetTargetVisible()	{ return targetVisible_; }
 
-	void SendKey(int key);
-
-	static vector<TrackingObject*> GetTrackableObjects()
+	static Vector_ts<TrackingObject*> GetTrackableObjects()
 	{
 		return trackableObjects_;
 	}
+	static TrackingObject* GetTrackingObject(int id);
+	static void RemoveTrackingObject(int id);
 
 	vector<TrackingObject*> GetVisibleObjects()
 	{
@@ -131,12 +134,9 @@ private:
 	bool histDisplay_;
 	string histWindowName_;
 
-	int inKey_;
-	bool waitingKey_;
-
 	int GetNextAvailableID();
 
-	static vector<TrackingObject*> trackableObjects_;
+	static Vector_ts<TrackingObject*> trackableObjects_;
 
 	bool showTracking_;
 	vector<TrackingObject*> possibleObjects_;

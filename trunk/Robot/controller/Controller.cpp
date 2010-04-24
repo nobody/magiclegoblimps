@@ -3,6 +3,15 @@
 //static member variables must be redeclared in source
 vector<Robot*> Controller::robots_;
 SOCKET Controller::connectSocket_;
+char* Controller::port_;
+int Controller::xMax;
+int Controller::yMax;
+bool Controller::connected_;
+vector<GridLoc*> Controller::permIllegalLocs;
+float Controller::timer_;
+time_t Controller::lastTime_;
+bool Controller::running_;
+HANDLE Controller::robotSemaphore_;
 
 Controller::Controller(int xDim, int yDim, string routerIP)
 {
@@ -15,13 +24,15 @@ Controller::Controller(int xDim, int yDim, string routerIP)
 	connectSocket_ = NULL;
 	port_ = "9999";
 
-	lastObjectSize_ = 0;
-	lastRobotSize_ = 0;
+	robotSemaphore_ = CreateSemaphore(NULL, 1, 1, NULL);
 
 	connected_ = false;
+	running_ = true;
+
+	_beginthread(UpdateThread, 0, NULL);
 }
 
-bool Controller::ConnectToServer(string ip)
+bool Controller::Connect(string ip)
 {
 	WSADATA wsaData;
 	connectSocket_ = INVALID_SOCKET;
@@ -32,53 +43,53 @@ bool Controller::ConnectToServer(string ip)
 	iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
 	if (iResult != 0) 
 	{
-        printf("WSAStartup failed: %d\n", iResult);
-        return false;
-    }
+		printf("WSAStartup failed: %d\n", iResult);
+		return false;
+	}
 
 	ZeroMemory(&hints, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
 
 	iResult = getaddrinfo(ip.c_str(), port_, &hints, &result);
-    if (iResult != 0) 
+	if (iResult != 0) 
 	{
-        printf("getaddrinfo failed: %d\n", iResult);
-        WSACleanup();
-        return false;
-    }
+		printf("getaddrinfo failed: %d\n", iResult);
+		WSACleanup();
+		return false;
+	}
 
-    for (ptr = result; ptr != NULL; ptr = ptr->ai_next)
+	for (ptr = result; ptr != NULL; ptr = ptr->ai_next)
 	{
-        connectSocket_ = socket(ptr->ai_family, ptr->ai_socktype, 
-            ptr->ai_protocol);
-        if (connectSocket_ == INVALID_SOCKET) {
-            printf("Error at socket(): %ld\n", WSAGetLastError());
-            freeaddrinfo(result);
-            WSACleanup();
-            return false;
-        }
+		connectSocket_ = socket(ptr->ai_family, ptr->ai_socktype, 
+			ptr->ai_protocol);
+		if (connectSocket_ == INVALID_SOCKET) {
+			printf("Error at socket(): %ld\n", WSAGetLastError());
+			freeaddrinfo(result);
+			WSACleanup();
+			return false;
+		}
 
-        iResult = connect(connectSocket_, ptr->ai_addr, (int)ptr->ai_addrlen);
-        if (iResult == SOCKET_ERROR) 
+		iResult = connect(connectSocket_, ptr->ai_addr, (int)ptr->ai_addrlen);
+		if (iResult == SOCKET_ERROR) 
 		{
-            closesocket(connectSocket_);
-           	connectSocket_ = INVALID_SOCKET;
+			closesocket(connectSocket_);
+			connectSocket_ = INVALID_SOCKET;
 			connected_ = false;
-            continue;
-        }
-        break;
-    }
+			continue;
+		}
+		break;
+	}
 
-    freeaddrinfo(result);
+	freeaddrinfo(result);
 
-    if (connectSocket_ == INVALID_SOCKET) 
+	if (connectSocket_ == INVALID_SOCKET) 
 	{
-        printf("Unable to connect to server!\n");
-        WSACleanup();
-        return false;
-    }
+		printf("Unable to connect to server!\n");
+		WSACleanup();
+		return false;
+	}
 
 	cout << "Connected to server." << endl;
 
@@ -87,14 +98,16 @@ bool Controller::ConnectToServer(string ip)
 
 	if (robots_.empty())
 	{
-		init = new robotInit[1];
-		init[0].RID = -1;
-		init[0].VideoURL = NULL;
+		init = new robotInit;
+		init->RID = -1;
+		init->VideoURL = NULL;
 
 		write_data(P_ROBOT_INIT, init, 1, &sendArray);
 	}
 	else
 	{
+		WaitForSingleObject(robotSemaphore_, INFINITE);
+
 		init = new robotInit[robots_.size()];
 
 		vector<Robot*>::iterator it;
@@ -114,17 +127,19 @@ bool Controller::ConnectToServer(string ip)
 			i++;
 		}
 
+		ReleaseSemaphore(robotSemaphore_, 1, NULL);
+
 		write_data(P_ROBOT_INIT, init, (short)robots_.size(), &sendArray);
 	}
 
 	iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
-    if (iResult == SOCKET_ERROR) 
+	if (iResult == SOCKET_ERROR) 
 	{
-        printf("send failed: %d\n", WSAGetLastError());
-        closesocket(connectSocket_);
-        WSACleanup();
+		printf("send failed: %d\n", WSAGetLastError());
+		closesocket(connectSocket_);
+		WSACleanup();
 		connected_ = false;
-    }
+	}
 
 	delete[] init;
 
@@ -135,6 +150,46 @@ bool Controller::ConnectToServer(string ip)
 	return true;
 }
 
+void Controller::Disconnect()
+{
+	if (connectSocket_ != NULL)
+	{
+		shutdown(connectSocket_, SD_BOTH);
+		closesocket(connectSocket_);
+		WSACleanup();
+		connected_ = false;
+	}
+
+	if (robots_.size() > 0)
+	{
+		vector<Robot*>::iterator it;
+
+		for (it = robots_.begin(); it != robots_.end(); it++)
+		{
+			(*it)->StopRunning();
+			delete (*it);
+		}
+
+		robots_.clear();
+	}
+
+	//vector iterator error needs fixing
+	/*
+	if (Camera::GetTrackableObjects().size() > 0)
+	{
+		Vector_ts<TrackingObject*>::iterator it;
+		Vector_ts<TrackingObject*> objects = Camera::GetTrackableObjects();
+
+		for (it = objects.begin(); it != objects.end(); it++)
+			delete (*it);
+
+		objects.clear();
+	}
+	*/
+
+	CloseHandle(robotSemaphore_);
+}
+
 void Controller::ClientThread(void* params)
 {
 	int iResult = 0;
@@ -142,8 +197,8 @@ void Controller::ClientThread(void* params)
 	int recvBufLen = BUFFER_LENGTH;
 	while (true)
 	{
-        iResult = recv(connectSocket_, recvBuf, recvBufLen, 0);
-        if (iResult > 0)
+		iResult = recv(connectSocket_, recvBuf, recvBufLen, 0);
+		if (iResult > 0)
 		{
 			readReturn* data = new readReturn;
 
@@ -171,7 +226,9 @@ void Controller::ClientThread(void* params)
 
 					newObj->SetID(obj[i].OID);
 
+					Camera::GetTrackableObjects().lock();
 					Camera::GetTrackableObjects().push_back(newObj);
+					Camera::GetTrackableObjects().unlock();
 				}
 			}
 			else if (type == P_ASSIGNMENT)
@@ -190,7 +247,11 @@ void Controller::ClientThread(void* params)
 						" " << assign[i].y;
 					cmd = oss.str();
 
-					getRobot(assign[i].RID)->ExecuteCommand(cmd);
+					Robot* robot = GetRobot(assign[i].RID);
+
+					WaitForSingleObject(robot->GetSemaphore(), INFINITE);
+					robot->ExecuteCommand(cmd);
+					ReleaseSemaphore(robot->GetSemaphore(), 1, NULL);
 				}
 
 				delete[] assign;
@@ -214,56 +275,45 @@ void Controller::ClientThread(void* params)
 
 			delete data;
 		}
-        else if (iResult == 0)
+		else if (iResult == 0)
 		{
-            printf("Connection closed\n");
+			printf("Connection closed\n");
 			_endthread();
 		}
-        else
-            printf("recv failed: %d\n", WSAGetLastError());
-    } 
+		else
+			printf("recv failed: %d\n", WSAGetLastError());
+	} 
 }
 
 bool Controller::Command(int id, int command, int arg)
 {
 	if (command == P_CMD_FWD)
 	{
-		getRobot(id)->ExecuteCommand("forward");
+		GetRobot(id)->ExecuteCommand("forward");
 	}
 	else if(command == P_CMD_LFT)
 	{
-		getRobot(id)->ExecuteCommand("left");
+		GetRobot(id)->ExecuteCommand("left");
 	}
 	else if(command == P_CMD_RGHT)
 	{
-		getRobot(id)->ExecuteCommand("right");
+		GetRobot(id)->ExecuteCommand("right");
 	}
 	else if (command == P_CMD_CAMROT)
 	{
 		string cmd = "";
 		stringstream oss;
-		oss << "pan " << arg;
+		oss << "pan " << -arg;
 		cmd = oss.str();
-		getRobot(id)->ExecuteCommand(cmd);
+		GetRobot(id)->ExecuteCommand(cmd);
 	}
 	else if (command == P_CMD_DEL_OBJ)
 	{
-		vector<TrackingObject*>::iterator it;
-
-		for (it = Camera::GetTrackableObjects().begin(); 
-			it != Camera::GetTrackableObjects().end(); it++)
-		{
-			if ((*it)->GetID() == arg)
-			{
-				delete (*it);
-				Camera::GetTrackableObjects().erase(it);
-				break;
-			}
-		}
+		Camera::RemoveTrackingObject(arg);
 	}
 	else if (command == P_CMD_SHUTDOWN)
 	{
-		disconnect();
+		Disconnect();
 	}
 
 	return true;
@@ -271,27 +321,19 @@ bool Controller::Command(int id, int command, int arg)
 
 void Controller::AddRobot(Robot* robot)
 {
+	RobotParams* rp = new RobotParams;
+	rp->robot = robot;
+	robot->StartRunning();
+	_beginthread(RobotThread, 0, rp);
+	WaitForSingleObject(robotSemaphore_, INFINITE);
 	robots_.push_back(robot);
+	ReleaseSemaphore(robotSemaphore_, 1, NULL);
+	SendRobot(robot->GetID());
 }
 
 Robot* Controller::GetRobot(int id)
 {
 	vector<Robot*>::iterator it;
-
-	for (it = robots_.begin(); it != robots_.end(); it++)
-	{
-		if ((*it)->GetID() == id)
-			return (*it);
-	}
-
-	return NULL;
-}
-
-
-Robot* Controller::getRobot(int id)
-{
-	vector<Robot*>::iterator it;
-
 	for (it = robots_.begin(); it != robots_.end(); it++)
 	{
 		if ((*it)->GetID() == id)
@@ -303,383 +345,291 @@ Robot* Controller::getRobot(int id)
 
 void Controller::RemoveRobot(int id)
 {
+	WaitForSingleObject(robotSemaphore_, INFINITE);
 	vector<Robot*>::iterator it;
-
 	for (it = robots_.begin(); it != robots_.end(); it++)
 	{
 		if ((*it)->GetID() == id)
 		{
-			(*it)->Disconnect();
+			(*it)->StopRunning();
 			delete (*it);
 			robots_.erase(it);
 			break;
 		}
 	}
+	ReleaseSemaphore(robotSemaphore_, 1, NULL);
 }
 
-vector<Robot*> Controller::GetRobotVector()
+void Controller::SendRobot(int id)
 {
-	return robots_;
-}
+	if (!connected_)
+		return;
 
-void Controller::Disconnect()
-{
-	if (connectSocket_ != NULL)
+	WaitForSingleObject(robotSemaphore_, INFINITE);
+
+	byteArray sendArray;
+	robotInit* init;
+	Robot* robot = GetRobot(id);
+
+	init = new robotInit;
+
+	init->RID = robot->GetID();
+	if (robot->GetCamera()->GetDLinkCam())
+		init->cameraType = P_DLINK;
+	else
+		init->cameraType = P_CISCO;
+	init->VideoURL = new string(robot->GetCamera()->GetExtURL());
+	init->x = robot->getLocation()->getX();
+	init->y = robot->getLocation()->getY();
+
+	ReleaseSemaphore(robotSemaphore_, 1, NULL);
+
+	write_data(P_ROBOT_INIT, init, 1, &sendArray);
+
+	int iResult = 0;
+
+	iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
+	if (iResult == SOCKET_ERROR) 
 	{
-		shutdown(connectSocket_, SD_BOTH);
+		printf("send failed: %d\n", WSAGetLastError());
 		closesocket(connectSocket_);
-	    WSACleanup();
+		WSACleanup();
 		connected_ = false;
 	}
 
-	if (robots_.size() > 0)
-	{
-		vector<Robot*>::iterator it;
-
-		for (it = robots_.begin(); it != robots_.end(); it++)
-		{
-			(*it)->Disconnect();
-			delete (*it);
-		}
-
-		robots_.clear();
-	}
-	
-	if (Camera::GetTrackableObjects().size() > 0)
-	{
-		vector<TrackingObject*>::iterator it;
-		vector<TrackingObject*> objects = Camera::GetTrackableObjects();
-
-		for (it = objects.begin(); it != objects.end(); it++)
-		{
-			delete (*it);
-		}
-
-		objects.clear();
-	}
+	delete init;
 }
 
-void Controller::disconnect()
+void Controller::SendObject(int id)
 {
-	if (connectSocket_ != NULL)
+	if (!connected_)
+		return;
+
+	byteArray sendArray;
+	object* objects = new object;
+	TrackingObject* obj = Camera::GetTrackingObject(id);
+
+	string n = "";
+	stringstream oss;
+	oss << "Animal" << obj->GetID();
+	n = oss.str();
+	string* name = new string (n);
+
+	char* barr;
+	int bsize;
+
+	objects->OID = obj->GetID();
+	objects->name = name;
+
+	barr = TrackingObject::BoxToArray(obj->GetOriginalBox(), &bsize);
+	objects->box = barr;
+	objects->box_size = bsize;
+
+	char* harr;
+	int hsize;
+
+	harr = TrackingObject::HistogramToArray(obj->GetHistogram(), &hsize);
+	objects->color = harr;
+	objects->color_size = hsize;
+
+	write_data(P_OBJECT, objects, 1, &sendArray);
+
+	int iResult = 0;
+
+	iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
+
+	if (iResult == SOCKET_ERROR) 
 	{
-		shutdown(connectSocket_, SD_BOTH);
+		printf("send failed: %d\n", WSAGetLastError());
 		closesocket(connectSocket_);
-	    WSACleanup();
-		//connected_ = false;
+		WSACleanup();
+		connected_ = false;
 	}
 
-	if (robots_.size() > 0)
-	{
-		vector<Robot*>::iterator it;
-
-		for (it = robots_.begin(); it != robots_.end(); it++)
-		{
-			(*it)->Disconnect();
-			delete (*it);
-		}
-
-		robots_.clear();
-	}
-
-	if (Camera::GetTrackableObjects().size() > 0)
-	{
-		vector<TrackingObject*>::iterator it;
-		vector<TrackingObject*> objects = Camera::GetTrackableObjects();
-
-		for (it = objects.begin(); it != objects.end(); it++)
-		{
-			delete (*it);
-		}
-
-		objects.clear();
-	}
+	delete objects;
 }
 
-void Controller::Update()
+void Controller::UpdateThread(void* params)
 {
-	time_t seconds = time(NULL);
-	float interval = (float)seconds - lastTime_;
-	lastTime_ = seconds;
-
-	timer_ += interval;
-
-	if (connected_ && (robots_.size() > 0))
+	while (running_)
 	{
-		if (lastRobotSize_ != robots_.size())
+		time_t seconds = time(NULL);
+		float interval = (float)seconds - lastTime_;
+		lastTime_ = seconds;
+
+		timer_ += interval;
+
+		if (timer_ > POLL_INTERVAL)
 		{
-			lastRobotSize_ = robots_.size();
-
-			byteArray sendArray;
-			robotInit* init;
-
-			init = new robotInit[robots_.size()];
-
 			vector<Robot*>::iterator it;
-			int i = 0;
 
-			for (it = robots_.begin(); it != robots_.end(); it++)
+			if (connected_ && (robots_.size() > 0))
 			{
-				init[i].RID = (*it)->GetID();
-				if ((*it)->GetCamera()->GetDLinkCam())
-					init[i].cameraType = P_DLINK;
-				else
-					init[i].cameraType = P_CISCO;
-				init[i].VideoURL = new string((*it)->GetCamera()->GetExtURL());
-				init[i].x = (*it)->getLocation()->getX();
-				init[i].y = (*it)->getLocation()->getY();
+				byteArray sendArray;
 
-				i++;
-			}
+				WaitForSingleObject(robotSemaphore_, INFINITE);
 
-			write_data(P_ROBOT_INIT, init, (short)robots_.size(), &sendArray);
+				robotUpdate* update = new robotUpdate[robots_.size()];
 
-			int iResult = 0;
+				int i = 0;
 
-			iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
-			if (iResult == SOCKET_ERROR) 
-			{
-				printf("send failed: %d\n", WSAGetLastError());
-				closesocket(connectSocket_);
-				WSACleanup();
-				connected_ = false;
-			}
-
-			delete[] init;
-		}
-	}
-
-	if (timer_ > POLL_INTERVAL)
-	{
-		vector<Robot*>::iterator it;
-
-		for (it = robots_.begin(); it != robots_.end(); it++)
-		{
-			if ((*it)->GetNXTConnected())
-			{
-				try
+				for (it = robots_.begin(); it != robots_.end(); it++)
 				{
-					string update = (*it)->GetNXT()->ReadMessage();
+					WaitForSingleObject((*it)->GetSemaphore(), INFINITE);
 
-					vector<string> tokens;
-					tokenize(update, tokens, " ");
+					update[i].RID = (*it)->GetID();
+					update[i].dir = (*it)->getHeading();
+					update[i].x = (*it)->getLocation()->getX();
+					update[i].y = (*it)->getLocation()->getY();
+					update[i].listSize = 
+						(int)(*it)->GetCamera()->GetVisibleObjects().size();
 
-					(*it)->SetUpdate(atoi(tokens[0].c_str()),
-						atoi(tokens[1].c_str()),
-						atoi(tokens[2].c_str()),
-						atoi(tokens[3].c_str()),
-						atoi(tokens[4].c_str()),
-						atoi(tokens[5].c_str()));
-
-					cout << "Robot: " << (*it)->getID();
-					cout << " Loc: " << (*it)->getLocation()->getX() << ", " << (*it)->getLocation()->getY(); 
-					cout << " Status: " << (*it)->getStatus();
-					cout << " Heading: " << (*it)->getHeading();
-					cout << " Batt: " << (*it)->getBatt() << endl;
-
-					(*it)->setRobotMoving(false);
-
-					if(!((*it)->getStatus() & (INTERSECTION | IDLE | STOP)))
-					{it+1;}
-					else if((*it)->GetCamera()->GetTargetVisible())
-						(*it)->GetNXT()->SendMessage(newCmd((*it)));
-					else if(*((*it)->getLocation()) == *((*it)->getDestination())
-						|| !(*it)->getHasDest())
-					{}
-					else if(!(*it)->getHasPath())
+					if (update[i].listSize > 0)
 					{
-						(*it)->setPath(genPath(*(*it)));
-						(*it)->GetNXT()->SendMessage(newCmd((*it)));
-					}
-					else if((*it)->getLocation()->calcDist(*(*it)->getPath()->getStart()) != 1)
-					{
-						(*it)->setPath(genPath(*(*it)));
-						(*it)->GetNXT()->SendMessage(newCmd((*it)));
-					}
-					else
-					{
-						(*it)->GetNXT()->SendMessage(newCmd((*it)));
-					}
-				}
-				catch (Nxt_exception& e)
-				{
-					//keep the empty mailbox exceptions quiet
-					/*
-					cout << e.what() << endl;
-					cout << e.error_code() << endl;
-					cout << e.error_type() << endl;
-					cout << e.who() << endl;
-					*/
-				}
-			}
-		}
+						int* objects = new int[update[i].listSize];
+						for (int j = 0; j < update[i].listSize; j++)
+						{
+							objects[j] = 
+								(*it)->GetCamera()->GetVisibleObjects()[j]->GetID();
+						}
+						update[i].objects = objects;
 
-		if (connected_ && (robots_.size() > 0))
-		{
-			byteArray sendArray;
-
-			robotUpdate* update = new robotUpdate[robots_.size()];
-
-			int i = 0;
-
-			for (it = robots_.begin(); it != robots_.end(); it++)
-			{
-				update[i].RID = (*it)->GetID();
-				update[i].dir = (*it)->getHeading();
-				update[i].x = (*it)->getLocation()->getX();
-				update[i].y = (*it)->getLocation()->getY();
-				update[i].listSize = 
-					(int)(*it)->GetCamera()->GetVisibleObjects().size();
-
-				if (update[i].listSize > 0)
-				{
-					int* objects = new int[update[i].listSize];
-					for (int j = 0; j < update[i].listSize; j++)
-					{
-						objects[j] = 
-							(*it)->GetCamera()->GetVisibleObjects()[j]->GetID();
-					}
-					update[i].objects = objects;
-
-					float* qualities = new float[update[i].listSize];
-					for (int j = 0; j < update[i].listSize; j++)
-					{
-						qualities[j] = 
-							(*it)->GetCamera()->GetVisibleObjects()[j]->GetQuality(
+						float* qualities = new float[update[i].listSize];
+						for (int j = 0; j < update[i].listSize; j++)
+						{
+							qualities[j] = 
+								(*it)->GetCamera()->GetVisibleObjects()[j]->GetQuality(
 								(*it)->GetCamera()->GetImageWidth());
-					}
-					update[i].qualities = qualities;
-
-					int* xs = new int[update[i].listSize];
-					int* ys = new int[update[i].listSize];
-
-					if ((*it)->GetCamConnected() && (*it)->GetNXTConnected())
-					{
-						for (int j = 0; j < update[i].listSize; j++)
-						{
-							xs[j] = (*it)->GetObjectLocation(objects[j])->getX();
-							ys[j] = (*it)->GetObjectLocation(objects[j])->getY();
 						}
-					}
-					else
-					{
-						for (int j = 0; j < update[i].listSize; j++)
+						update[i].qualities = qualities;
+
+						int* xs = new int[update[i].listSize];
+						int* ys = new int[update[i].listSize];
+
+						if ((*it)->GetCamConnected() && (*it)->GetNXTConnected())
 						{
-							xs[j] = 0;
-							ys[j] = 0;
+							for (int j = 0; j < update[i].listSize; j++)
+							{
+								xs[j] = (*it)->GetObjectLocation(objects[j])->getX();
+								ys[j] = (*it)->GetObjectLocation(objects[j])->getY();
+							}
 						}
+						else
+						{
+							for (int j = 0; j < update[i].listSize; j++)
+							{
+								xs[j] = 0;
+								ys[j] = 0;
+							}
+						}
+
+						update[i].xs = xs;
+						update[i].ys = ys;
 					}
 
-					update[i].xs = xs;
-					update[i].ys = ys;
+					ReleaseSemaphore((*it)->GetSemaphore(), 1, NULL);
+
+					i++;
 				}
 
-				i++;
-			}
+				ReleaseSemaphore(robotSemaphore_, 1, NULL);
 
-			write_data(P_ROBOT_UPDATE, update, (short)robots_.size(), &sendArray);
+				write_data(P_ROBOT_UPDATE, update, (short)robots_.size(), &sendArray);
 
-			delete[] update;
+				delete[] update;
 
-			int iResult = 0;
-
-			iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
-		    if (iResult == SOCKET_ERROR) 
-			{
-		        printf("send failed: %d\n", WSAGetLastError());
-		        closesocket(connectSocket_);
-		        WSACleanup();
-				connected_ = false;
-		    }
-		}
-
-		timer_ = 0;
-	}
-
-	if (connected_ && (Camera::GetTrackableObjects().size() > 0))
-	{
-		if (lastObjectSize_ != Camera::GetTrackableObjects().size())
-		{
-			lastObjectSize_ = Camera::GetTrackableObjects().size();
-
-			byteArray sendArray;
-
-			//object* objects = new object[lastObjectSize_];
-
-			int i = 0;
-			int iResult = 0;
-
-			vector<TrackingObject*>::iterator it;
-			vector<TrackingObject*> tobjects = Camera::GetTrackableObjects();
-
-			for (it = tobjects.begin(); it != tobjects.end(); it++)
-			{
-				//really only one object
-				object* objects = new object;
-				string n = "";
-				stringstream oss;
-				oss << "Animal" << (*it)->GetID();
-				n = oss.str();
-				string* name = new string (n);
-
-				char* barr;
-				int bsize;
-
-				/*objects[i].OID = (*it)->GetID();
-				objects[i].name = name;
-
-				barr = TrackingObject::BoxToArray((*it)->GetOriginalBox(), &bsize);
-				objects[i].box = barr;
-				objects[i].box_size = bsize;*/
-				objects->OID = (*it)->GetID();
-				objects->name = name;
-
-				barr = TrackingObject::BoxToArray((*it)->GetOriginalBox(), &bsize);
-				objects->box = barr;
-				objects->box_size = bsize;
-
-				cout << bsize << endl;
-
-				char* harr;
-				int hsize;
-
-				harr = TrackingObject::HistogramToArray((*it)->GetHistogram(), &hsize);
-				objects->color = harr;
-				objects->color_size = hsize;
-
-				cout << hsize << endl;
-
-				i++;
-
-				write_data(P_OBJECT, objects, 1, &sendArray);
-
-
+				int iResult = 0;
 
 				iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
+				if (iResult == SOCKET_ERROR) 
+				{
+					printf("send failed: %d\n", WSAGetLastError());
+					closesocket(connectSocket_);
+					WSACleanup();
+					connected_ = false;
+				}
 			}
 
-			//write_data(P_OBJECT, objects, (short)lastObjectSize_, &sendArray);
+			timer_ = 0;
+		}
+	}
+}
 
-			////int iResult = 0;
+void Controller::RobotThread(void* params)
+{
+	RobotParams* rp = (RobotParams*)params;
+	Robot* robot = rp->robot;
 
-			//iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
-			//delete[] objects;
-			if (iResult == SOCKET_ERROR) 
+	robot->Connect();
+
+	while (robot->GetRunning())
+	{
+		robot->Update();
+
+		if (robot->GetNXTConnected())
+		{
+			try
+			{	
+				WaitForSingleObject(robot->GetSemaphore(), INFINITE);
+
+				string update = robot->GetNXT()->ReadMessage();
+
+				vector<string> tokens;
+				tokenize(update, tokens, " ");
+
+				robot->SetUpdate(atoi(tokens[0].c_str()),
+					atoi(tokens[1].c_str()),
+					atoi(tokens[2].c_str()),
+					atoi(tokens[3].c_str()),
+					atoi(tokens[4].c_str()),
+					atoi(tokens[5].c_str()));
+
+				cout << "Robot: " << robot->getID();
+				cout << " Loc: " << robot->getLocation()->getX() << ", " << robot->getLocation()->getY(); 
+				cout << " Status: " << robot->getStatus();
+				cout << " Heading: " << robot->getHeading();
+				cout << " Batt: " << robot->getBatt() << endl;
+
+				robot->setRobotMoving(false);
+
+				if(!(robot->getStatus() & (INTERSECTION | IDLE | STOP)))
+				{}
+				else if(robot->GetCamera()->GetTargetVisible())
+					robot->GetNXT()->SendMessage(newCmd(robot));
+				else if(*(robot->getLocation()) == *(robot->getDestination())
+					|| !robot->getHasDest())
+				{}
+				else if(!robot->getHasPath())
+				{
+					robot->setPath(genPath(*robot));
+					robot->GetNXT()->SendMessage(newCmd(robot));
+				}
+				else if(robot->getLocation()->calcDist(*robot->getPath()->getStart()) != 1)
+				{
+					robot->setPath(genPath(*robot));
+					robot->GetNXT()->SendMessage(newCmd(robot));
+				}
+				else
+				{
+					robot->GetNXT()->SendMessage(newCmd(robot));
+				}
+
+				ReleaseSemaphore(robot->GetSemaphore(), 1, NULL);
+			}
+			catch (Nxt_exception& e)
 			{
-				printf("send failed: %d\n", WSAGetLastError());
-				closesocket(connectSocket_);
-				WSACleanup();
-				connected_ = false;
+				//keep the empty mailbox exceptions quiet
+				/*
+				cout << e.what() << endl;
+				cout << e.error_code() << endl;
+				cout << e.error_type() << endl;
+				cout << e.who() << endl;
+				*/
 			}
 		}
 	}
 
-	vector<Robot*>::iterator it;
-
-	for (it = robots_.begin(); it != robots_.end(); it++)
-	{
-		(*it)->Update();
-	}
+	robot->Disconnect();
 }
 
 Path* Controller::genPath(Robot& robot)
@@ -691,7 +641,7 @@ Path* Controller::genPath(Robot& robot)
 
 	/*if(robot.getLocation() == robot.getDestination())
 	{
-		Path* newPth = new Path();*/
+	Path* newPth = new Path();*/
 
 
 	//Make sure the destination is not in the list of illegal
@@ -749,13 +699,13 @@ Path* Controller::genPath(Robot& robot)
 }
 
 vector<GridLoc*> Controller::getValidMoves(GridLoc loc, 
-						  vector<GridLoc*> illMoves)
+	vector<GridLoc*> illMoves)
 {
 	vector<GridLoc*> moves;
 
 	int xLoc = loc.getX();
 	int yLoc = loc.getY();
-	
+
 	if(xLoc > 0 && xLoc < xMax)
 	{
 		GridLoc* xplus = new GridLoc(xLoc+1, yLoc);
@@ -818,7 +768,7 @@ vector<GridLoc*> Controller::getIllMoves()
 	{
 		if((*it)->getRobotMoving())
 			illMoves.push_back(new GridLoc((*it)->getPath()->getStart()->getX(),
-				(*it)->getPath()->getStart()->getY()));
+			(*it)->getPath()->getStart()->getY()));
 		illMoves.push_back(new GridLoc((*it)->getLocation()->getX(),
 			(*it)->getLocation()->getY()));
 	}
@@ -829,9 +779,9 @@ void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
 {
 	Robot* robot = GetRobot(robotID);
 	Camera* camera = robot->GetCamera();
-	
+
 	camera->SetTarget(objID);
-	
+
 	//TODO: camera thread/spinning
 	//while (!(camera->GetTargetVisible()))
 	//{
@@ -848,13 +798,13 @@ void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
 	{
 		robot->setDestination(lastKnownLoc);
 		robot->setPath(genPath(*robot));
-                robot->centerCameraOnTarget();
+		robot->centerCameraOnTarget();
 	}
 	else
 	{
 		robot->setDestination(robot->GetObjectLocation(objID));
 		robot->setPath(genPath(*robot));
-                robot->centerCameraOnTarget();
+		robot->centerCameraOnTarget();
 	}
 }
 
@@ -1052,12 +1002,12 @@ string Controller::newCmd(Robot* rob)
 			cmd = "left";
 			printf("turn left\n");
 			rob->setHeading(SOUTH);
-//			rob->setRobotMoving(true);
-//			rob->updateLocation();
+			//rob->setRobotMoving(true);
+			//rob->updateLocation();
 			break;
 		}
 	}
-	
+
 	return cmd;
 }
 
