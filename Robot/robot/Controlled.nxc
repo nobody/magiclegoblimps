@@ -3,7 +3,7 @@
 #define CAMBOX 3
 
 mutex mailbox;
-//mutex mutpan;
+int numCmd = 0;
 
 bool testCommand(string msg, string cmd)
 {
@@ -22,18 +22,24 @@ string readInbox(bool clear)
 
 task receiveCommand()
 {
+ //Precedes(receiveCommand);
+
  string msg = "";
 
  FOREVER
  {
   setLightOff();
   
-  //TextOut(0,0,NumToStr(STATUS),true);
-
+  Wait(100);
+  TextOut(0,0,NumToStr(getStatus()),true);
+  TextOut(0,LCD_LINE1,NumToStr(battery()),false);
+  TextOut(75,LCD_LINE1,"cmd",false);
+  TextOut(0,LCD_LINE5,NumToStr(numCmd),false);
   msg = readInbox(false);
   
   if(StrLen(msg)>0)
   {
+   numCmd++;
 
    if( testCommand(msg,"stop")
     /*|| testCommand(msg,"pan")
@@ -134,6 +140,8 @@ task receiveCommand()
    {
     PlayTone(1000,50);
    }
+   
+   Wait(15);
 
   }
  }
@@ -141,23 +149,24 @@ task receiveCommand()
 
 task cmdPan()
 {
+ //Precedes(cmdPan);
+
  string msg;
 
  FOREVER
  {
-  ReceiveMessage(CAMBOX,false,msg);
+  TextOut(75,LCD_LINE3,"pan",false);
+  
+  ReceiveMessage(CAMBOX,true,msg);
 
-  if( StrLen(msg)>0 )
+  if( StrLen(msg)>0 && testCommand(msg,"pan") )
   {
-   ReceiveMessage(CAMBOX,true,msg);
-   
-   if( !(testCommand(msg,"pan")) )
-       continue;
-
    msg = SubStr( msg, 4, StrLen(msg) );
 
    pan( StrToNum( msg ) ); // send deg
   }
+  
+  Wait(27);
  }
 }
 
@@ -165,10 +174,14 @@ task cmdPan()
 // only stops forward command
 task cmdStop()
 {
+ //Precedes(cmdStop);
+
  string msg;
 
  FOREVER
  {
+  TextOut(75,LCD_LINE5,"stop",false);
+  
   msg = readInbox(false);
 
   if( StrLen(msg)>0 && testCommand(msg,"stop") )
@@ -179,26 +192,33 @@ task cmdStop()
    //StartTask(receiveCommand);
 
     setStatus(STOPPED);
-    
+    /*
     repeat(10)
      stopWheels();
+     */
   }
+  
+  Wait(31);
  }
 }
 
 task sendFeedBack()
 {
+//   Precedes(sendFeedBack);
+
    const string d = " ";
    string x, y, t, h, p, b, str, s, msg;
 
    FOREVER
    {
-       x = NumToStr(curX);
-       y = NumToStr(curY);
-       h = NumToStr(heading);
-       p = NumToStr(curPan);
+       TextOut(75,LCD_LINE7,"feed",false);
+       
+       x = NumToStr(getX());
+       y = NumToStr(getY());
+       h = NumToStr(getHeading());
+       p = NumToStr(getPan());
        b = NumToStr(battery());
-       s = NumToStr(STATUS);
+       s = NumToStr(getStatus());
        str = StrCat(x,d,y,d,h,d,p,d,b,d,s);
 
       ReceiveMessage(OUTBOX,false,msg);
@@ -219,10 +239,13 @@ task main()
 {
  Precedes(receiveCommand,cmdPan,cmdStop,sendFeedBack);
 
- // empty mailbox
+ // empty inbox
  string msg;
  do{
-    ReceiveMessage(INBOX,true,msg);
+    msg = readInbox(true);
+ } while(StrLen(msg)>0);
+ do{
+    ReceiveMessage(CAMBOX,true,msg);
  } while(StrLen(msg)>0);
 
  setSonarRaw();

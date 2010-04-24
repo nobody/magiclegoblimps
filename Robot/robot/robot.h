@@ -54,8 +54,6 @@ int curPan = 0;
 #define PAN 10                //512
 #define STOPPED 11            //1024
 
-int MODE = 0;
-
 // heading
 #define NORTH 0
 #define EAST 1
@@ -77,13 +75,16 @@ int RIGHT_MIN = SENSOR_MAX;
 // other
 #define FOREVER while(1)
 
-int curX;
-int curY;
+int curX = 0;
+int curY = 0;
 int heading;
 int STATUS = 0;
 int CALIBRATED = 0;
 
 mutex mutStatus;
+mutex mutPosition;
+mutex mutHeading;
+mutex mutPan;
 
 void setLightOn()
 {
@@ -108,9 +109,66 @@ void setSonarRaw()
  SetSensorLowspeed(_SONAR);
 }
 
-void remStatusIDLE()
+int getPan()
 {
- STATUS &= -1-(1<<(IDLE-1));
+ Acquire(mutPan);
+ int p = curPan;
+ Release(mutPan);
+ return p;
+}
+
+void setPan(int pan)
+{
+ Acquire(mutPan);
+ curPan = pan;
+ Release(mutPan);
+}
+
+int getX()
+{
+ Acquire(mutPosition);
+ int x = curX;
+ Release(mutPosition);
+ return x;
+}
+
+int getY()
+{
+ Acquire(mutPosition);
+ int y = curY;
+ Release(mutPosition);
+ return y;
+}
+
+int getHeading()
+{
+ Acquire(mutHeading);
+ int h = heading;
+ Release(mutHeading);
+ return h;
+}
+
+void setHeading(int h)
+{
+ Acquire(mutHeading);
+ heading = h;
+ Release(mutHeading);
+}
+
+int getStatus()
+{
+ Acquire(mutStatus);
+ int s = STATUS;
+ Release(mutStatus);
+ return s;
+}
+
+bool checkStatus(int s)
+{
+ Acquire(mutStatus);
+ bool b = ( STATUS & (1<<(s-1)) ) > 0;
+ Release(mutStatus);
+ return b;
 }
 
 void setStatus(int s)
@@ -120,7 +178,7 @@ void setStatus(int s)
  STATUS |= (1 << (s-1));
  
  if( STATUS !=  (1<<(IDLE-1)) )
-     remStatusIDLE();
+     STATUS &= -1-(1<<(IDLE-1));
  
  Release(mutStatus);
 }
@@ -137,14 +195,6 @@ void remStatus(int s)
   || ( STATUS == (1<<INTERSECTION) )
   /*|| ( STATUS != (1<<PAN) )*/ )
      setStatus(IDLE);
-}
-
-bool checkStatus(int s)
-{
- Acquire(mutStatus);
- bool b = ( STATUS & (1<<(s-1)) ) > 0;
- Release(mutStatus);
- return b;
 }
 
 int battery()
@@ -248,50 +298,22 @@ void pan(int deg)
   deg = -deg; // moved motor from front to back
  setStatus(PAN);
  
- /*
  // normalize input
- while( deg < -360 )
+ if( deg < -360 )
         deg += 360;
  deg %= 360;
- */
- 
- curPan += deg;
  
  RotateMotor(MOTOR_CAMERA,PAN_SPEED,deg*PAN_RATIO);
  
+ curPan += deg;
 
  // normalize current
- //while( curPan < 0 )
- curPan += 360;
+ if ( curPan < 0 )
+    curPan += 360;
  curPan %= 360;
 
- 
  remStatus(PAN);
 }
-
-/*
-// angle
-void pid(int angle)
-{
- setStatus(PAN);
- 
- // normalize input
- while( angle < -360 )
-        angle += 360;
- angle %= 360;
-
- curPan += angle;
- 
- RotateMotorPID(MOTOR_CAMERA,PAN_SPEED,angle*PAN_RATIO,PGAIN,IGAIN,DGAIN);
- 
- // normalize current
- while( curPan < 0 )
-        curPan += 360;
- curPan %= 360;
- 
- remStatus(PAN);
-}
-*/
 
 int sensorLeft()
 {
@@ -369,7 +391,7 @@ void checkSonar()
  {
   setStatus(SONARBLOCK);
   stopWheels();
-  while( SONAR <= NEAR );
+  while( SONAR <= NEAR && !checkStatus(STOPPED) );
   remStatus(SONARBLOCK);
  }
 }
@@ -397,13 +419,15 @@ void intersection()
  if( !checkStatus(STOPPED) ){
      setStatus(INTERSECTION);
 
-     switch(heading)
+     Acquire(mutPosition);
+     switch(getHeading())
      {
       case NORTH : curY++; break;
       case EAST  : curX++; break;
       case SOUTH : curY--; break;
       case WEST  : curX--; break;
      }
+     Release(mutPosition);
  }
 }
 
@@ -421,8 +445,8 @@ void lineFollow()
  lineCorrect();
 
  do {
-   checkSonar();  // blocking
    adjustLinePosition();
+   checkSonar();  // blocking
  } while( aboveThreshold() && !checkStatus(STOPPED) );
 
  stopWheels();
