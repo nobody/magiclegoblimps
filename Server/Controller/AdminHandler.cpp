@@ -258,7 +258,67 @@ void AdminHandler::session::read_handler(const boost::system::error_code& error,
 
             break;
             case P_CMD_MVTO:
+            {   
+                cmd.cmd = P_CMD_MVTO;
+                token = s.substr(0, s.find('$', 0));
+                if(token.size() == s.size()){
+                    break;
+                }
 
+                s = s.substr(token.size() +1, std::string::npos);
+                int robotid = atoi(token.c_str());
+
+                
+                Vector_ts<Robot*>::iterator it;
+                Vector_ts<Robot*>::iterator used_it;
+
+                for(it = robots->begin(); it != robots->end(); ++it){
+                    (*it)->lock();
+                    if((*it)->getGlobalID() == robotid){
+                        subject = (*it);
+                        break;
+                    }
+                    (*it)->unlock();
+                }
+                if (subject == NULL) {
+                    std::cout << "[AH] couldn't find rid:" << robotid << "\n";
+                    break;
+                }
+
+                inUse->lock();
+                    
+                for(used_it = inUse->begin(); used_it != inUse->end(); ++used_it){
+                    if((*used_it) == subject)
+                         isUsed = true;
+                }
+
+
+                if(!isUsed)
+                    inUse->push_back(subject);
+                inUse->unlock();
+
+
+                cmd.RID = subject->getRID();
+
+ 
+                token = s.substr(0, s.find('$', 0));
+                s = s.substr(token.size(), std::string::npos);
+
+                int arg1, arg2;
+
+                arg1 = atoi(token.c_str());
+
+                token = s.substr(0, s.find('$', 0));
+                s = s.substr(token.size(), std::string::npos);
+
+                arg2 = atoi(token.c_str());
+
+                cmd.arg = P_COORD(arg1, arg2);
+
+
+                robotControl->sendCommand(&cmd, subject->getEndpoint());
+                (*it)->unlock();
+            }
             break;
             case P_CMD_CAMROT:
             {
