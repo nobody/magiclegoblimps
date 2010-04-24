@@ -330,10 +330,10 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 
         std::cout << "[RH] got total: " << total << "\n";
 
-        if (bytes_read >= total) {
+        if (bytes_read >= (size_t)total) {
             std::cout << "[RH] we read the entire thing in one go, so copy it all now...\n";
             memcpy(arr, buf, total);
-            if (bytes_read > total) {
+            if (bytes_read > (size_t)total) {
                 char tmp[bytes_read - total];
                 memcpy(tmp, buf+total, bytes_read - total);
                 memset(buf, 0, RH_BUFFER_SIZE);
@@ -344,7 +344,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
             memcpy(arr, buf, bytes_read);
 
             int num____ = 0;
-            while(bytes_read < total){
+            while(bytes_read < (size_t)total){
                 num____++;
                 int remaining = total - bytes_read;
                 int to_read = (remaining < (RH_BUFFER_SIZE-buf_offset) ? remaining : (RH_BUFFER_SIZE-buf_offset));
@@ -355,7 +355,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                     int old_bytes_read = bytes_read;
                     bytes_read += boost::asio::read(connections[connEP]->socket(), boost::asio::buffer(buf+buf_offset, RH_BUFFER_SIZE-buf_offset), boost::asio::transfer_at_least(to_read), error);
                     std::cout << "[RH] read " << bytes_read << " bytes at line 472(" << buf_offset << ")\n";
-                    if (bytes_read <= total){
+                    if (bytes_read <= (size_t)total){
                         memcpy((arr+old_bytes_read), buf, bytes_read - old_bytes_read);
                     } else {
                         memcpy((arr+old_bytes_read), buf, total - old_bytes_read);
@@ -390,7 +390,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                     continue;
                 }
             }
-            if (bytes_read > total) {
+            if (bytes_read > (size_t)total) {
                 char tmp[bytes_read - total];
                 memcpy(tmp, buf+total, bytes_read - total);
                 memset(buf, 0, RH_BUFFER_SIZE);
