@@ -187,7 +187,7 @@ int main() {
     
 
     
-
+/*
     std::cout << "Read object data from socket:\n";
     while (0 < (conn = read(sock, buffer, 1))) {
         printf("%02X ", (unsigned)*buffer);
@@ -197,7 +197,99 @@ int main() {
 
     if (-1 == conn)
             perror("read()");
+*/
+
+    bool loop = true;
+    while(loop) {
+        int command;
+        std::cout << "Enter the command:\n1. RobotUpdate\n2. Quit\n";
+        std::cin >> command;
+
+        switch (command) {
+            case 2:
+                loop = false;
+                break;
+
+            case 1:
+                {
+                    int RID, x, y, dir;
+                    int listSize = 0;
+                    int *objects, *xs, *ys;
+                    float* qual;
+                    std::cout << "RID: ";
+                    std::cin >> RID;
+
+                    std::cout << "x: ";
+                    std::cin >> x;
+
+                    std::cout << "y: ";
+                    std::cin >> y;
+
+                    std::cout << "dir: ";
+                    std::cin >> dir;
+
+                    std:: cout << "listSize: ";
+                    std::cin >> listSize;
+
+                    if (listSize == 0){
+                        objects = xs = ys = NULL;
+                        qual= NULL;
+                    } else {
+                        objects = new int[listSize];
+                        qual = new float[listSize];
+                        xs = new int[listSize];
+                        ys = new int[listSize];
+                    }
+
+                    for (int i = 0; i < listSize; ++i) {
+                        std::cout << "objID: ";
+                        std::cin >> objects[i];
+
+                        std::cout << "qual: ";
+                        std::cin >> qual[i];
+
+                        std::cout << "x: ";
+                        std::cin >> xs[i];
+
+                        std::cout << "y: ";
+                        std::cin >> ys[i];
+                    }
+
+                    robotUpdate* u = new robotUpdate;
+                    u->RID = RID;
+                    u->x = x;
+                    u->y = y;
+                    u->dir = dir;
+                    u->listSize = listSize;
+                    u->objects = objects;
+                    u->qualities = qual;
+                    u->xs = xs;
+                    u->ys = ys;
+
+                    byteArray uar;
+                    if (write_data(P_ROBOT_UPDATE, u, 1, &uar)) {
+                        std::cerr << "Failed to create update array\n";
+                        return -1;
+                    }
+
+                    conn = write(sock, uar.array, uar.size);
+                    std::cout << "Wrote update data to socket:\n";
+                    for (int i = 0; i < uar.size; ++i) {
+                        printf("%02X ", uar.array[i]);
+                    }
+                    std::cout << std::endl;
+                }
+                break;
+
+            default:
+
+                break;
+        }
+    }
 
     close(sock);
     return 0;
 }
+
+
+/* vi: set tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
