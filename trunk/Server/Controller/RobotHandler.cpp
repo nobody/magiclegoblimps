@@ -61,7 +61,6 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
     connections[connEP]->readUnlock();
 
     //std::cout<<"[RH] data read(" << count << "), socket released\n";
-
     //catch errors to tell when the connection closes;
     if(error == boost::asio::error::eof){
         std::cout<<"[RH] EOF\n";
@@ -102,7 +101,6 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
     //compute the total and the bytes remaing to be pulled from the socket
     int total = *((int*)(arr+1));
     int remaining = total - count;
-
     //if there are bytes remainging to be read read them
     if(remaining > 0){
         connections[connEP]->readLock();
@@ -150,7 +148,6 @@ void RobotHandler::onConnect(TcpServer::TcpConnection::pointer tcp_connection){
     //consume the stuff in the buffer, we're done with it now;
     inputBuffer.consume(total);
     count -= total;
-
     //convert the char array to a an array of objects
     readReturn* message = new readReturn;
     if(read_data((void*)arr, message) < 0){
@@ -266,10 +263,12 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 
     //declare loop  varibles
     bool connected = true;
-    boost::asio::streambuf inputBuffer;
+    //boost::asio::streambuf inputBuffer;
     boost::system::error_code error;
-    size_t count = 0;
-
+    size_t bytes_read = 0;
+    char buf[RH_BUFFER_SIZE];
+    int buf_offset = 0;
+    memset(buf, 0, RH_BUFFER_SIZE);
     //main listening loop for a server connection
     //std::cout<<"[RH] initiating loop\n";
     while(connected){
@@ -279,13 +278,15 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         //it checks to see if the bytes it wants are already there
         //so it doesn't block on the socket and wait for a new message 
         //so that it can process a message we already have
+/*
         if(count < 5){
-
+            std::cout << "[RH] count: " << count << "\n";
             //locks the socket, reads into the buffer, increases count by the number of
             //bytes read in and then unlocks the socket.
             connections[connEP]->readLock();
             try{
                 count += boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(5), error);
+                std::cout << "[RH] count: " << count << "\n";
             }catch(boost::exception &e){
                 std::cerr << "[RH] exception occured: \n" << diagnostic_information(e);
                 connections[connEP]->readUnlock();
@@ -303,6 +304,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
 
         }
         if (count < 5) {
+        std::cout << "[RH] count: " << count << "\n";
             connected = false;
             continue;
         }
@@ -346,12 +348,14 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         //to get the entire message
         size_t total = (size_t)(*((int*)(arr+1)));
         size_t remaining = total - count;
-
+        std::cout << "[RH] count: " << count << "\n";
         //if there are bytes remainging to be read read them
         if(remaining > 0 && count < remaining){
+        std::cout << "[RH] count: " << count << "\n";
             connections[connEP]->readLock();
             try{
                 count += boost::asio::read(connections[connEP]->socket(), inputBuffer, boost::asio::transfer_at_least(remaining - count), error);
+        std::cout << "[RH] count: " << count << "\n";
             }catch(boost::exception &e){
                 std::cerr << "[RH] exception occured: \n" << diagnostic_information(e);
                 connections[connEP]->readUnlock();
@@ -386,6 +390,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         }
 
 
+
         //std::cout<<"[RH] Recieved a message"<<std::endl;
         //reset all the varibles with the new data in the buffer
         delete[] arr;
@@ -408,8 +413,139 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         //remove the number of bytes consumed from count so that we 
         //keep acurate track of how much is in the buffer
         count -= total;
+        std::cout << "[RH] count: " << count << "\n";
+
+*/
+//**********************************************************************************************************
+        char* arr;
+        int loc_in_arr = 0;
+        std::cout << "[RH] buffer size: " << bytes_read << "\n";
+        if(bytes_read < 5){
+            connections[connEP]->readLock();
+            try {
+                bytes_read = boost::asio::read(connections[connEP]->socket(), boost::asio::buffer(buf+buf_offset, RH_BUFFER_SIZE-buf_offset), boost::asio::transfer_at_least(5), error);
+                std::cout << "[RH] read " << bytes_read << " bytes at line 425\n";
+            }catch(boost::exception &e){
+                std::cerr << "[RH] exception occured: \n" << diagnostic_information(e);
+                connections[connEP]->readUnlock();
+                cleanupConn(connEP);
+                return;
+            }catch(...){        
+                std::cerr << "[RH] unknown exception occured in listen\n";
+                connections[connEP]->readUnlock();
+                cleanupConn(connEP);
+                return;
+            }
+            connections[connEP]->readUnlock();
+
+            //catch errors to tell when the connection closes;
+            if(error == boost::asio::error::eof){
+                std::cout<<"[RH] EOF\n";
+                connected = false;
+                continue;
+            }
+            if(error == boost::asio::error::operation_aborted){
+                std::cout<<"[RH] aborted..\n";
+                connected = false;
+                continue;
+            }
+            if(error){
+                connected = false;
+                continue;
+            }
+        }
+
+        if (bytes_read < 5) {
+            std::cout << "[RH] we still only have " << bytes_read << " bytes\n";
+            connected = false;
+            continue;
+        }
+
+        int total = *(int*)(buf+1);
+        for(int i = 0; i < 5; ++i){
+            //std::cout <<"hex value" << std::hex << buf[i] <<std::endl;
+            printf("hex value: %02X\n", buf[i]);
+            fflush(stdout);
+        }
+
+        // copy the 5 bytes to arr
+        arr = new char[total];
+        memcpy(arr, buf, 5);
+
+        std::cout << "[RH] got total: " << total << "\n";
+
+        if (bytes_read >= total) {
+            std::cout << "[RH] we read the entire thing in one go, so copy it all now...\n";
+            memcpy(arr, buf, total);
+            if (bytes_read > total) {
+                char tmp[bytes_read - total];
+                memcpy(tmp, buf+total, bytes_read - total);
+                memcpy(buf, tmp, bytes_read - total);
+                buf_offset = bytes_read - total;
+            }
+        } else {
+            int num____ = 0;
+            while(bytes_read < total){
+                num____++;
+                int remaining = total - bytes_read;
+                int to_read = (remaining < RH_BUFFER_SIZE ? remaining : RH_BUFFER_SIZE);
+                std::cout << "[RH] remaining this round (" << num____ << "): " << remaining << "\n";
+
+                connections[connEP]->readLock();
+                try{
+                    bytes_read += boost::asio::read(connections[connEP]->socket(), boost::asio::buffer(buf+buf_offset, RH_BUFFER_SIZE-buf_offset), boost::asio::transfer_at_least(to_read), error);
+                    std::cout << "[RH] read " << bytes_read << " bytes at line 472\n";
+                    memcpy((arr+(total-remaining)), buf, bytes_read);
+                }catch(boost::exception &e){
+                    std::cerr << "[RH] exception occured: \n" << diagnostic_information(e);
+                    connections[connEP]->readUnlock();
+                    cleanupConn(connEP);
+                    return;
+                
+                }catch(...){        
+                    std::cerr << "[RH] unknown exception occured in listen\n";
+                    connections[connEP]->readUnlock();
+                    cleanupConn(connEP);
+                    return;
+                }
+                connections[connEP]->readUnlock();
+
+                //catch errors to tell when the connection closes;
+                if(error == boost::asio::error::eof){
+                    std::cout<<"[RH] EOF\n";
+                    connected = false;
+                    continue;
+                }
+                if(error == boost::asio::error::operation_aborted){
+                    std::cout<<"[RH] aborted..\n";
+                    connected = false;
+                    continue;
+                }
+                if(error){
+                    connected = false;
+                    continue;
+                }
+            }
+            if (bytes_read > total) {
+                char tmp[bytes_read - total];
+                memcpy(tmp, buf+total, bytes_read - total);
+                memcpy(buf, tmp, bytes_read - total);
+                buf_offset = bytes_read - total;
+            }
+        }
+        bytes_read -= total;
+
+        std::cout << "[RH] supposedly we have the entire array...(" << bytes_read << ") vs (" << total << ")\n";
+        for (int i = 0; i < total; ++i) {
+            printf("%02X ", arr[i]);
+            fflush(stdout);
+        }
+        std::cout << "\n";
 
 
+
+
+//**********************************************************************************************************
 
         //convert the char array to a 
         //std::cout<<"[RH] converting message to structs"<<std::endl;
@@ -421,7 +557,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
         }
 
         //delete the array, we're done with it now
-        delete arr;
+        delete[] arr;
 
         //switch on the type of struct recovered
         switch(message->type){

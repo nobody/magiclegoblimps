@@ -18,9 +18,9 @@ DbSpam: DbSpam.cpp
 	${CC} -o"$@" ${DEBUG} ${LIBDIRS} ${LIBS} ${INCLUDES} $@.cpp ./random_device.o
 	@echo "Done building: $@"
 
-RobotController: RobotController.cpp ../build/protocol.o
+RobotController: RobotController.cpp ${TESTDATA_DEPS}
 	@echo "Building: $@"
-	${CC} -o"$@" ${DEBUG} ${LIBDIRS} ${LIBS} ${INCLUDES} -I ../ $@.cpp ../build/protocol.o
+	${CC} -o"$@" ${DEBUG} ${LIBDIRS} ${LIBS} ${INCLUDES} -I ../ $@.cpp ${TESTDATA_DEPS}
 
 testdata: testdata.cpp ${TESTDATA_DEPS}
 	@echo "Building: $@"

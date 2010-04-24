@@ -52,24 +52,24 @@ int main() {
 
     Vector_ts<Object*>* objs = new Vector_ts<Object*>;
 
-    char tmp1[] = "qwertyuiopasdf";
-    char tmp2[] = "qwertyuiopasdf";
-    char tmp3[] = "qwertyuiopasdf";
-    char tmp4[] = "qwertyuiopasdf";
-    char tmp5[] = "qwertyuiopasdf";
-    char tmp6[] = "qwertyuiopasdf";
+    char tmp1[] = "Construct a module that blocks the reception of ICMP echo requests (ping) after 10 such packets have been received. The module will use the netfilter framework in the Linux Kernel. Netfilter provides five hooks. All packets, including incoming, outgoing and forwarded, traverse these five hooks. You as a developer can register your own function to listen for packets on any or all of the hooks. After the registration, whenever a packet traverses a hook for which you have registered your own function, that fun";
+    char tmp2[] = "Construct a module that blocks the reception of ICMP echo requests (ping) after 10 such packets have been received. The module will use the netfilter framework in the Linux Kernel. Netfilter provides five hooks. All packets, including incoming, outgoing and forwarded, traverse these five hooks. You as a developer can register your own function to listen for packets on any or all of the hooks. After the registration, whenever a packet traverses a hook for which you have registered your own function, that fun";
+    char tmp3[] = "Construct a module that blocks the reception of ICMP echo requests (ping) after 10 such packets have been received. The module will use the netfilter framework in the Linux Kernel. Netfilter provides five hooks. All packets, including incoming, outgoing and forwarded, traverse these five hooks. You as a developer can register your own function to listen for packets on any or all of the hooks. After the registration, whenever a packet traverses a hook for which you have registered your own function, that fun";
+    char tmp4[] = "Construct a module that blocks the reception of ICMP echo requests (ping) after 10 such packets have been received. The module will use the netfilter framework in the Linux Kernel. Netfilter provides five hooks. All packets, including incoming, outgoing and forwarded, traverse these five hooks. You as a developer can register your own function to listen for packets on any or all of the hooks. After the registration, whenever a packet traverses a hook for which you have registered your own function, that fun";
+    char tmp5[] = "Construct a module that blocks the reception of ICMP echo requests (ping) after 10 such packets have been received. The module will use the netfilter framework in the Linux Kernel. Netfilter provides five hooks. All packets, including incoming, outgoing and forwarded, traverse these five hooks. You as a developer can register your own function to listen for packets on any or all of the hooks. After the registration, whenever a packet traverses a hook for which you have registered your own function, that fun";
+    char tmp6[] = "Construct a module that blocks the reception of ICMP echo requests (ping) after 10 such packets have been received. The module will use the netfilter framework in the Linux Kernel. Netfilter provides five hooks. All packets, including incoming, outgoing and forwarded, traverse these five hooks. You as a developer can register your own function to listen for packets on any or all of the hooks. After the registration, whenever a packet traverses a hook for which you have registered your own function, that fun";
     char box1[] = "a";
     char box2[] = "b";
     char box3[] = "c";
     char box4[] = "d";
     char box5[] = "e";
     char box6[] = "f";
-    Object* obj1 = new Object(1, "Object 1", tmp1, 13, box1, 1);
-    Object* obj2 = new Object(2, "Object 2", tmp2, 13, box2, 1);
-    Object* obj3 = new Object(3, "Object 3", tmp3, 13, box3, 1);
-    Object* obj4 = new Object(4, "Object 4", tmp4, 13, box4, 1);
-    Object* obj5 = new Object(5, "Object 5", tmp5, 13, box5, 1);
-    Object* obj6 = new Object(6, "Object 6", tmp6, 13, box6, 1);
+    Object* obj1 = new Object(1, "Object 1", tmp1, 512, box1, 1);
+    Object* obj2 = new Object(2, "Object 2", tmp2, 512, box2, 1);
+    Object* obj3 = new Object(3, "Object 3", tmp3, 512, box3, 1);
+    Object* obj4 = new Object(4, "Object 4", tmp4, 512, box4, 1);
+    Object* obj5 = new Object(5, "Object 5", tmp5, 512, box5, 1);
+    Object* obj6 = new Object(6, "Object 6", tmp6, 512, box6, 1);
 
     objs->push_back(obj1);
     objs->push_back(obj2);
