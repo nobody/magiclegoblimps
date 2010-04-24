@@ -7,6 +7,8 @@
 #ifndef ROBOTHANDLER_H_
 #define ROBOTHANDLER_H_
 
+#define RH_BUFFER_SIZE 8192
+
 #include "TcpServer.h"
 #include <boost/thread.hpp>
 #include <boost/exception/all.hpp>

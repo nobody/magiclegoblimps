@@ -5,6 +5,9 @@
 #include <boost/asio.hpp>
 
 #include "../protocol.h"
+#include "../DataFile.h"
+#include "../Vector_ts.h"
+#include "../Object.h"
 
 int main() {
     // let's create some robots to send to the server
@@ -93,6 +96,9 @@ int main() {
     update[2].ys[1] = 2;
     update[2].ys[2] = 3;
 
+    DataFile *objfile = new DataFile("object.dat", DataFile::OBJECT);
+    Vector_ts<Object*> *objects = (Vector_ts<Object*>*) objfile->read();
+
     byteArray updArr;
     if (write_data(P_ROBOT_UPDATE, update, 3, &updArr)) {
         std::cerr << "Failed to create update array\n";
@@ -144,18 +150,30 @@ int main() {
 
     sleep(1);
 
-    object *objs = new object[1];
-    objs[0].OID = 6;
+    object *objs = new object[objects->size()];
+    /*objs[0].OID = 6;
     objs[0].name = new std::string("Obj 6");
     objs[0].color_size = 10;
     objs[0].color = "1234567890";
     objs[0].box_size = 1;
     objs[0].box = new char[1];
-    objs[0].box[0] = 'x';
+    objs[0].box[0] = 'x';*/
 
-    /*
+    Vector_ts<Object*>::iterator it;
+    int i = 0;
+    for(it = objects->begin(); it != objects->end(); ++it){
+	objs[i].name = new std::string((*it)->getName());
+	objs[i].OID = (*it)->getOID();
+	objs[i].color_size = (*it)->getColorsize(); 
+	objs[i].color = (*it)->getColor();
+	objs[i].box_size = (*it)->getBoxsize();
+	objs[i].box = (*it)->getBox();
+	++i;
+    }
+
+    
     byteArray objArr;
-    if (write_data(P_OBJECT, objs, 1, &objArr)) {
+    if (write_data(P_OBJECT, objs, objects->size(), &objArr)) {
         std::cerr << "Failed to create object array\n";
         return -1;
     }
@@ -166,7 +184,7 @@ int main() {
         printf("%02X ", objArr.array[i]);
     }
     std::cout << std::endl;
-    */
+    
 
     
 
