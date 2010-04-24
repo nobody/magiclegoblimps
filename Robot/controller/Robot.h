@@ -71,6 +71,12 @@ public:
 	void SetUpdate(int x, int y, int heading, int pan, int battery, int status);
 	string newCmd();
 
+	HANDLE GetSemaphore() { return updateSemaphore_; }
+
+	bool GetRunning() { return running_; }
+	void StartRunning() { running_ = true; }
+	void StopRunning() { running_ = false; }
+
 	void Update();
 
 private:
@@ -101,6 +107,10 @@ private:
 
 	Path* robPath;
 	bool hasPath;
+
+	HANDLE updateSemaphore_;
+
+	bool running_;
 };
 
 #endif

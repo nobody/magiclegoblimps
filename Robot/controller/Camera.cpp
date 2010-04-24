@@ -1,12 +1,12 @@
 #include "Camera.h"
 
 //static member variables must be redeclared in source
-vector<TrackingObject*> Camera::trackableObjects_;
+Vector_ts<TrackingObject*> Camera::trackableObjects_;
 string Camera::routerIP_;
 
 Camera::Camera(string ip, bool dLinkCam)
 {
-	scanInterval_ = 3;		
+	scanInterval_ = 2;		
 	lockTime_ = 1;
 
 	ip_ = ip;
@@ -27,10 +27,7 @@ Camera::Camera(string ip, bool dLinkCam)
 	histDisplay_ = true;		
 	showTracking_ = true;		
 	locked_ = false;	
-	targetVisible_ = false;
-
-	inKey_ = -1;		
-	waitingKey_ = false;		
+	targetVisible_ = false;	
 
 	target_ = -1;		
 
@@ -209,81 +206,6 @@ void Camera::DisplayFrame()
 
 	cvShowImage(displayWindowName_.c_str(), image);
 	cvShowImage(histWindowName_.c_str(), histImage);
-
-	if (waitingKey_)
-	{
-		if (inKey_ == 't')
-		{
-			if (showTracking_)
-				showTracking_ = false;
-			else 
-				showTracking_ = true;
-		}
-
-		//stores the currently tracked (red) object
-		if (inKey_ == 's')
-		{
-			/*
-			float maxValue = 0;
-			int maxIndex = 0;
-			cvGetMinMaxHistValue(hist, NULL, &maxValue, NULL, &maxIndex);
-			CvScalar color = CV_RGB(h, s, maxValue);
-			*/
-			CvScalar color = CV_RGB(0, 0, 0);
-
-			TrackingObject* newObject = new TrackingObject(hist, trackBox, 
-				color);
-
-			newObject->SetTrackingWindow(cvRect(0, 0, 
-				image->width, image->height));
-
-			newObject->SetID(GetNextAvailableID());
-
-			trackableObjects_.push_back(newObject);
-
-			cvZero(histImage);
-
-			trackObject = false;
-			histCreated = false;
-		}
-
-		//displays the centered/distance/quality information
-		if (inKey_ == 'c')
-		{
-			vector<TrackingObject*>::iterator it;
-
-			for (it = visibleObjects_.begin(); it != visibleObjects_.end(); it++)
-			{
-				cout << (*it)->GetColor().val << endl;
-
-				for (int i = 0; i < 4; i++)
-				{
-					cout << (*it)->GetColor().val[i] << endl;
-				}
-
-				float dist = 
-					(*it)->GetCenteredPercentage(image->width);
-
-				if (dist < CENTERED_EPSILON && dist > -CENTERED_EPSILON)
-				{
-					cout << (*it)->GetID() << " is centered." << endl;
-				}
-				else
-				{
-					cout << (*it)->GetID() << " is " << dist << 
-						"% from the center." << endl;
-				}
-
-				cout << (*it)->GetID() << " is size " << 
-					(*it)->GetSizePercentage() << "%" << endl;
-
-				cout << (*it)->GetID() << " has quality " << 
-					(*it)->GetQuality(image->width) << endl;
-			}
-		}
-
-		waitingKey_ = false;
-	}
 }
 
 void Camera::StopDisplay()
@@ -294,10 +216,36 @@ void Camera::StopDisplay()
 	cvDestroyWindow(histWindowName_.c_str());
 }
 
-void Camera::SendKey(int key)
+int Camera::SaveObject()
 {
-	inKey_ = key;
-	waitingKey_ = true;
+	/*
+	float maxValue = 0;
+	int maxIndex = 0;
+	cvGetMinMaxHistValue(hist, NULL, &maxValue, NULL, &maxIndex);
+	CvScalar color = CV_RGB(h, s, maxValue);
+	*/
+	CvScalar color = CV_RGB(0, 0, 0);
+
+	TrackingObject* newObject = new TrackingObject(hist, trackBox, 
+		color);
+
+	newObject->SetTrackingWindow(cvRect(0, 0, 
+		image->width, image->height));
+
+	int id = GetNextAvailableID();
+
+	newObject->SetID(id);
+
+	trackableObjects_.lock();
+	trackableObjects_.push_back(newObject);
+	trackableObjects_.unlock();
+
+	cvZero(histImage);
+
+	trackObject = false;
+	histCreated = false;
+	
+	return id;
 }
 
 void Camera::Update()
@@ -343,20 +291,20 @@ void Camera::Update()
 	}		
 
 	if (!image)
-    	{
-    	    image = cvCreateImage(cvGetSize(frame), 8, 3);
-    	    image->origin = frame->origin;
-    	    hsv = cvCreateImage(cvGetSize(frame), 8, 3);
-    	    hue = cvCreateImage(cvGetSize(frame), 8, 1);
-    	    mask = cvCreateImage(cvGetSize(frame), 8, 1);
-    	    backProject = cvCreateImage(cvGetSize(frame), 8, 1);
-    	    hist = cvCreateHist(1, &histDivs, CV_HIST_ARRAY, &histRanges, 1);
-    	    histImage = cvCreateImage(cvSize(320, 200), 8, 3);
-    	    cvZero(histImage);
-    	}
+    {
+    	image = cvCreateImage(cvGetSize(frame), 8, 3);
+    	image->origin = frame->origin;
+    	hsv = cvCreateImage(cvGetSize(frame), 8, 3);
+    	hue = cvCreateImage(cvGetSize(frame), 8, 1);
+    	mask = cvCreateImage(cvGetSize(frame), 8, 1);
+    	backProject = cvCreateImage(cvGetSize(frame), 8, 1);
+    	hist = cvCreateHist(1, &histDivs, CV_HIST_ARRAY, &histRanges, 1);
+    	histImage = cvCreateImage(cvSize(320, 200), 8, 3);
+    	cvZero(histImage);
+    }
 
-    	cvCopy(frame, image, 0);
-    	cvCvtColor(image, hsv, CV_BGR2HSV);
+    cvCopy(frame, image, 0);
+    cvCvtColor(image, hsv, CV_BGR2HSV);
 
 	int _vMin = vMin, _vMax = vMax;
 
@@ -487,6 +435,7 @@ int Camera::GetNextAvailableID()
 
 	vector<TrackingObject*>::iterator it;
 
+	trackableObjects_.readLock();
 	for (it = trackableObjects_.begin(); it != trackableObjects_.end(); it++)
 	{
 		if ((*it)->GetID() == id)
@@ -495,6 +444,7 @@ int Camera::GetNextAvailableID()
 			it = trackableObjects_.begin();
 		}
 	}
+	trackableObjects_.readUnlock();
 
 	return id;
 }
@@ -509,6 +459,7 @@ void Camera::Scan()
 	{
 		bool visible = false;
 
+		trackableObjects_.readLock();
 		for (it = trackableObjects_.begin(); it != trackableObjects_.end(); it++)
 		{
 			vector<TrackingObject*>::iterator jt;
@@ -527,9 +478,17 @@ void Camera::Scan()
 			if (!visible)
 				possibleObjects_.push_back(*it);
 		}
+		trackableObjects_.readUnlock();
 	}
 	else
-		possibleObjects_ = trackableObjects_;
+	{
+		trackableObjects_.readLock();
+		for (it = trackableObjects_.begin(); it != trackableObjects_.end(); it++)
+		{
+			possibleObjects_.push_back(*it);
+		}
+		trackableObjects_.readUnlock();
+	}
 
 	for (it = possibleObjects_.begin(); it != possibleObjects_.end(); it++)
 	{
@@ -579,4 +538,34 @@ bool Camera::isTargetVisible()
 	}
 
 	return false;
+}
+
+TrackingObject* Camera::GetTrackingObject(int id)
+{	
+	trackableObjects_.readLock();
+	vector<TrackingObject*>::iterator it;
+	for (it = trackableObjects_.begin(); it != trackableObjects_.end(); it++)
+	{
+		if ((*it)->GetID() == id)
+			return (*it);
+	}
+
+	return NULL;
+	trackableObjects_.readUnlock();
+}
+
+void Camera::RemoveTrackingObject(int id)
+{
+	trackableObjects_.lock();
+	vector<TrackingObject*>::iterator it;
+	for (it = trackableObjects_.begin(); it != trackableObjects_.end(); it++)
+	{
+		if ((*it)->GetID() == id)
+		{
+			delete (*it);
+			trackableObjects_.erase(it);
+			break;
+		}
+	}
+	trackableObjects_.unlock();
 }
