@@ -85,9 +85,10 @@ while(true){
 //Find the object with highest demand that has not yet been assigned.  If all 
     int maxObject = -1;
     for(int j = 0; j < numObjects; ++j){
-        std::cout   << "[AS] OID: "  <<objects[j]->getOID() <<" index: " <<j 
+        /*std::cout   << "[AS] OID: "  <<objects[j]->getOID() <<" index: " <<j 
                     <<" Demand of: " <<demand[j]  <<" Cur max demand: " << maxObject 
                     << " robot assigned: " << objAss[j] << "\n";
+        */
         if(maxObject == -1 && objAss[j] == -1){
             maxObject = j;
         }
@@ -103,6 +104,8 @@ while(true){
 //Find the robot that best services this demand that has not yet been assigned
     int maxRobot = -1;
     double tQos = -1;
+
+    std::cout <<"[AS] Finding robot that best serves object " <<objects[maxObject]->getOID() <<"\n";
 
     for(int j = 0; j < numRobots; j++){
         double t = quality -> calcQos(objects[maxObject],robots[j]);
@@ -123,16 +126,6 @@ while(true){
     }
 }
 
-/*  ASSIGNMENT METHOD: Uninformed Assignment
-for(int i = 0; i < numRobots; i++){
-    robotAssignments[i] = i % numObjects;
-}
-*/
- //
- // After all assignments have been completed, write assignment map and return it.
- // Set 'viewed from' field of objects for next round of QoS
- //
- 
  std::map<Robot* , int>* ret = new std::map<Robot* , int>();
  for(int i = 0; i < numRobots; i++){
     if(robotAssignments[i]!=-1){
@@ -144,8 +137,7 @@ for(int i = 0; i < numRobots; i++){
     }
  }
 
-//Hungarian Method for comparison
-
+/* HUngarian method stuff.  not used for now.
 
 //matrix of QoS per object and robot
 int* arr;
@@ -189,6 +181,7 @@ hungarian_print_assignment(&prob);
 
 hungarian_free(&prob);
 free(r);
+*/
 
 //Write the assignments back to the actual objects
 //
@@ -201,7 +194,7 @@ free(r);
         for(int j = 0; j < numRobots; j++){ //Assign view of unseen object to cam with best view of it.
             if(maxIndex==-1 || quality->calcQos(objects[i],robots[j])>qu){
                 maxIndex = j;
-                qu = quality->calcQos(objects[i],robots[j]);
+                qu = quality->calcQos(objects[i], robots[j]);
             }
         }
         if(qu<=0){
@@ -215,7 +208,7 @@ free(r);
  
  delete[] qual;
  delete[] objAss;
- delete[] arr;
+ //delete[] arr;
 
  return ret;
     

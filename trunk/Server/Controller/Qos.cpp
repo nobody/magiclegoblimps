@@ -51,11 +51,13 @@ double Qos::calcQos(Object* o, Robot* r) {
     if(o == NULL || r == NULL) {
         return 0;
     }
+    std::cout <<"[QS] Pair: R" <<r->getRID() << " O" <<o->getOID() <<"\n";
 
     //Manually create points until/if we use point class
     Point* rPoint = new Point(r->getXCord(), r->getYCord());
+
     int camVal = 0;
-    std::cout << "[QS] CamQual" << r->getCamera() << "\n";
+    //std::cout << "[QS] CamQual " << r->getCamera() << "\n";
     if(r->getCamera() != 0){
         camVal = 1;
     }
@@ -90,7 +92,7 @@ double Qos::dist(Point p1, Point p2){
     //double d = sqrt((p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y));
     int d = abs(p1.x - p2.x) + abs(p1.y - p2.y);
 
-    std::cout <<"[QS] Manhattan Dist (" <<p1.x <<", " <<p1.y <<"), (" <<p2.x <<", " <<p2.y <<") = " <<d <<"\n";
+    std::cout <<"[QS] Manhattan Dist R(" <<p1.x <<", " <<p1.y <<"), O(" <<p2.x <<", " <<p2.y <<") = " <<d <<"\n";
     if(d >= Qos::OPTIMAL_DIST){
         return Qos::OPTIMAL_DIST / (double)d; //Optimal / Actual if D > optimal
     }else{
