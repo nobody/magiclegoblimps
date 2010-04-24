@@ -11,7 +11,7 @@
 int Robot::counter = 1;
 const int Robot::camdata[][3] = { {160, 120, 15}, {160 ,120, 15}, {0, 0, 0} };
 
-Robot::Robot() : xCord(0), yCord(0) {
+Robot::Robot() : xCord(0), yCord(0), camera(0), dir(0) {
     // TODO Auto-generated constructor stub
     pos = *(new Point(xCord,yCord));
     list = new std::map<int, float>;
@@ -19,7 +19,7 @@ Robot::Robot() : xCord(0), yCord(0) {
 }
 
 
-Robot::Robot(boost::asio::ip::tcp::endpoint EP, int RID) : RID(RID), xCord(0), yCord(0) {
+Robot::Robot(boost::asio::ip::tcp::endpoint EP, int RID) : RID(RID), xCord(0), yCord(0), camera(0), dir(0) {
     // TODO Auto-generated constructor stub
     robotEP = EP;
     pos = *(new Point(xCord,yCord));

@@ -294,9 +294,9 @@ bool DbManager::insertCameras( Vector_ts<Robot*>* robots) {
                 ss << "2";
             }
             ss << "', '"
-               << (*it)->getXCord()
+               << ( (*it)->getXCord() < 0 ? 0 : (*it)->getXCord() )
                << "', '"
-               << (*it)->getYCord()
+               << ( (*it)->getYCord() < 0 ? 0 : (*it)->getYCord() )
                << "', '0', '0', '";
             if ((*it)->getCamera() < 3 && (*it)->getCamera() >= 0) {
                 ss << Robot::camdata[(*it)->getCamera()][0]
