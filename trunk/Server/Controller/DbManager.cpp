@@ -393,9 +393,9 @@ bool DbManager::updateCameras( Vector_ts<Robot*>* robots) {
                << "', ";
             float max_qual = -1;
             int max_qual_id = -1;
-            std::map<int, float>* list = (*it)->list;
-            std::map<int, float>::iterator ito = list->begin();
-            for (; ito != list->end(); ++ito) {
+            std::map<int, float>* viewable_objs = (*it)->getViewable_objs();
+            std::map<int, float>::iterator ito = viewable_objs->begin();
+            for (; ito != viewable_objs->end(); ++ito) {
                 if (max_qual < ito->second) {
                     max_qual_id = ito->first;
                     max_qual = ito->second;

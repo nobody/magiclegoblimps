@@ -448,7 +448,7 @@ void RobotHandler::threaded_listen(const boost::asio::ip::tcp::endpoint connEP){
                             (*it)->setXCord(robotData[i].x);
                             (*it)->setYCord(robotData[i].y);
                             (*it)->setDir(robotData[i].dir);
-                            (*it)->setList(robotData[i].objects, robotData[i].qualities, robotData[i].listSize);
+                            (*it)->setViewable_objs(robotData[i].objects, robotData[i].qualities, robotData[i].listSize);
 
                             for (int j = 0; j < robotData[i].listSize; ++j) {
                                 Vector_ts<Object*>::iterator oit;

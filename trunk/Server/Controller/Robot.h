@@ -42,12 +42,14 @@ public:
 
     std::string getVideoURL();
 
+    std::map<int, float>* getViewable_objs();
+
     void setCamera(int type);
     void setXCord(int x);
     void setYCord(int y);
     void setDir(int d);
     void setVideoURL(std::string);
-    void setList(int* objects, float* qualities, int size);
+    void setViewable_objs(int* objects, float* qualities, int size);
 
     //some useful operators
     inline bool operator<(Robot& aRobot) const{
@@ -70,8 +72,6 @@ public:
             
     }
     
-    //the vector that holds the object ids of objects in view
-    std::map<int, float>* list;
 
 private:
     //mutex for thread safety
@@ -93,6 +93,8 @@ private:
     int camera;
     int dir;
     std::string videoURL;
+    //the map that holds the object ids of objects in view and their qualities
+    std::map<int, float>* viewable_objs;
 
     
 };

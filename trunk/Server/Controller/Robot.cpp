@@ -14,7 +14,7 @@ const int Robot::camdata[][3] = { {160, 120, 15}, {160 ,120, 15}, {0, 0, 0} };
 Robot::Robot() : xCord(0), yCord(0), camera(0), dir(0) {
     // TODO Auto-generated constructor stub
     pos = *(new Point(xCord,yCord));
-    list = new std::map<int, float>;
+    viewable_objs = new std::map<int, float>;
     globalID = counter++;
 }
 
@@ -23,14 +23,14 @@ Robot::Robot(boost::asio::ip::tcp::endpoint EP, int RID) : RID(RID), xCord(0), y
     // TODO Auto-generated constructor stub
     robotEP = EP;
     pos = *(new Point(xCord,yCord));
-    list = new std::map<int, float>;
+    viewable_objs = new std::map<int, float>;
     globalID = counter++;
 }
 
 Robot::~Robot() {
     robotMutex.lock();
     robotMutex.unlock();
-    delete list;
+    delete viewable_objs;
 }
 
 //locks and unlocks the robot's private mutex
@@ -87,12 +87,15 @@ void Robot::setVideoURL(std::string url) {
     videoURL = url;
 }
 
-void Robot::setList(int* objects, float* qualities, int size){
-    list->clear();
+void Robot::setViewable_objs(int* objects, float* qualities, int size){
+    viewable_objs->clear();
 
     for(int i = 0; i < size; ++i){
-       (*list)[objects[i]] = qualities[i];
+       (*viewable_objs)[objects[i]] = qualities[i];
     }
+}
+std::map<int, float>* Robot::getViewable_objs() {
+    return viewable_objs;
 }
 void Robot::setCamera(int type){
     camera = type;
