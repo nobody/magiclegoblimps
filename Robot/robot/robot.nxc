@@ -1,0 +1,586 @@
+// mailboxes
+#define FEEDBOX 0  // to controller
+#define MOVEBOX 1   // from controller
+#define STOPBOX 2
+#define PANBOX 3
+
+// motors
+#define MOTOR_LEFT OUT_A
+#define MOTOR_RIGHT OUT_C
+#define MOTOR_BOTH OUT_AC
+#define MOTOR_CAMERA OUT_B
+
+#define SPEED 35
+#define TURN_SPEED 30
+#define SPEED_CAL 35
+#define SPEED_ADJUST 4
+#define SPD_ADJ_CAL 3
+#define SPEED_CONTROL 15
+#define TURN90 160
+#define TURN180 320
+#define PAN_RATIO 17 / 12
+#define PGAIN 50
+#define IGAIN 50
+#define DGAIN 50
+
+int PAN_SPEED = 20;
+int curPan = 0;
+
+// light sensors
+#define _SENSOR_LEFT S2
+#define _SENSOR_RIGHT S3
+#define SENSOR_LEFT SENSOR_2
+#define SENSOR_RIGHT SENSOR_3
+
+#define THRESHOLD 35 // 1-99
+#define THRESHOLD_T 65 // 1-99
+#define SENSOR_MAX 1023
+
+// sonar
+#define _SONAR S4
+#define SONAR SensorUS(_SONAR)
+
+#define NEAR 15
+#define FAR 100
+
+// heading
+#define NORTH 0
+#define EAST 1
+#define SOUTH 2
+#define WEST 3
+
+#define FOREVER while(1)
+
+// Calibration
+int LEFT_MAX = 0;
+int LEFT_MIN = SENSOR_MAX;
+int RIGHT_MAX = 0;
+int RIGHT_MIN = SENSOR_MAX;
+
+int curX = 0;
+int curY = 0;
+int heading;
+int CALIBRATED = 0;
+
+bool INTERSECTION = 0;
+bool STOPPED = 0;
+
+void setLightOn()
+{
+ SetSensorType(_SENSOR_LEFT, SENSOR_TYPE_LIGHT_ACTIVE);
+ SetSensorType(_SENSOR_RIGHT, IN_TYPE_LIGHT_ACTIVE);
+}
+
+void setLightOff()
+{
+ SetSensorType(_SENSOR_LEFT, SENSOR_TYPE_LIGHT_INACTIVE);
+ SetSensorType(_SENSOR_RIGHT, IN_TYPE_LIGHT_INACTIVE);
+}
+
+void setLightRaw()
+{
+ SetSensorMode(_SENSOR_LEFT, SENSOR_MODE_RAW);
+ SetSensorMode(_SENSOR_RIGHT, SENSOR_MODE_RAW);
+}
+
+void setSonarRaw()
+{
+ SetSensorLowspeed(_SONAR);
+}
+
+int battery()
+{
+ return (BatteryLevel()-6600) / 30;
+}
+
+void stopWheels()
+{
+ Off(MOTOR_BOTH);
+}
+
+void motorPower(int left, int right)
+{
+ OnFwd(MOTOR_LEFT,left);
+ OnFwd(MOTOR_RIGHT,right);
+}
+
+void forward()
+{
+ motorPower(SPEED,SPEED);
+}
+
+void pivotLeft(int power)
+{
+ OnFwd(MOTOR_LEFT,power);
+ OnRev(MOTOR_RIGHT,power);
+}
+
+void pivotRight(int power)
+{
+ OnRev(MOTOR_LEFT,power);
+ OnFwd(MOTOR_RIGHT,power);
+}
+
+void forwardWait(int ms)
+{
+ forward();
+ Wait(ms);
+ stopWheels();
+}
+
+/*
+  negative left, positive right
+  controller and client implemented backwards
+*/
+void pan(int deg)
+{
+ int p;
+ 
+ deg = -deg; // moved motor from front to back
+             // controller and
+
+ // normalize input
+ if( deg < -360 )
+     deg += 360;
+ deg %= 360;
+
+ RotateMotor(MOTOR_CAMERA,PAN_SPEED,deg*PAN_RATIO);
+
+ p = curPan + deg;
+ 
+ // normalize current
+ if( p < 0 )
+     p += 360;
+ curPan = p % 360;
+}
+
+int sensorLeft()
+{
+ int value = SENSOR_LEFT - LEFT_MIN;
+ int range = LEFT_MAX - LEFT_MIN;
+ return ( value*100 / range );
+}
+
+int sensorRight()
+{
+ int value = SENSOR_RIGHT - RIGHT_MIN;
+ int range = RIGHT_MAX - RIGHT_MIN;
+ return ( value*100 / range );
+}
+
+void lineCorrect()
+{
+ int left, right;
+
+ setLightOn();
+ Wait(50);
+
+ left = sensorLeft();
+ right = sensorRight();
+
+ if( left<right )
+ {
+  while( abs(right-left) > 5 )
+  {
+     pivotLeft(SPEED);   //motorPower(-SPEED,SPEED);
+     left = sensorLeft();
+     right = sensorRight();
+  }
+ }
+ else
+ {
+  while( abs(right-left) > 5 )
+  {
+     pivotRight(SPEED);  //motorPower(SPEED,-SPEED);
+     left = sensorLeft();
+     right = sensorRight();
+  }
+ }
+
+ stopWheels();
+}
+
+void checkSonar()
+{
+ if( SONAR <= NEAR )
+ {
+  stopWheels();
+  while( SONAR <= NEAR && !STOPPED );
+ }
+}
+
+void adjustLinePosition()
+{
+ int pos = sensorRight() - sensorLeft();
+ int adj = pos * SPD_ADJ_CAL;
+
+ if( adj < -SPEED_CONTROL ) adj = -SPEED_CONTROL;
+ else if( adj > SPEED_CONTROL ) adj = SPEED_CONTROL;
+
+ motorPower( SPEED - adj, SPEED + adj);
+}
+
+bool aboveThreshold()
+{
+ return ( sensorLeft() > THRESHOLD || sensorRight() > THRESHOLD );
+}
+
+void intersection()
+{
+ if( !STOPPED )
+ {
+  INTERSECTION = TRUE;
+
+  switch(heading)
+  {
+   case NORTH : curY++; break;
+   case EAST  : curX++; break;
+   case SOUTH : curY--; break;
+   case WEST  : curX--; break;
+  }
+ }
+}
+
+void lineFollow()
+{
+ STOPPED = FALSE;
+ INTERSECTION = FALSE;
+
+ setLightOn();
+
+ Wait(50);
+
+ forwardWait(400);
+ lineCorrect();
+
+ do {
+   adjustLinePosition();
+   checkSonar();  // blocking
+ } while( aboveThreshold() && !STOPPED );
+
+ stopWheels();
+
+ intersection();
+
+ forwardWait(350);
+ lineCorrect();
+
+ stopWheels();
+}
+
+void calibrateLine()
+{
+ int left,right;
+
+ setLightOn();
+ Wait(50);
+
+ pivotRight(SPEED_CAL);    //motorPower(SPEED_CAL,-SPEED_CAL);
+ 
+ do{
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ } while( SENSOR_LEFT > 400 );
+
+ stopWheels();
+ Wait(50);
+
+ pivotLeft(SPEED_CAL);  //motorPower(-SPEED_CAL,SPEED_CAL);
+ 
+ do{
+  left = SENSOR_LEFT;
+  right = SENSOR_RIGHT;
+
+  if(left<LEFT_MIN) LEFT_MIN = left;
+  else if(left>LEFT_MAX) LEFT_MAX = left;
+
+  if(right<RIGHT_MIN) RIGHT_MIN = right;
+  else if(right>RIGHT_MAX) RIGHT_MAX = right;
+ } while( SENSOR_RIGHT > 400 );
+
+ stopWheels();
+ Wait(50);
+ lineCorrect();
+ Wait(50);
+
+ stopWheels();
+}
+
+void turnRightLine()
+{
+ setLightOn();
+ Wait(50);
+ 
+ pivotRight(TURN_SPEED+10);  //motorPower(TURN_SPEED+10,-TURN_SPEED-10);
+ Wait(500);
+ 
+ until(sensorRight()<THRESHOLD);
+ 
+ stopWheels();
+ Wait(50);
+ 
+ forwardWait(75);
+ lineCorrect();
+ forwardWait(25);
+ lineCorrect();
+ forwardWait(25);
+ lineCorrect();
+
+ heading = (heading + 1) % 4;
+}
+
+void turnLeftLine()
+{
+ setLightOn();
+ Wait(50);
+ 
+ pivotLeft(TURN_SPEED+10); //motorPower(-TURN_SPEED-10,TURN_SPEED+10);
+ Wait(500);
+ 
+ until(sensorLeft()<THRESHOLD);
+ 
+ stopWheels();
+ Wait(50);
+ 
+ forwardWait(75);
+ lineCorrect();
+ forwardWait(25);
+ lineCorrect();
+ forwardWait(25);
+ lineCorrect();
+
+ heading =  (heading) ? (heading - 1) : 3;
+}
+
+void turnaroundLine()
+{
+ setLightOn();
+ Wait(50);
+ 
+ pivotRight(TURN_SPEED+10);  //motorPower(TURN_SPEED+10,-TURN_SPEED-10);
+ Wait(500);
+ 
+ until(sensorRight()<THRESHOLD);
+
+ stopWheels();
+ Wait(50);
+ 
+ pivotRight(TURN_SPEED+10);  //motorPower(TURN_SPEED+10,-TURN_SPEED-10);
+ Wait(500);
+ 
+ until(sensorRight()<THRESHOLD);
+ 
+ stopWheels();
+ Wait(50);
+ 
+ forwardWait(75);
+ lineCorrect();
+ forwardWait(25);
+ lineCorrect();
+ forwardWait(25);
+ lineCorrect();
+
+ heading = (heading + 2) % 4;
+}
+
+void newCoordinates(string msg)
+{
+ int i, s0, s1, s2;
+ int len = StrLen(msg);
+ string t;
+ 
+ for(i=0; i<len; i++)
+ {
+  if( SubStr(msg,i,1) == " " )
+  {
+   s0 = i;
+   break;
+  }
+ }
+ 
+ for(++i; i<len; i++)
+ {
+  if( SubStr(msg,i,1) == " " )
+  {
+   s1 = i;
+   break;
+  }
+ }
+   
+ for(++i; i<len; i++)
+ {
+  if( SubStr(msg,i,1) == " " )
+  {
+   s2 = i;
+   break;
+  }
+ }
+
+ if( s0>0 && s0<s1 && s1<s2 )
+ {
+  t = SubStr(msg,s0+1,len);
+  curX = StrToNum(t);
+  t = SubStr(msg,s1+1,len);
+  curY = StrToNum(t);
+  t = SubStr(msg,s2+1,len);
+  heading = StrToNum(t);
+ }
+ else
+ {
+  PlayTone(200,50);
+ }
+}
+
+void movementFeedback(bool idle)
+{
+ string d = " ";
+ string x = NumToStr(curX);
+ string y = NumToStr(curY);
+ string h = NumToStr(heading);
+ string b = NumToStr(battery());
+ string id = NumToStr(idle);
+ string in = NumToStr(INTERSECTION);
+ string s = StrCat(x,d,y,d,h,d,b,d,id,d,in);
+ 
+ SendResponseString(FEEDBOX,s);
+}
+
+bool testCommand(string msg, string cmd)
+{
+ int len = StrLen(cmd);
+ return (StrLen(msg) >= len && SubStr(msg,0,len) == cmd);
+}
+
+task cmdPan()
+{
+ string msg, p;
+ 
+ FOREVER
+ {
+  ReceiveMessage(PANBOX,TRUE,msg);
+  
+  if( StrLen(msg)>0 && testCommand(msg,"pan") )
+  {
+   msg = SubStr( msg, 4, StrLen(msg)-4 );
+   
+   pan( StrToNum(msg) ); // send deg
+   
+   p = NumToStr(curPan);
+   p = StrCat("pan ",p);
+   
+   SendResponseString(FEEDBOX,p);
+  }
+  
+  Wait(15);
+ }
+}
+
+task cmdStop()
+{
+ string msg;
+ 
+ FOREVER
+ {
+  ReceiveMessage(STOPBOX,TRUE,msg);
+  
+  if( StrLen(msg)>0 && testCommand(msg,"stop") )
+  {
+   STOPPED = TRUE;
+  }
+  
+  Wait(23);
+ }
+}
+
+task cmdMovement()
+{
+ string msg;
+ 
+ FOREVER
+ {
+  setLightOff();
+  stopWheels();
+  
+  ReceiveMessage(MOVEBOX,TRUE,msg);
+  
+  if(StrLen(msg)>0)
+  {
+  	if( testCommand(msg,"left") || testCommand(msg,"4") )
+  	{
+    movementFeedback(0);
+  	 turnLeftLine();
+  	 movementFeedback(1);
+  	}
+  	else if( testCommand(msg,"right") || testCommand(msg,"6") )
+  	{
+    movementFeedback(0);
+  	 turnRightLine();
+  	 movementFeedback(1);
+  	}
+  	else if( testCommand(msg,"turnaround") || testCommand(msg,"2") )
+  	{
+    movementFeedback(0);
+    turnaroundLine();
+    movementFeedback(1);
+  	}
+  	else if( testCommand(msg,"calibrate") || testCommand(msg,"5") )
+  	{
+    movementFeedback(0);
+    calibrateLine();
+    movementFeedback(1);
+  	}
+  	else if( testCommand(msg,"forward") || testCommand(msg,"8") )
+  	{
+    movementFeedback(0);
+    lineFollow();
+    movementFeedback(1);
+  	}
+  	else if( testCommand(msg,"correct") )
+  	{
+    movementFeedback(0);
+    lineCorrect();
+    movementFeedback(1);
+  	}
+  	else if( testCommand(msg,"coordinates") || testCommand(msg,"coord") )
+  	{
+    newCoordinates(msg);
+  	}
+  	else
+  	{
+    PlayTone(1000,50);
+  	}
+  }
+  
+  Wait(7);
+ }
+}
+
+task main()
+{
+ Precedes(cmdMovement,cmdPan,cmdStop);
+
+ // empty inboxes
+ string msg;
+ do{
+    ReceiveMessage(MOVEBOX,TRUE,msg);
+ } while(StrLen(msg)>0);
+ do{
+    ReceiveMessage(PANBOX,TRUE,msg);
+ } while(StrLen(msg)>0);
+ do{
+    ReceiveMessage(STOPBOX,TRUE,msg);
+ } while(StrLen(msg)>0);
+
+ setSonarRaw();
+ setLightRaw();
+
+ curX = 0;
+ curY = -1;
+ heading = 0;
+}
