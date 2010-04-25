@@ -66,8 +66,10 @@ void LocalInput()
 		//Robot* robot = new Robot(6, "192.168.1.101:7001", true);
 		controller->AddRobot(robot);
 
+		/*
 		robot = new Robot(6, "10.176.14.89:7003", true);
 		controller->AddRobot(robot);
+		*/
 	}
 
 	//addrobot port/id ip true/false

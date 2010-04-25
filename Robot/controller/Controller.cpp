@@ -103,6 +103,8 @@ bool Controller::Connect(string ip)
 		init->VideoURL = NULL;
 
 		write_data(P_ROBOT_INIT, init, 1, &sendArray);
+
+		delete init;
 	}
 	else
 	{
@@ -130,6 +132,8 @@ bool Controller::Connect(string ip)
 		ReleaseSemaphore(robotSemaphore_, 1, NULL);
 
 		write_data(P_ROBOT_INIT, init, (short)robots_.size(), &sendArray);
+
+		delete[] init;
 	}
 
 	iResult = send(connectSocket_, sendArray.array, sendArray.size, 0);
@@ -140,8 +144,6 @@ bool Controller::Connect(string ip)
 		WSACleanup();
 		connected_ = false;
 	}
-
-	delete[] init;
 
 	_beginthread(ClientThread, 0, NULL);
 
@@ -173,19 +175,16 @@ void Controller::Disconnect()
 		robots_.clear();
 	}
 
-	//vector iterator error needs fixing
-	/*
-	if (Camera::GetTrackableObjects().size() > 0)
+	if (Camera::GetTrackableObjects()->size() > 0)
 	{
 		Vector_ts<TrackingObject*>::iterator it;
-		Vector_ts<TrackingObject*> objects = Camera::GetTrackableObjects();
+		Vector_ts<TrackingObject*>* objects = Camera::GetTrackableObjects();
 
-		for (it = objects.begin(); it != objects.end(); it++)
+		for (it = objects->begin(); it != objects->end(); it++)
 			delete (*it);
 
-		objects.clear();
+		objects->clear();
 	}
-	*/
 
 	CloseHandle(robotSemaphore_);
 }
@@ -226,9 +225,12 @@ void Controller::ClientThread(void* params)
 
 					newObj->SetID(obj[i].OID);
 
-					Camera::GetTrackableObjects().lock();
-					Camera::GetTrackableObjects().push_back(newObj);
-					Camera::GetTrackableObjects().unlock();
+					Vector_ts<TrackingObject*>* objects = 
+						Camera::GetTrackableObjects();
+
+					objects->lock();
+					objects->push_back(newObj);
+					objects->unlock();
 				}
 			}
 			else if (type == P_ASSIGNMENT)

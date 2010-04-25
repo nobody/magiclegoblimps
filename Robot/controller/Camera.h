@@ -98,9 +98,9 @@ public:
 	int GetTargetID()		{ return target_; }
 	bool GetTargetVisible()	{ return targetVisible_; }
 
-	static Vector_ts<TrackingObject*> GetTrackableObjects()
+	static Vector_ts<TrackingObject*>* GetTrackableObjects()
 	{
-		return trackableObjects_;
+		return &trackableObjects_;
 	}
 	static TrackingObject* GetTrackingObject(int id);
 	static void RemoveTrackingObject(int id);
