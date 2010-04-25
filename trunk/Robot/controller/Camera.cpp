@@ -265,28 +265,6 @@ void Camera::Update()
 		return;
 	}
 
-	time_t seconds = time(NULL);
-	float interval = (float)seconds - lastTime_;
-	lastTime_ = seconds;
-
-	scanTimer_ += interval;
-
-	if (scanTimer_ > scanInterval_)
-	{
-		Scan();
-		scanTimer_ = 0;
-	}
-
-	lockTimer_ += interval;
-
-	if (lockTimer_ > lockTime_)
-	{
-		if (!locked_)
-			Lock();
-
-		targetVisible_ = isTargetVisible();
-	}
-
 	int binWidth;
 
 	IplImage* frame = cvQueryFrame(capture_);
@@ -424,17 +402,41 @@ void Camera::Update()
 		}
 	}
 
+	trackableObjects_.readLock();
 	if (lastObjectSize_ != trackableObjects_.size())
 	{
 		lastObjectSize_ = trackableObjects_.size();
 		visibleObjects_.clear();
 	}
+	trackableObjects_.readUnlock();
 
 	if (selectObject && selection.width > 0 && selection.height > 0)
 	{
 		cvSetImageROI(image_, selection);
 		cvXorS(image_, cvScalarAll(255), image_, 0);
 		cvResetImageROI(image_);
+	}
+
+	time_t seconds = time(NULL);
+	float interval = (float)seconds - lastTime_;
+	lastTime_ = seconds;
+
+	scanTimer_ += interval;
+
+	if (scanTimer_ > scanInterval_)
+	{
+		Scan();
+		scanTimer_ = 0;
+	}
+
+	lockTimer_ += interval;
+
+	if (lockTimer_ > lockTime_)
+	{
+		if (!locked_)
+			Lock();
+
+		targetVisible_ = isTargetVisible();
 	}
 }
 
