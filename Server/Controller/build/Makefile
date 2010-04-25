@@ -1,7 +1,12 @@
 CC = g++
 
-LIBS = -lboost_system -lboost_thread -lmysqlcppconn
-LIBDIRS = -L ../lib -L /usr/local/lib/
+LIBDIRS = -L ../lib
+LBITS := $(shell getconf LONG_BIT)
+ifeq ($(LBITS),64)
+    LIBS = -lboost_system64 -lboost_thread64 -lmysqlcppconn64
+else
+    LIBS = -lboost_system32 -lboost_thread32 -lmysqlccpconn32
+endif
 
 INCLUDES = -I ../include 
 
