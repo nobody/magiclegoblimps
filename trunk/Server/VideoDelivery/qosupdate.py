@@ -15,15 +15,20 @@ def parse(in_lines):
     throws an exception if the message could not be parsed.
     """
     # record incoming traffic
-    s = '>>> From QoS Server\n'
-    for ln in in_lines:
-        s += ln + '\n'
-    transcribe(s)
+    if not settings.TESTMODE:
+        s = '>>> From QoS Server\n'
+        for ln in in_lines:
+            s += ln + '\n'
+        transcribe(s)
 
     if len(in_lines) < 2 or in_lines[1] != '':
         raise Exception('could not parse QoS message')
 
-    timestamp = parse_timestamp(in_lines[0])
+    try:
+        timestamp = parse_timestamp(in_lines[0])
+    except ValueError:
+        raise Exception('could not parse QoS message')
+
     if len(in_lines) == 2:
         return (timestamp, [], [])
 

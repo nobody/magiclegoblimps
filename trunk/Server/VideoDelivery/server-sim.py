@@ -140,14 +140,19 @@ def main():
             push = get_live_urls()
             conn.send(push)
             req = conn.recv(4096)
+            time.sleep(1.0)
+            if len(req) == 0:
+                break
         except socket.error as ex1:
             print('socket.error: ' + str(ex1))
             break # simulator does not attempt to recover
         except Exception as ex2:
             print('error: ' + str(ex2))
-        if len(req) == 0:
             break
-        time.sleep(1.0)
+        except KeyboardInterrupt:
+            break
+    conn.close()
+    s.close()
 
 if __name__ == '__main__':
     main()
