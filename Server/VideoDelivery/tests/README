@@ -1,0 +1,5 @@
+This directory contains test scripts for the simulator. They consist of a
+series of messages that the QoS server sends to the video delivery server.
+The idea is to run the QoS server using one of these test scripts and then
+inspect the transcript.log and vidserver.log files to see if the video
+delivery server behaved correctly.

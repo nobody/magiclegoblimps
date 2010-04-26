@@ -1,113 +1,15 @@
 #!/usr/bin/python3
 
+from __future__ import print_function
 import socket
 import time
 import random
 from datetime import datetime
+import sys
+import settings
 
-opts = {
-    'max_devices': 12,
-    'max_objects': 20,
-    'max_obj/cam': 3,
-}
-
-devices = []
-
-# how often each of these should change in seconds
-obj_update_interval = [3,30]
-obj_wait = 10.0
-last_obj_update = time.time()
-
-dev_wait = 32
-dev_update_interval = [31,90]
-last_dev_update = time.time()
-
-class Device():
-    def __init__(self):
-        self.url = ''
-        self.objects = []
-        self.online = False
-
-def init_data():
-    """
-    Read test data needed for simulation into python data structures.
-    """
-    url_template = 'http://10.176.14.{0}/video.cgi'
-    base_ip = 60
-
-    for i in range(0, opts['max_devices']):
-        d = Device()
-        d.url = url_template.format(str(base_ip + i))
-        d.objects = update_objects()
-        devices.append(d)
-    update_devices()
-
-def update_objects():
-    """
-    Get a list of objects viewable by a camera.
-    """
-    count = random.randint(0, opts['max_obj/cam'])
-    obj_list = []
-    nums_seen = [0]
-    for i in range(0, count):
-        o = {'id': 0, 'qos': 0.0}
-        x = 0
-        while x in nums_seen:
-            x = random.randint(1, opts['max_objects'])
-        o['id'] = x
-        o['qos'] = random.random()
-        obj_list.append(o)
-    return obj_list
-
-def update_qos():
-    """
-    Change qos data for each object viewable by each camera.
-    """
-    for dev in devices:
-        for o in dev.objects:
-            o['qos'] = random.random()
-
-def update_devices():
-    """
-    Add/remove cameras from the system.
-    """
-    for d in devices:
-        d.online = random.randint(0,2) == 1
-
-def get_new_wait(update_interval):
-    return update_interval[0] + random.random() * (update_interval[1]
-            - update_interval[0])
-
-def get_updates():
-    global last_dev_update, dev_wait, last_obj_update, obj_wait
-    now = time.time()
-    if now - last_dev_update > dev_wait:
-        update_devices()
-        update_qos()
-        last_dev_update = now
-        dev_wait = get_new_wait(dev_update_interval)
-    elif now - last_obj_update > obj_wait:
-        for d in devices:
-            d.objects = update_objects()
-        last_obj_update = now
-        obj_wait = get_new_wait(obj_update_interval)
-    else:
-        update_qos()
-
-def get_status():
-    """
-    Generate a status update to send to the client.
-    """
-    get_updates()
-    stat = str(datetime.today()) + '\n\n'
-    for d in devices:
-        if d.online:
-            ln = d.url + ';'
-            for o in d.objects:
-                ln += str(o['id']) + ';'
-                ln += str(o['qos']) + ';'
-            stat += ln + '\n'
-    return stat.encode()
+def usage():
+    print('usage: python server-sim.py test-file.txt')
 
 def handle_response():
     """
@@ -115,29 +17,51 @@ def handle_response():
     """
     pass
 
-def get_live_urls():
+def get_message_sequence():
     """
     Reads the contents of the file and encodes them for sending over the
     socket. Used to test restreaming.
     """
-    with open('./live-feeds.txt', 'r') as f:
-        txt = f.read()
-    return txt.encode()
+    if len(sys.argv) != 2:
+        usage()
+        exit(1)
+    text = ''
+    try:
+        with open(sys.argv[1], 'r') as f:
+            text = f.read()
+    except:
+        print('count not read file: ' + sys.argv[1])
+        exit(1)
+    messages = text.split('>>>\n')
+    return messages
+
+def get_message(messages, i):
+    message = "{0}\n\n{1}"
+    lines = messages[i].splitlines()
+    url_lines = []
+    for i in range(len(lines)):
+        if lines[i][0] == '#':
+            pass
+        else:
+            url_lines.append(lines[i])
+    urls = '\n'.join(url_lines)
+    timestamp = datetime.today().strftime('%Y-%b-%d %H:%M:%S')
+    message = message.format(timestamp, urls)
+    print('\n\nMessage:\n' + message)
+    return message.encode()
+    
 
 def main():
-    random.seed()
-    init_data()
-
+    messages = get_message_sequence()
     s = socket.socket()
-    addr = ('localhost', 5678)
+    addr = ('localhost', settings.QOS_SERVER_PORT)
     s.bind(addr)
     s.listen(5)
 
     (conn, caddr) = s.accept()
-    while True:
+    for i in range(len(messages)):
         try:
-            # push = get_status()
-            push = get_live_urls()
+            push = get_message(messages, i)
             conn.send(push)
             req = conn.recv(4096)
             time.sleep(1.0)
@@ -152,7 +76,6 @@ def main():
         except KeyboardInterrupt:
             break
     conn.close()
-    s.close()
 
 if __name__ == '__main__':
     main()
