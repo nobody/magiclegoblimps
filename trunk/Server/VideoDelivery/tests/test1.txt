@@ -1,0 +1,39 @@
+# Add one camera
+1;http://192.168.1.101/video.cgi;
+>>>
+# Add three more cameras
+2;http://192.168.1.102/video.cgi;
+3;http://192.168.1.103/video.cgi;
+4;http://192.168.1.104/video.cgi;
+>>>
+# Update one camera
+1;http://192.168.1.101/video.cgi;1;0.3;
+>>>
+# Update two cameras
+1;http://192.168.1.101/video.cgi;1;0.7;2;0.43;
+3;http://192.168.1.103/video.cgi;2;0.26;
+>>>
+# Update two cameras, delete one camera
+1;http://192.168.1.101/video.cgi;1;0.7;2;0.21;
+DELETE 2;http://192.168.1.102/video.cgi;
+3;http://192.168.1.103/video.cgi;2;0.26;
+>>>
+# Add a camera, update 3 cameras
+1;http://192.168.1.101/video.cgi;1;0.54;
+2;http://192.168.1.102/video.cgi;
+3;http://192.168.1.103/video.cgi;2;0.26;
+4;http://192.168.1.104/video.cgi;3;0.76;
+>>>
+# Delete two cameras
+DELETE 2;http://192.168.1.102/video.cgi;
+DELETE 3;http://192.168.1.103/video.cgi;2;0.26;
+>>>
+# Come back online
+1;http://192.168.1.101/video.cgi;
+2;http://192.168.1.102/video.cgi;3;0.47;
+4;http://192.168.1.104/video.cgi;2;0.31;
+>>>
+# Delete remaining feeds
+DELETE 1;http://192.168.1.101/video.cgi;
+DELETE 4;http://192.168.1.104/video.cgi;
+DELETE 2;http://192.168.1.102/video.cgi;
