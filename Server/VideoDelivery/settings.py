@@ -4,7 +4,6 @@ Application settings for the video delivery server controller.
 
 # General settings
 DEBUG = True
-TESTMODE = True
 LOGFILE = 'logs/vidserver.log'
 TRANSCRIPT_FILE = 'logs/transcript.log'
 ROOT_DIR = [
