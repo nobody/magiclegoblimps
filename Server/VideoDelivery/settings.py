@@ -3,7 +3,8 @@ Application settings for the video delivery server controller.
 """
 
 # General settings
-DEBUG = False
+DEBUG = True
+TESTMODE = True
 LOGFILE = 'logs/vidserver.log'
 TRANSCRIPT_FILE = 'logs/transcript.log'
 ROOT_DIR = [
@@ -13,15 +14,16 @@ LIVE_CSV_FILE = '/var/www/mlb/live-feeds.csv'
 
 # QoS server settings
 #QOS_SERVER_URL = '10.21.1.110'
-QOS_SERVER_URL = '10.176.14.94'
-QOS_SERVER_PORT = 20000
-# QOS_SERVER_URL = 'localhost'
-# QOS_SERVER_PORT = 5678
+# QOS_SERVER_URL = '10.176.14.94'
+# QOS_SERVER_PORT = 20000
+QOS_SERVER_URL = 'localhost'
+QOS_SERVER_PORT = 5678
 MAX_CONNECTION_ATTEMPTS = 10
 CONNECTION_RETRY_INTERVAL = 30
 
 # Video server settings
-CURRENT_IP = '10.176.14.65' # 'localhost'
+# CURRENT_IP = '10.176.14.65'
+CURRENT_IP = 'localhost'
 # CURRENT_IP = '00-22-19-13-c5-ad.dyn.utdallas.edu'
 FEEDER_URLS = 'http://localhost:{0}/{1}.ffm'
 LIVE_FEED_URLS = 'http://{0}:{1}/{2}.flv' # domain, port, filename
@@ -36,7 +38,8 @@ ARCHIVE_THUMB_SIZE = '60x44'
 
 CONFIG_TEMPLATE = 'config-template.txt'
 CONFIG_FILE_DIR = './'
-ARCHIVE_DIR = '/var/www/mlb/archives'
+ARCHIVE_DIR = './archives'
+# ARCHIVE_DIR = '/var/www/mlb/archives'
 
 CONFIG_FNAME = 'ffserver-{0}.conf'
 STREAM_NAME = 'live-{0}'
