@@ -27,7 +27,7 @@ def update_database(vid_fname, thumb_fname, object_id, object_qos):
     db.addArchiveFootage(conn, vfurl, object_id, object_qos, ssfurl)
     db.close(conn)
     
-def create_archive(last_archived, object_id, object_qos):
+def create_archive(feed_url, object_id, object_qos):
     """
     Creates and archive video and screen shot for the given VidFeed object. If
     an archive is currently being captured for this object, then this method
@@ -42,10 +42,9 @@ def create_archive(last_archived, object_id, object_qos):
             return
 
     # create the archives
-    last_archived = datetime.now()
     # TODO: get vfeed parameters w/o vfeed object
-    (vfname, vidproc) = ffserver.capture_archive(vfeed, object_id, object_qos)
-    (ssfname, thumbproc) = ffserver.capture_screenshot(vfeed, vfname)
+    (vfname, vidproc) = ffserver.capture_archive(feed_url, object_id, object_qos)
+    (ssfname, thumbproc) = ffserver.capture_screenshot(feed_url, vfname)
 
     vidproc.wait()
     thumbproc.wait()
