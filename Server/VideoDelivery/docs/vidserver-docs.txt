@@ -1,0 +1,161 @@
+
+===============================================================================
+= Video Delivery Server: User Guide ===========================================
+===============================================================================
+
+Note this guide is written and intended for use by programmers/system administrators, who will be responsible for installing, running, and maintaining the system.
+
+
+
+= Software requirements =======================================================
+ - Linux (Ubuntu 9.10)
+   http://www.ubuntu.com/
+ - Python 2.6
+   http://www.python.org/
+ - MySQL-python 1.2.3c1
+   http://sourceforge.net/projects/mysql-python/
+ - FFmpeg (latest version) includes FFserver
+   http://www.ffmpeg.org/
+ - Apache HTTP Server 2.2 (for archive videos and thumbnails)
+   http://httpd.apache.org/
+
+
+
+= Hardware requirements =======================================================
+ - As much RAM, CPU, and Bandwidth as you can get.
+
+
+
+= Installation ================================================================
+ 1) Install Linux, Python, MySQL-python, FFmpeg/FFserver, and Apache.
+    Default configurations are fine.
+ 2) Checkout latest code from SVN
+    http://code.google.com/p/magiclegoblimps/
+    You can put this anywhere you feel like.
+ 3) Edit settings file (details below)
+    magiclegoblimps/Server/VideoDelivery/settings.py
+ 4) Wait for client database and the QoS server to start
+ 5) Launch Video Delivery server
+    python vidcontrol.py
+ 6) Press ctrl-c to shutdown server
+    The program will catch this signal and perform all of the necessary
+    cleanup.
+ 7) If everything goes wrong:
+    -- search for and kill all ffserver/ffmpeg processes
+    -- delete all ffserver-*.conf files
+    -- check to logs to try and figure out what happened
+
+
+
+= Settings (settings.py) ======================================================
+
+This is the most important thing. The settings.py files is a normal Python file (so any Python code is valid) used to configure the server. Here is a description of all the settings and how to configure them. Read this section carefully. This list is not comprehensive. Some settings are being phased out, and not all are essential to program operation. A basic familiarity with both Python and the Linux filesystem are necessary to correctly edit this file.
+
+DEBUG - Whether or not the project in DEBUG mode. This should be set to False for a production environment, or True for testing. When in debug mode, the program uses dummy programs that do not do anything in place of launching ffmpeg/ffserver processes for transcoding/streaming video.
+
+ROOT_DIR - A list of directories in which the program will run. It chooses the first one that exists on your system, and defaults to the current directory if all fail. This allows us to accomodate different installation paths in different testing environments.
+
+LOGFILE - Relative path to the server's runtime log. You should create all directories listed in this path before the program runs.
+
+TRANSCRIPT_FILE - Relative path to the log that records all of the data sent between the video delivery server and the quality of service (QoS) server.
+
+QOS_SERVER_URL - The host name or IP address for the QoS server.
+
+QOS_SERVER_PORT - The port on which to connect to the QoS server.
+
+MAX_CONNECTION_ATTEMPTS - Set the number of times to retry a connection to the QoS server if the initial connection fails.
+
+CONNECTION_RETRY_INTERVAL - The time in seconds between connection attempts.
+
+CURRENT_IP - The current host name or IP address for the video delivery server. This can be obtained by running the ifconfig command.
+
+FEEDER_URLS - Format of the URLs used internally by FFserver during transcoding. Don't modify this unless you know what you're doing.
+
+LIVE_FEED_URLS - Format of the URLs for the live Flash video streams. Don't modify this unless you know what you're doing.
+
+ARCHIVE_FEED_URLS - The base URL including directory path in which the archive videos and thumbnails are stored. This URL should correspond to the physical directory specified in the ARCHIVE_DIR setting.
+
+ARCHIVE_CSV_FILE - Deprecated. We are instead updating the client group's database directly.
+
+ARCHIVE_HTML - Testing only. An HTML file that lists links to all of the archive videos.
+
+ARCHIVE_DURATION - The amount of time (in seconds) to record for archive videos.
+
+ARCHIVE_QOS_THRESHOLD - If the QoS metric for an object in a camera feed exceeds this value [0.0-1.0], an archive video will be recorded.
+
+ARCHIVE_THUMB_SIZE = The thumbnail size in pixels for archive video thumnails. The format is a python string such as 'WxH', where W is the width in pixels and H is the height in pixels.
+
+CONFIG_TEMPLATE - The template file used to create FFserver configuration files. Don't mess with this unless you're an FFserver guru. You can even modify the contents of the configuration template file if you really, really know FFserver.
+
+CONFIG_FILE_DIR - The directory in which the CONFIG_TEMPLATE file is located.
+
+ARCHIVE_DIR - The directory in which the archive videos and thumbnails are stored. This should be in a web accessible directory (i.e. beneath Apache's server root directory), and the owner under which the video delivery process is executing needs to have permissions to write to this directory. The easiest way to do this is change the owner of the archive directory to be the same as the user running the video delivery server.
+
+CONFIG_NAME - format for FFserver configuration files. Leave this alone.
+
+STREAM_NAME - Used to name/identify live Flash streams. Leave this alone.
+
+FEED_NAME - Used internally by FFserver to track streams being transcoded.
+
+FFMPEG_ARGS - Specify arguments for transcoding video streams. Leave this alone  unless you are familiar with FFmpeg. This is a Python list containing the same arguments you would give on the command line. The input-stream and output-stream arguments will be replaced by the actual input/output streams determined by the video delivery server.
+
+FFSERVER_ARGS - Specify arguments for running FFserver instances. Don't mess with this. FFserver doesn't have any other arguments anyways.
+
+MySQL_HOST - The host name of the client group's MySQL database.
+
+MySQL_USER - The user name for the client group's MySQL database.
+
+MySQL_PASS - The password for the client group's MySQL database.
+
+MySQL_DATABASE - The database for name the client group's MySQL database.
+
+
+
+= Log files ===================================================================
+
+You can view the logs to verify everything is working correctly or to diagnose a problem. There are two log files, vidserver.log and transcript.log.
+    -- vidserver.log
+       This is what's going on inside me? Errors, 
+    -- transcript.log
+       Exact transcript of all data sent to/from the QoS server labeled
+       accordingly.
+
+
+
+= Troubleshooting =============================================================
+
+1) Check the log files, they will contain error messages to help diagnose the problem.
+2) Help! There are no log files.
+    a) Check your settings.py file and try again
+    b) Make sure you are connected to the internet and that the client database is running. The MySQL-python driver connection object doesn't automatically timeout, so if one of the two conditions occur, the process will hang. The only way to terminate the program is to kill the process from the shell.
+    
+= Design =======================================================================
+
+We thought thi would be an easy part of the project. We assumed we could find and configure an acceptable open source video server and then move on to other parts of the project. This assumption turned out to be wrong. We required a video server that supported live streaming of Adobe's Flash video format (FLV). Unfortunately, many open source servers did not support this. We found two open source products and two commercial products that claimed to support live FLV streaming. We ruled out the commercial products because they were prohibitively expensive, so that left us with the Red5 media server and FFserver, which is part of the FFmpeg package for video encoding and editing. There were no install instructions for Red5 and no documentation for how to configure and run it either. We managed to get it installed and playing something, but it depended on every Java library known to man and we had no idea where to even begin configuring. After much trial and error with FFserver, we finally managed to modify a sample FFserver config file to produce take a camera feed as input and produce an FLV stream as output.
+
+Since FFserver was the only piece of software we could actually get to stream video, we decided to use it. However, we had to work around some serious shortcomings. Mainly, FFserver can only be statically configured. Any changes, such as adding a new camera feed or removing an existing camera feed, required us to stop the server, modify the config file, then start the server again. Since extensibility was a requirement for this project, this was not acceptable. 
+
+Our workaround for this issue was to have a program that receives messages cameras that need to be added to or removed from the system, and use this program to generate appropriate FFserver config files then launch and kill individual instances of FFserver as needed. Since we were also transcoding the video stream from the MJPEG format to the FLV format, it was necessary to launch appropriately configured FFmpeg instances to perform the conversion. The only issue we faced was that each instance of FFserver must be bound to a separate port, so our program needed to account for this.
+
+So now we have a program that receives messages telling it which camera feeds to add or remove, and the program generates FFserver config files then it launches or kills the appropriate FFserver and FFmpeg processes for those camera feeds. As long as we can access a camera feed, we could transcode it to FLV and stream it to anywhere in the UTD network. The only other concern would be that of generating more processes than the computer could handle, but due to the processor intensive nature of video transcoding and the bandwidth intensive nature of video streaming, we determined that we would run into problems with CPU usage or bandwidth utilization before hitting the process limit for the operating system. For the demo this design was sufficient, but for a production application we would want to extend the design to balance the load across a cluster of similarly configured servers.
+
+As far as performance goes, we were able to transcode and stream several streams at about a 50% CPU usage on a 3GHz Intel dual core processor, and up to about 3Gb/s upload bandwidth peak (wow, I know)! Before committing to our design and the use of FFserver, we were transcoding video from four streams to 17 computers in the lab without difficult. There was about a 3 second delay between an action occuring in real life to the action appearing on the computer, but since it was not critical for our part of the system operate in real time, this delay was acceptable. However, this test was done at around 2 AM when the university's network is under a light load. When we did our first demo around 2 PM, the university's network was under a heavy load, so there were often delays in the video streaming resulting in abrupt pauses in the video as the video player buffered enough of the stream to playback. However, we determined it was out of our control as far as the speed and congestion of the school's network - at least as far as the scope of this project was concerned.
+
+Anyways, since we were already receiving information about the camera feeds from the Quality of Service server (QoS), we decided it would be a nice feature to record archive footage when objects viewable in a camera feed exceeded a certain quality threshold. This would allow users of the system to view high quality footage of particular objects even if those objects are not in view of any camera. Because we do not know when to expect updates form the QoS server, they could be milliseconds apart or minutes apart, we decided to save 30 second clips of archive footage whenever an object exceeded a given QoS threshold and also take a thumbnail of a frame in the archive clip for users to preview before viewing the clip. For this task, our program would spawn additional FFmpeg processes to capture both the archive video clip and the preview thumbnail. One feature missing that would likely be required in a practical implementation would be to delete old archive footage periodically, or replace old archive footage with newer or higher quality footage to avoid filling the entire hard drive with video files.
+
+The last component of our system involves writing information about the live stream URLs and the archive clip and thumbnail URLs to the client group's MySQL databse. This would allow the client group to actually show the video to the system's end users. This was easy to add to our system since we already had the required information we needed to save to the database.
+
+= Implementation ===============================================================
+
+[TODO]
+
+= Testing ======================================================================
+
+[TODO]
+
+Testing without actual video feeds/server connections.
+
+Unit tests for each module.
+
+Server simulator.
+ 
