@@ -64,11 +64,15 @@ public:
 	int getCamDir()				{ return cameraDirection_; }
 	int getBatt()				{ return batteryLevel_; }
 
+	void SetCameraPanning(bool panning) { cameraPanning_ = panning; }
+
+	void setSearchLoc(int x, int y);
 	GridLoc* getSearchLoc()		{ return searchLoc; }
 
 	void ExecuteCommand(string command);
 
-	void SetUpdate(int x, int y, int heading, int pan, int battery, int status);
+	void SetUpdateMovement(int x, int y, int heading, int battery, int status);
+	void SetUpdatePan(int pan);
 	string newCmd();
 
 	HANDLE GetSemaphore() { return updateSemaphore_; }
@@ -91,6 +95,7 @@ private:
 	bool robotOnline_;
 	bool robotActive_;
 	bool robotMoving_;
+	bool cameraPanning_;
 
 	GridLoc* loc;
 	GridLoc* nextLoc;
@@ -107,6 +112,10 @@ private:
 
 	Path* robPath;
 	bool hasPath;
+
+	float timer_;
+	time_t lastTime_;
+	int panTime_;
 
 	HANDLE updateSemaphore_;
 

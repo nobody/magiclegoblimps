@@ -18,9 +18,8 @@
 
 #pragma comment(lib, "ws2_32.lib")
 
-#define IDLE			1
+#define IDLE			2
 #define INTERSECTION	8
-#define STOP			1024
 
 struct RobotParams
 {
@@ -53,7 +52,7 @@ public:
 		vector<GridLoc*> illMoves);
 	static vector<GridLoc*> getIllMoves();
 
-	static void SearchObject(int robotID, int objID, GridLoc* lastKnownLoc);
+	static void SearchObject(Robot* robot);
 	static void SpiralSearch(Robot* robot, GridLoc* loc);
 
 	static string newCmd(Robot* rob);

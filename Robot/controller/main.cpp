@@ -118,9 +118,7 @@ void LocalInput()
 
 			Robot* robot = controller->GetRobot(atoi(tokens[1].c_str()));
 
-			WaitForSingleObject(robot->GetSemaphore(), INFINITE);
 			robot->ExecuteCommand(command);
-			ReleaseSemaphore(robot->GetSemaphore(), 1, NULL);
 		}
 	}
 
@@ -183,7 +181,7 @@ void LocalInput()
 
 	//testmove id x y
 	else if (tokens[0].compare("testmove") == 0)
-	{
+	{	
 		GridLoc* loc = 
 			new GridLoc(atoi(tokens[2].c_str()), atoi(tokens[3].c_str()));
 
