@@ -109,13 +109,13 @@ void forward()
  motorPower(SPEED,SPEED);
 }
 
-void pivotLeft(int power)
+void pivotRight(int power)
 {
  OnFwd(MOTOR_LEFT,power);
  OnRev(MOTOR_RIGHT,power);
 }
 
-void pivotRight(int power)
+void pivotLeft(int power)
 {
  OnRev(MOTOR_LEFT,power);
  OnFwd(MOTOR_RIGHT,power);
@@ -244,7 +244,6 @@ void intersection()
 void lineFollow()
 {
  STOPPED = FALSE;
- INTERSECTION = FALSE;
 
  setLightOn();
 
@@ -444,9 +443,8 @@ void movementFeedback(bool idle)
  string y = NumToStr(curY);
  string h = NumToStr(heading);
  string b = NumToStr(battery());
- string id = NumToStr(idle);
- string in = NumToStr(INTERSECTION);
- string s = StrCat(x,d,y,d,h,d,b,d,id,d,in);
+ string i = NumToStr(idle*2+INTERSECTION*8);
+ string s = StrCat(x,d,y,d,h,d,b,d,i);
  
  SendResponseString(FEEDBOX,s);
 }
@@ -464,16 +462,15 @@ task cmdPan()
  FOREVER
  {
   ReceiveMessage(PANBOX,TRUE,msg);
-  
+
   if( StrLen(msg)>0 && testCommand(msg,"pan") )
   {
-   msg = SubStr( msg, 4, StrLen(msg)-4 );
+   msg = SubStr( msg, 4, StrLen(msg) );
    
    pan( StrToNum(msg) ); // send deg
    
    p = NumToStr(curPan);
    p = StrCat("pan ",p);
-   
    SendResponseString(FEEDBOX,p);
   }
   
@@ -508,44 +505,39 @@ task cmdMovement()
   stopWheels();
   
   ReceiveMessage(MOVEBOX,TRUE,msg);
-  
+
   if(StrLen(msg)>0)
   {
   	if( testCommand(msg,"left") || testCommand(msg,"4") )
   	{
     movementFeedback(0);
   	 turnLeftLine();
-  	 movementFeedback(1);
   	}
   	else if( testCommand(msg,"right") || testCommand(msg,"6") )
   	{
     movementFeedback(0);
   	 turnRightLine();
-  	 movementFeedback(1);
   	}
   	else if( testCommand(msg,"turnaround") || testCommand(msg,"2") )
   	{
     movementFeedback(0);
     turnaroundLine();
-    movementFeedback(1);
   	}
   	else if( testCommand(msg,"calibrate") || testCommand(msg,"5") )
   	{
     movementFeedback(0);
     calibrateLine();
-    movementFeedback(1);
   	}
   	else if( testCommand(msg,"forward") || testCommand(msg,"8") )
   	{
+    INTERSECTION = FALSE;
     movementFeedback(0);
     lineFollow();
-    movementFeedback(1);
   	}
   	else if( testCommand(msg,"correct") )
   	{
     movementFeedback(0);
     lineCorrect();
-    movementFeedback(1);
   	}
   	else if( testCommand(msg,"coordinates") || testCommand(msg,"coord") )
   	{
@@ -555,6 +547,7 @@ task cmdMovement()
   	{
     PlayTone(1000,50);
   	}
+   movementFeedback(1);
   }
   
   Wait(7);
