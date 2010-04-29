@@ -32,7 +32,7 @@ class Archive():
             if not x.endswith('.flv') or len(parts) != 3:
                 continue
 
-            self.filenames.append(x)
+            self.filenames.append(settings.ARCHIVE_FEED_URLS + x)
             qos = parts[0]
             self.qos.append(qos)
             obj = parts[1]
@@ -42,16 +42,40 @@ class Archive():
             parts = x.split('.')
 
             # make sure this is a valid archive video entry
-            if not x.endswith('.flv') or len(parts) != 2:
+            if not x.endswith('.flv') or len(parts) != 3:
                 continue
 
-            thumb = parts[0]
+            thumb = parts[0] + parts[1] + '.jpg'
             self.thumb.append(thumb)
 
         for x in range(len(self.filenames)):
             self.objects_qos[self.objects[x]] = self.qos[x]
         log('Checking archive folder for files')
-    
+
+    def checkDatabase(self):
+        """
+        Grabs the information from the database and then checks if videos in
+        archive database match those in folder
+
+        NOT TESTED because I couldn't connect to the database
+        """
+        getArchives()
+        conn = db.connect()
+        cursor = conn.cursor()
+        sql = 'SELECT archives_url FROM archives'
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        for x in range(len(self.filenames)):
+            for y in results:
+                if filenames[x] == y[0]:
+                    # File is already in the database
+                    continue
+                else:
+                    # File in the folder doesn't exist on the database must add
+                    # it to the database
+                    conn = db.connect()
+                    db.addArchiveFootage(conn,filenames[x],objects[x],qos[x],thumb[x])
+
     def create_HTML(self):
         """
         Create a file that has the links and information for the current archived directory
@@ -119,5 +143,4 @@ def create_archive(conn, vfeed, obj_i):
 if __name__ == '__main__':
     ar = Archive()
     ar.get_ArchiveFeeds()
-    ar.create_HTML()
-    print(str(ar.objects_qos))
+    print(str(ar.thumb))
