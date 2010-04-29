@@ -326,6 +326,7 @@ void Controller::AddRobot(Robot* robot)
 	RobotParams* rp = new RobotParams;
 	rp->robot = robot;
 	robot->StartRunning();
+	robot->setSearchLoc(xMax / 2, yMax / 2);
 	_beginthread(RobotThread, 0, rp);
 	WaitForSingleObject(robotSemaphore_, INFINITE);
 	robots_.push_back(robot);
@@ -564,51 +565,54 @@ void Controller::RobotThread(void* params)
 
 	robot->Connect();
 
-	int outCounter = 0;
-
 	while (robot->GetRunning())
 	{
 		robot->Update();
 
 		if (robot->GetNXTConnected())
 		{
+			WaitForSingleObject(robot->GetSemaphore(), INFINITE);
+
 			try
 			{	
-				WaitForSingleObject(robot->GetSemaphore(), INFINITE);
-
 				string update = robot->GetNXT()->ReadMessage();
 
 				vector<string> tokens;
 				tokenize(update, tokens, " ");
 
-				robot->SetUpdate(atoi(tokens[0].c_str()),
-					atoi(tokens[1].c_str()),
-					atoi(tokens[2].c_str()),
-					atoi(tokens[3].c_str()),
-					atoi(tokens[4].c_str()),
-					atoi(tokens[5].c_str()));
-
-				if (outCounter > 15)
+				if (tokens[0].compare("pan") == 0)
 				{
+					robot->SetUpdatePan(atoi(tokens[1].c_str()));
+					robot->SetCameraPanning(false);
+				}
+				else
+				{
+					robot->SetUpdateMovement(atoi(tokens[0].c_str()),
+						atoi(tokens[1].c_str()),
+						atoi(tokens[2].c_str()),
+						atoi(tokens[3].c_str()),
+						atoi(tokens[4].c_str()));
+
 					cout << "Robot: " << robot->getID();
 					cout << " Loc: " << robot->getLocation()->getX() << ", " << robot->getLocation()->getY(); 
 					cout << " Status: " << robot->getStatus();
 					cout << " Heading: " << robot->getHeading();
-					cout << " Batt: " << robot->getBatt() << endl;
-					outCounter = 0;
+					cout << " Batt: " << robot->getBatt();
+					cout << " Pan: " << robot->getCamDir() << endl;
 				}
-
-				outCounter++;
 
 				robot->setRobotMoving(false);
 
-				if(!(robot->getStatus() & (INTERSECTION | IDLE | STOP)))
+				if(!(robot->getStatus() & (INTERSECTION | IDLE)))
 				{}
 				else if(robot->GetCamera()->GetTargetVisible())
 					robot->GetNXT()->SendMessage(newCmd(robot));
 				else if(*(robot->getLocation()) == *(robot->getDestination())
 					|| !robot->getHasDest())
-				{}
+				{
+					if (robot->GetCamera()->GetTargetID() != -1)
+						robot->GetNXT()->SendMessage(newCmd(robot));
+				}
 				else if(!robot->getHasPath())
 				{
 					robot->setPath(genPath(*robot));
@@ -623,8 +627,6 @@ void Controller::RobotThread(void* params)
 				{
 					robot->GetNXT()->SendMessage(newCmd(robot));
 				}
-
-				ReleaseSemaphore(robot->GetSemaphore(), 1, NULL);
 			}
 			catch (Nxt_exception& e)
 			{
@@ -636,6 +638,8 @@ void Controller::RobotThread(void* params)
 				cout << e.who() << endl;
 				*/
 			}
+
+			ReleaseSemaphore(robot->GetSemaphore(), 1, NULL);
 		}
 	}
 
@@ -785,36 +789,21 @@ vector<GridLoc*> Controller::getIllMoves()
 	return illMoves;
 }
 
-void Controller::SearchObject(int robotID, int objID, GridLoc* lastKnownLoc)
+void Controller::SearchObject(Robot* robot)
 {
-	Robot* robot = GetRobot(robotID);
-	Camera* camera = robot->GetCamera();
-
-	camera->SetTarget(objID);
-
-	//TODO: camera thread/spinning
-	//while (!(camera->GetTargetVisible()))
-	//{
-	//	//TODO: SPIN CAMERA.
-	//           //This needs to happen continuously while the robot is moving through
-	//           //the spiral search. Maybe a separate thread?
-	//}
-	if(!lastKnownLoc)
+	if(robot->getSearchLoc()->getY() == -1)
 	{
-		//this doesn't build correctly (something to do with camera)
-		SpiralSearch(robot, new GridLoc(yMax/2, xMax/2));
+		SpiralSearch(robot, new GridLoc(yMax / 2, xMax / 2));
 	}
-	else if(!camera->GetTargetVisible())
+	else if (robot->getLocation()->getX() == robot->getSearchLoc()->getX() &&
+		robot->getLocation()->getY() == robot->getSearchLoc()->getY())
 	{
-		robot->setDestination(lastKnownLoc);
-		robot->setPath(genPath(*robot));
-		robot->centerCameraOnTarget();
+		SpiralSearch(robot, robot->getLocation());
 	}
 	else
 	{
-		robot->setDestination(robot->GetObjectLocation(objID));
+		robot->setDestination(robot->getSearchLoc());
 		robot->setPath(genPath(*robot));
-		robot->centerCameraOnTarget();
 	}
 }
 
@@ -843,8 +832,7 @@ void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 
 	int countSpirals = 1;
 
-	while(!(robot->GetCamera()->GetTargetVisible()) && 
-		(countSpirals < xMax/2 && countSpirals < yMax/2))
+	while(countSpirals < xMax/2 && countSpirals < yMax/2)
 	{
 		for (int countTurns = 0; countTurns < 2; countTurns++) 
 		{
@@ -885,21 +873,24 @@ string Controller::newCmd(Robot* rob)
 		{
 			cmd = "left";
 			cout << "left-turn-tracking" << endl;
+			rob->ExecuteCommand("pan 90");
 		}
 		else if(rob->getCamDir() <= 225 && rob->getCamDir() > 135)
 		{
 			cmd = "turnaround";
 			cout << "turnaround-tracking" << endl;
+			rob->ExecuteCommand("pan 180");
 		}
 		else if(rob->getCamDir() <= 315 && rob->getCamDir() > 225)
 		{
 			cmd = "right";
 			cout << "right-turn-tracking" << endl;
+			rob->ExecuteCommand("pan -90");
 		}
 	}
 	else if(!rob->getHasPath())
 	{
-		SearchObject(rob->GetID(), rob->GetCamera()->GetTargetID(), rob->getSearchLoc());
+		SearchObject(rob);
 		return cmd;
 	}
 	else if(rob->getLocation()->getX() < rob->getPath()->getStart()->getX())

@@ -113,8 +113,8 @@ public:
 	void Update();
 
 private:
-	static const int MIN_SIZE = 5;
-	static const int MAX_SIZE = 400;
+	static const int MIN_SIZE = 10;
+	static const int MAX_SIZE = 300;
 	static const int CENTERED_EPSILON = 15;
 	
 	float scanInterval_;

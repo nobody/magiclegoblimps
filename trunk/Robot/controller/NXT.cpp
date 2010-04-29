@@ -31,6 +31,7 @@ bool NXT::Connect()
 
 void NXT::Disconnect()
 {
+	//exception here
 	StopPrograms();
 
 	connection_->disconnect();

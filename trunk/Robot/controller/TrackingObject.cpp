@@ -65,6 +65,7 @@ int TrackingObject::CenterDistanceToDegrees(int width, bool cam)
 
 	centered = -centered;
 
+	//epsilon
 	if (abs(centered) > 0.15f)
 	{
 		if (cam == true)

@@ -12,18 +12,23 @@ Robot::Robot(int port, string ip, bool dLink)
 	robotOnline_ = false;
 	robotActive_ = false;
 	robotMoving_ = false;
+
 	hasPath = false;
 	hasDest = false;
+
+	cameraPanning_ = false;
 
 	batteryLevel_ = 0;
 	status_ = 0;
 
 	loc = new GridLoc();
 	dest = new GridLoc();
-	searchLoc = new GridLoc();
+	searchLoc = new GridLoc(0, -1);
 
 	robotHeading_ = NORTH;
 	cameraDirection_ = 0;
+
+	panTime_ = 1;
 
 	updateSemaphore_ = CreateSemaphore(NULL, 1, 1, NULL);
 	
@@ -165,13 +170,16 @@ void Robot::ExecuteCommand(string command)
 	if (tokens.size() == 0)
 		return;
 	
+	//catch NXT dead exception
+
+	WaitForSingleObject(updateSemaphore_, INFINITE);
+	
 	if (tokens[0].compare("target") == 0)
 	{
 		int id = atoi(tokens[1].c_str());
 
 		if (tokens.size() > 2)
 		{
-			//do what you need to with these
 			int startX = atoi(tokens[2].c_str());
 			int startY = atoi(tokens[3].c_str());
 
@@ -183,7 +191,11 @@ void Robot::ExecuteCommand(string command)
 	}
 	else if (tokens[0].compare("pan") == 0 || tokens[0].compare("pid") == 0)
 	{
-		nxt_->SendMessage(command, 3);
+		if (!cameraPanning_)
+		{
+			cameraPanning_ = true;
+			nxt_->SendMessage(command, 3);
+		}
 	}
 	else
 	{
@@ -202,9 +214,11 @@ void Robot::ExecuteCommand(string command)
 
 		nxt_->SendMessage(command);
 	}
+
+	ReleaseSemaphore(updateSemaphore_, 1, NULL);
 }
 
-void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, int status)
+void Robot::SetUpdateMovement(int x, int y, int heading, int battery, int status)
 {
 	loc->setX(x);
 	loc->setY(y);
@@ -217,52 +231,22 @@ void Robot::SetUpdate(int x, int y, int heading, int pan, int battery, int statu
 	else if (heading == 3)
 		robotHeading_ = WEST;
 	
-	cameraDirection_ = pan;
 	batteryLevel_ = battery;
 	status_ = status;
+}
 
-	//status
-	//======
-	//idle 1
-	//destination 2
-	//line follow 4
-	//intersection 8
-	//turn left 16
-	//turn right 32
-	//turnaround 64
-	//sonar block 128
-	//calibrate 256
-	//pan 512
-	//stop 1024
-
-	//example
-	if (status_ & 1)
-		cout << "Idle ";
-	if (status_ & 2)
-		cout << "Dest" << endl;
-	if (status_ & 4)
-		cout << "Lf" << endl;
-	if (status_ & 8)
-		cout << "intersec" << endl;
-	if (status_ & 16)
-		cout << "left" << endl;
-	if (status_ & 32)
-		cout << "right" << endl;
-	if (status_ & 64)
-		cout << "uturn" << endl;
-	if (status_ & 128)
-		cout << "Sonar Block" << endl;
-	if (status_ & 256)
-		cout << "calib" << endl;
-	if (status_ & 512)
-		cout << "pan" << endl;
-	if (status_ & 1024)
-		cout << "stop" << endl;
+void Robot::SetUpdatePan(int pan)
+{
+	cameraDirection_ = pan;
 }
 
 void Robot::Update()
 {
-	WaitForSingleObject(updateSemaphore_, INFINITE);
+	time_t seconds = time(NULL);
+	float interval = (float)seconds - lastTime_;
+	lastTime_ = seconds;
+
+	timer_ += interval;
 
 	camera_->Update();
 
@@ -276,8 +260,6 @@ void Robot::Update()
 		else 
 			ExecuteCommand("pan 1");
 	}
-
-	ReleaseSemaphore(updateSemaphore_, 1, NULL);
 }
 
 void Robot::centerCameraOnTarget()
@@ -295,13 +277,20 @@ void Robot::centerCameraOnTarget()
 			break;
 
 		if(camera_->GetTargetID() == (*voIter)->GetID())
-			d = (*voIter)->CenterDistanceToDegrees(width, cam) / 7;
+			d = (*voIter)->CenterDistanceToDegrees(width, cam);
 	}
 
+	if (d > 0)
+		ExecuteCommand("pan 2");
+	else if (d < 0)
+		ExecuteCommand("pan -2");
+
+	/*
 	stringstream oss;
 	oss << "pan " << d;
 	cmd = oss.str();
 	ExecuteCommand(cmd);
+	*/
 }
 
 string Robot::newCmd()
@@ -478,4 +467,10 @@ void Robot::updateLocation()
 		hasPath = false;
 		hasDest = false;
 	}
+}
+
+void Robot::setSearchLoc(int x, int y)
+{
+	searchLoc->setX(x);
+	searchLoc->setY(y);
 }
