@@ -150,13 +150,30 @@ The last component of our system involves writing information about the live str
 = Interfaces ===================================================================
 
 Input:
-Communicating with QoS server
- -- simpler than originally planned
- -- one-way communication
- -- keep running regardless of 
+
+The QoS server communicates with the video delivery server using a server push protocal. Whenever the QoS server has new information to share with the video delivery server, it sends the video server a message with the new information. This could be the addition or removal of camera feeds as well as updates to the visible objects and QoS values in a camera feed. All messages follow a similar format:
+
+    <timestamp>\n
+    \n
+    [feeds]
+
+where feeds is one of
+<camera id>;<camera url>;[objects/QoS values]\n
+DELETE <camera id>;<camera url>;\n
+
+<timestamp> is a string in the form 'DD-Mon-YY HH:MM:SS'
+<camera id> is an integer key for the camera
+<camera url> is the URL for the raw camera feed
+[objects\QoS values] is an optional list of [object id];[QoS value]; pairs for visible objects where [object id] is an integer and [QoS value] is a floating point number.
+
+If a feed starts with the DELETE keyword, that means we should stop streaming that camera feed. Otherwise, it is either an add or update command. If we are already streaming the camera feed, we assume it just contains an update to the objects and QoS values in the camera's view. If we are not streaming that camera's feed, we assume it is a new camera added to the system. The feeds section may consist of zero or more such feed statements, and the different types of feed statements (add/update/delete) may be mixed in any order.
+
+If any invalid messages are received from the QoS server that are not in this format, we simply discard them and wait for the next message to arrive. Invalid messages do not affect the state of the QoS server.
+
 
 Output:
-Publish URLs to client database
+
+The video delivery server publishes URLs for live streams to the Camera? table in the client group's database, and the URLs for archive videos in the Archive? table in the client group's database.
 
 = Testing ======================================================================
 
@@ -166,21 +183,28 @@ One goal for testing was to be able to test the video delivery server independen
 
 Another goal was to be able to test our server with or without cameras connected to the network. Since we are using a third-party component to do the actual video encoding and streaming, we needed to be able to distinguish between errors in our code and errors in the third-party software. To do this we have a debug mode that does not actually launch
 
-Testing without actual video feeds/server connections.
- -- either skip or use dummy procs
- -- actual parameters for FFserver/FFmpeg determined outside of the program then included in the program
+Testing without actual video feeds/server connections
+
+For testing without video feeds, we replaced launching FFserver/FFmpeg processes with launching dummy processes which were programs that ran but didn't do anything. This occurs when the DEBUG setting in settings.py is set to True. When we have camera feeds available, we simply go back to using the FFserver/FFmpeg processes. The arguments given to these programs are first determined independently of our program, so they are expected to work when included in our program. The processes are called in an identical, so the choice of whether to use the actual programs or dummy programs depends only on the DEBUG setting. For capturing archive clips and thumbnails, we just skip the process creation entirely when DEBUG is set to True. Dummy processes are useful because we can run the Unix `ps` command to check to see that the processes were actually launched and running.
 
 Unit tests for each module
-We are working on writing unit tests for each module with the goal of achieveing as close to 100% code coverage as possible. An obvious reason is to verify that each of our code modules works correctly (at least for the test cases given). Another less obvious reason, is because Python is a dynamic language, we don't want to run into a situation where we are depending to perform an operation on an unsupported type or attempting to use an unbound variable (possibly because of a misspelling of the variable name) because that line has not yet been executed.
+
+We are working on writing unit tests for each module with the goal of achieveing as close to 100% code coverage as possible. An obvious reason is to verify that each of our code modules works correctly (at least for the test cases given). Another less obvious reason, is because Python is a dynamic language, we don't want to run into a situation where we are depending to perform an operation on an unsupported type or attempting to use an unbound variable, which would raise a ValueError (possibly because of a misspelling of the variable name) because that line has not yet been executed.
 
 Server simulator
- -- Sends data in same format, but at a uniform rate
- -- Can turn server on and off to simulate dropped connections (video delivery server should keep running)
- -- Can tests for conformance to the protocol
- -- Uses test scripts (plain text), so you can create repeatable tests for different scenarios
- -- If you have cameras running you can use their IP addresses in the tests scripts and the server will stream actual video
+
+The server simulator is a separate process that our program can connect via a socket in an identical manner to the actual QoS server. The server simulator then sends messages to our video delivery server at a constant rate (e.g. one message per second). The messages are specified in a test script stored in the Server/VideoDelivery/tests/ directory. The server simulator reads this script and prepends a timestamp to each message and sends it to the video delivery server in an identical format to those messages sent by the actual QoS server. The log and transcript file for the video delivery can then be examined to determine if the video delivery server responded appropriately to each messages. When the server simulator reaches the end of a test script it shuts down. The video delivery should remain running and reconnect if the server simulator is run again. This allows us to test that the video delivery server responds appropriately to lost connections and also allows us to run multiple tests sequentially without the need to restart the video delivery server each time.
+
+Testing in this manner has several advantages:
+
+1) It decouples the tests from the actual running of the tests by using test scripts. This allows us to write new and diverse test cases that do not require us to modify the server simulator's code.
+
+2) If we have camera feeds available, we can use a test script that includes the actual URLs of those camera feeds and the video delivery server will transcode and stream the video from these cameras.
+
+3) We can create malformed messages to make sure the video delivery server recovers appropriately from unexpected input.
+
 
 = Performance ==================================================================
 
-[TODO] We should do some more testing before the next demo
+[TODO] We should do some more testing before the next demo, and try and take some quantifiable measurements.
  
