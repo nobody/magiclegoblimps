@@ -22,7 +22,7 @@ Note this guide is written and intended for use by programmers/system administra
 
 
 = Hardware requirements =======================================================
- - As much RAM, CPU, and Bandwidth as you can get.
+ - As much RAM, CPU, and Bandwidth as you can get :)
 
 
 
@@ -132,6 +132,7 @@ You can view the logs to verify everything is working correctly or to diagnose a
 = Design =======================================================================
 
 We thought this would be an easy part of the project. We assumed we could find and configure an acceptable open source video server and then move on to other parts of the project. This assumption turned out to be wrong. We required a video server that supported live streaming of Adobe's Flash video format (FLV). Unfortunately, many open source servers did not support this. We found two open source products and two commercial products that claimed to support live FLV streaming. We ruled out the commercial products because they were prohibitively expensive, so that left us with the Red5 media server and FFserver, which is part of the FFmpeg package for video encoding and editing. There were no install instructions for Red5 and no documentation for how to configure and run it either. We managed to get it installed and playing something, but it depended on every Java library known to man and we had no idea where to even begin configuring. After much trial and error with FFserver, we finally managed to modify a sample FFserver config file to produce take a camera feed as input and produce an FLV stream as output.
+
 Once we figured out the FFserver was able to produce an FLV stream from the camera feed as input we had to figure out how this would work for multiple feeds and make sure that this can all be done dynamically. It turns out that in order for us to use FFserver we would have to spawn many process of FFmpeg(this is what does the actual encoding) and FFserver(this is what does the streaming of the encoded video). This means that we would need someway to manage all of the processes so that they spawn accordingly and also killed themselves to make sure a mess of processes isn't left behind. We used knew that python had an easy way of keeping track of these processes and thus decided that it would be benefical to use it. The only other task to tackle was the saving of archived footage in order to show footage in times when the live feed was not on. FFmpeg could encode the video and output it to a stream like we were using or output this to a file which is perfect for achieving. With all of these things taken care of we designed our project in python using the open source FFmpeg and FFserver. 
 
 Since FFserver was the only piece of software we could actually get to stream video, we decided to use it. However, we had to work around some serious shortcomings. Mainly, FFserver can only be statically configured. Any changes, such as adding a new camera feed or removing an existing camera feed, required us to stop the server, modify the config file, then start the server again. Since extensibility was a requirement for this project, this was not acceptable. 
@@ -146,17 +147,40 @@ Anyways, since we were already receiving information about the camera feeds from
 
 The last component of our system involves writing information about the live stream URLs and the archive clip and thumbnail URLs to the client group's MySQL databse. This would allow the client group to actually show the video to the system's end users. This was easy to add to our system since we already had the required information we needed to save to the database.
 
-= Implementation ===============================================================
+= Interfaces ===================================================================
 
-[TODO]
+Input:
+Communicating with QoS server
+ -- simpler than originally planned
+ -- one-way communication
+ -- keep running regardless of 
+
+Output:
+Publish URLs to client database
 
 = Testing ======================================================================
 
-[TODO]
+Goals for testing
+
+One goal for testing was to be able to test the video delivery server independently of the other groups' servers. We needed a way to ensure that our code functioned properly so that we could be reasonably confident that it will work when connected to other parts of the system. To do this, we created a simulator for the QoS server, which is where we receive our input.
+
+Another goal was to be able to test our server with or without cameras connected to the network. Since we are using a third-party component to do the actual video encoding and streaming, we needed to be able to distinguish between errors in our code and errors in the third-party software. To do this we have a debug mode that does not actually launch
 
 Testing without actual video feeds/server connections.
+ -- either skip or use dummy procs
+ -- actual parameters for FFserver/FFmpeg determined outside of the program then included in the program
 
-Unit tests for each module.
+Unit tests for each module
+We are working on writing unit tests for each module with the goal of achieveing as close to 100% code coverage as possible. An obvious reason is to verify that each of our code modules works correctly (at least for the test cases given). Another less obvious reason, is because Python is a dynamic language, we don't want to run into a situation where we are depending to perform an operation on an unsupported type or attempting to use an unbound variable (possibly because of a misspelling of the variable name) because that line has not yet been executed.
 
-Server simulator.
+Server simulator
+ -- Sends data in same format, but at a uniform rate
+ -- Can turn server on and off to simulate dropped connections (video delivery server should keep running)
+ -- Can tests for conformance to the protocol
+ -- Uses test scripts (plain text), so you can create repeatable tests for different scenarios
+ -- If you have cameras running you can use their IP addresses in the tests scripts and the server will stream actual video
+
+= Performance ==================================================================
+
+[TODO] We should do some more testing before the next demo
  
