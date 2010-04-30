@@ -6,6 +6,8 @@ import ffserver
 import settings
 from logger import log
 import db
+import subprocess
+import VidFeed
 
 class Archive():
 
@@ -113,34 +115,43 @@ class Archive():
         except MySQL.Error as e:
             log("Error %d: %s" % (e.args[0], e.args[1]))
 
-def create_archive(conn, vfeed, obj_i):
+def create_archive(vfeed, obj_i):
     """
-    Creates and archive video and screen shot for the given VidFeed object. If
-    an archive is currently being captured for this object, then this method
-    does nothing to avoid creating duplicate or really similar archive videos.
-    In case multiple archives exist in the given VidFeed, obj_i specifies which
-    object we are interested in archiving.
+    Launches the archiveproc.py program that handles creating archives or
+    cleanup up failed attempts to creat archives. This function will not
+    archive a feed if it is already being archived.
     """
-    # Crude test to see if we're already archiving video for this object
-    if vfeed.last_archived is not None:
-        timediff = datetime.now() - vfeed.last_archived
-        if timediff.seconds < settings.ARCHIVE_DURATION:
+    # check to see if this feed is currently being archived
+    if vfeed.archive_proc is not None:
+        vfeed.archive_proc.poll()
+        if vfeed.archive_proc.returncode is None:
+            log('refused archive (already archiving) for ' + str(vfeed))
             return
+        else:
+            # done archiving
+            log('archiveproc returned {0} for {1}'.format(
+                    str(vfeed.archive_proc.returncode),
+                    str(vfeed)))
+            vfeed.archive_proc = None
 
-    # create the archives
-    vfeed.last_archived = datetime.now()
-    obj_to_archive = vfeed.objects[obj_i]
-    vfname = ffserver.capture_archive(vfeed, obj_to_archive[0],
-                                     obj_to_archive[1])
-    ssfname = ffserver.capture_screenshot(vfeed, vfname)
+    # everything's ok, let's create an archive clip
+    args = ['python',
+            settings.ARCHIVE_PROC_NAME,
+            vfeed.feed_url,
+            str(vfeed.objects[obj_i][0]), # object id
+            str(vfeed.objects[obj_i][1])] # object qos
 
-    # update client database
-    vfurl = settings.ARCHIVE_FEED_URLS + vfname
-    ssfurl = settings.ARCHIVE_FEED_URLS + ssfname
-    db.addArchiveFootage(conn, vfurl, vfeed.objects[obj_i][0],
-                         vfeed.objects[obj_i][1], ssfurl)
+    log('starting archive proc for ' + str(vfeed))
+    vfeed.archive_proc = subprocess.Popen(args, stdin=subprocess.PIPE,
+                                          stdout=subprocess.PIPE,
+                                          stderr=subprocess.PIPE)
 
 if __name__ == '__main__':
-    ar = Archive()
-    ar.get_ArchiveFeeds()
-    print(str(ar.thumb))
+    # ar = Archive()
+    # ar.get_ArchiveFeeds()
+    # print(str(ar.thumb))
+    
+    vf = VidFeed.VidFeed()
+    vf.feed_url = 'http://archive-test/video.mjpeg'
+    vf.objects = [(-1, 0.01), (-2, 0.02)]
+    create_archive(vf, 1)

@@ -20,43 +20,49 @@ def update_database(vid_fname, thumb_fname, object_id, object_qos):
     Update the client group's database.
     """
     conn = db.connect()
-    vfurl = settings.ARCHIVE_FEED_URLS + vfname
+    vfurl = settings.ARCHIVE_FEED_URLS + vid_fname
     ssfurl = 'NULL'
     if thumb_fname is not None:
-        ssfurl = settings.ARCHIVE_FEED_URLS + ssfname
+        ssfurl = settings.ARCHIVE_FEED_URLS + thumb_fname
     db.addArchiveFootage(conn, vfurl, object_id, object_qos, ssfurl)
     db.close(conn)
     
 def create_archive(feed_url, object_id, object_qos):
     """
-    Creates and archive video and screen shot for the given VidFeed object. If
-    an archive is currently being captured for this object, then this method
-    does nothing to avoid creating duplicate or really similar archive videos.
-    In case multiple archives exist in the given VidFeed, obj_i specifies which
-    object we are interested in archiving.
+    Creates and archive video and screen shot for the given VidFeed object and
+    waits for the archive to complete before updating the database.
     """
-    # Crude test to see if we're already archiving video for this object
-    if last_archived is not None:
-        timediff = datetime.now() - last_archived
-        if timediff.seconds < settings.ARCHIVE_DURATION:
-            return
-
     # create the archives
-    # TODO: get vfeed parameters w/o vfeed object
-    (vfname, vidproc) = ffserver.capture_archive(feed_url, object_id, object_qos)
+    (vfname, vidproc) = ffserver.capture_archive(feed_url, object_id,
+                                                 object_qos)
     (ssfname, thumbproc) = ffserver.capture_screenshot(feed_url, vfname)
 
     vidproc.wait()
     thumbproc.wait()
 
-    if vidproc.returncode != 0 and thumbproc.returncode == 0:
-        pass
-        # TODO: delete thumbnail file
-    elif vidproc.returncode == 0 and thumbproc.returncode != 0: 
+    if vidproc.returncode != 0 and thumbproc.returncode != 0:
+        log('archiving and thumbnail failed for feed: ' + feed_url)
+    elif vidproc.returncode != 0 and thumbproc.returncode == 0:
+        log('archiving failed for feed: ' + feed_url)
+        pass # TODO: delete thumbnail file
+    elif vidproc.returncode == 0 and thumbproc.returncode != 0:
+        # video feed ok, but no thumbnail failed
+        log('create archive clip, but could not create thumbnail for feed: '
+            + feed_url)
         update_database(vfname, None, object_id, object_qos)
     else:
+        log('archive completed successfully for feed: ' + feed_url)
         update_database(vfname, ssfname, object_id, object_qos)
+
+def get_datetime(timestamp):
+    return datetime.strptime(timestamp, '%Y-%b-%d %H:%M:%S')
 
 if __name__ == '__main__':
     args = sys.argv
-    create_archive() #TODO: update args to night require a VidFeed object
+    if len(args) != 4:
+        log('usage: python archiveproc.py video_url obj_id obj_qos')
+        exit(1)
+    feed_url = args[1]
+    object_id = args[2]
+    object_qos = args[3]
+    create_archive(feed_url, object_id, object_qos)

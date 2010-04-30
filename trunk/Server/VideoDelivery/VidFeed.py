@@ -23,6 +23,7 @@ class VidFeed():
         self.ffmpeg_proc = None
 
         self.last_archived = None # timestamp for start of last archive
+        self.archive_proc = None
 
         if not vfeed is None:
             self.feed_url = vfeed.feed_url

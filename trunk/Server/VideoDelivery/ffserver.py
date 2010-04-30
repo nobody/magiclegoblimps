@@ -59,7 +59,7 @@ def get_full_path(arch_fname):
     """
     return settings.ARCHIVE_DIR + '/' + arch_fname
 
-def capture_archive(vfeed, object_id, qos):
+def capture_archive(feed_url, object_id, qos):
     """
     Saves 30 seconds of the given feed to the archives directory.
     Returns the filename for the archive file.
@@ -67,33 +67,34 @@ def capture_archive(vfeed, object_id, qos):
     # ffmpeg -f mjpeg -i http://10.176.14.66/video.cgi -t 30 -f flv clip.flv
     archive_file = '{0}-{1}-{2}.flv'.format(
         str(qos), str(object_id), str(int(time())))
+    proc = None
     if not settings.DEBUG:
-        subprocess.Popen(
-            ['ffmpeg', '-f', 'mjpeg', '-i', vfeed.feed_url,
-             '-t', str(settings.ARCHIVE_DURATION), '-f', 'flv',
-             get_full_path(archive_file)],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE)
-    vfeed.last_archived = datetime.now()
-    log('archiving feed: {0}, object:{1}, qos: {2}'.format(
-        vfeed.feed_url, str(object_id), str(qos)))
-    return archive_file
+        proc = subprocess.Popen(
+                    ['ffmpeg', '-f', 'mjpeg', '-i', feed_url,
+                     '-t', str(settings.ARCHIVE_DURATION), '-f', 'flv',
+                     get_full_path(archive_file)],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE)
+    log('attempting to archive feed: {0}, object:{1}, qos: {2}'.format(
+        feed_url, str(object_id), str(qos)))
+    return (archive_file, proc)
 
-def capture_screenshot(vfeed, arch_video_url):
+def capture_screenshot(feed_url, arch_video_url):
     """
     Creates a screenshot for the specified feed.
     Returns the filename for the screenshot.
     """
     screenshot_file = arch_video_url.replace('.flv', '.jpg')
+    proc = None
     if not settings.DEBUG:
-        subprocess.Popen(
-            ['ffmpeg', '-f', 'mjpeg', '-i', vfeed.feed_url,
-             '-f', 'image2', '-t', '0.001', '-s',
-             settings.ARCHIVE_THUMB_SIZE, get_full_path(screenshot_file)],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE)
-    log('took screenshot for feed: ' + screenshot_file)
-    return screenshot_file
+        proc = subprocess.Popen(
+                ['ffmpeg', '-f', 'mjpeg', '-i', feed_url,
+                 '-f', 'image2', '-t', '0.001', '-s',
+                 settings.ARCHIVE_THUMB_SIZE, get_full_path(screenshot_file)],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE)
+    log('attempting to take screenshot for feed: ' + screenshot_file)
+    return (screenshot_file, proc)
 
 def dummy_launch(vfeed):
     """
