@@ -34,7 +34,7 @@ class Archive():
             if not x.endswith('.flv') or len(parts) != 3:
                 continue
 
-            self.filenames.append(settings.ARCHIVE_FEED_URLS + x)
+            self.filenames.append(x)
             qos = parts[0]
             self.qos.append(qos)
             obj = parts[1]
@@ -47,7 +47,7 @@ class Archive():
             if not x.endswith('.flv') or len(parts) != 3:
                 continue
 
-            thumb = parts[0] + parts[1] + '.jpg'
+            thumb = parts[0] + parts[1]
             self.thumb.append(thumb)
 
         for x in range(len(self.filenames)):
@@ -108,9 +108,9 @@ class Archive():
                     # Archive is currently there no need to add
                 else:
                     # Archive is not there need to update database
-                    db.addArchiveFootage(conn,settings.ARCHIVE_FEED_URL+self.filenames[x],
+                    db.addArchiveFootage(conn,settings.ARCHIVE_FEED_URLS+self.filenames[x],
                                         self.objects[x],self.qos[x],
-                                        settings.ARCHIVE_FEED_URL+'images/'+self.thumb[x]+'.jpg')
+                                        settings.ARCHIVE_FEED_URLS+'images/'+self.thumb[x]+'.jpg')
             log('Updated the Client database with Archived Videos')
         except MySQL.Error as e:
             log("Error %d: %s" % (e.args[0], e.args[1]))
