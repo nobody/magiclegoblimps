@@ -185,6 +185,8 @@ class VidControl():
         log('Killing feed in_url:{0}, out_url:{1}'.format(
                 vfeed.feed_url, vfeed.stream_url, vfeed.config_file))
         ffserver.kill(vfeed)
+        if vfeed.archive_proc is not None:
+            vfeed.archive_proc.wait()
         os.remove(vfeed.config_file)
         self.feeds.remove(vfeed)
 
@@ -203,7 +205,7 @@ class VidControl():
         for vf in self.feeds:
             for i in range(len(vf.objects)):
                 if vf.objects[i][1] > settings.ARCHIVE_QOS_THRESHOLD:
-                    archives.create_archive(self.conn, vf, i)
+                    archives.create_archive(vf, i)
                     break # archive max. of 1 object per feed at a given time
 
     def runserver(self):

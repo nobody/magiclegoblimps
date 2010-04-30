@@ -3,7 +3,7 @@ Application settings for the video delivery server controller.
 """
 
 # General settings
-DEBUG = True
+DEBUG = False
 LOGFILE = 'logs/vidserver.log'
 TRANSCRIPT_FILE = 'logs/transcript.log'
 ROOT_DIR = [
@@ -28,6 +28,7 @@ FEEDER_URLS = 'http://localhost:{0}/{1}.ffm'
 LIVE_FEED_URLS = 'http://{0}:{1}/{2}.flv' # domain, port, filename
 
 # archive settings
+ARCHIVE_PROC_NAME = './archiveproc.py' # path to archive program
 ARCHIVE_FEED_URLS = 'http://'+CURRENT_IP+'/archives/' # domain, filename
 ARCHIVE_CSV_FILE = '/var/www/mlb/archive-feeds.csv'
 ARCHIVE_HTML = './archives/index.html'
