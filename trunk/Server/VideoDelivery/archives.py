@@ -9,6 +9,7 @@ from logger import log
 import db
 import subprocess
 import VidFeed
+import MySQLdb
 
 class Archive():
 
@@ -48,36 +49,33 @@ class Archive():
             if not x.endswith('.flv') or len(parts) != 3:
                 continue
 
-            thumb = parts[0] + parts[1]
+            thumb = parts[0] + '.' + parts[1]
             self.thumb.append(thumb)
 
         for x in range(len(self.filenames)):
             self.objects_qos[self.objects[x]] = self.qos[x]
         log('Checking archive folder for files')
 
-    def checkDatabase(self):
+    def checkDatabase(self,conn,filename):
         """
         Grabs the information from the database and then checks if videos in
         archive database match those in folder
-
-        NOT TESTED because I couldn't connect to the database
         """
-        getArchives()
-        conn = db.connect()
-        cursor = conn.cursor()
-        sql = 'SELECT archives_url FROM archives'
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        for x in range(len(self.filenames)):
+        try:
+            cursor = conn.cursor()
+            sql = 'SELECT archives_url FROM archives'
+            cursor.execute(sql)
+            results = cursor.fetchall()
             for y in results:
-                if filenames[x] == y[0]:
+                if settings.ARCHIVE_FEED_URLS+filename == y[0]:
                     # File is already in the database
-                    continue
+                    return False
                 else:
                     # File in the folder doesn't exist on the database must add
                     # it to the database
-                    conn = db.connect()
-                    db.addArchiveFootage(conn,filenames[x],objects[x],qos[x],thumb[x])
+                    return True
+        except MySQLdb.Error as e:
+            log("Error %d: %s" % (e.args[0], e.args[1]))
 
     def create_HTML(self):
         """
@@ -96,15 +94,16 @@ class Archive():
             f.write('</html>\n')
         log('Created HTML page with latest archives')
 
-    def updateInital(self):
+    def updateInital(self,conn):
         """
         -update the SQL database, with the current information
         -using there stored procedure
         """
+        self.get_ArchiveFeeds()
         try:
-            conn = db.connect()
+            db.deleteTable(conn,'archives')
             for x in range(len(self.filenames)):
-                if checkArchive(conn,settings.ARCHIVE_FEED_URL+self.filenames[x]):
+                if self.checkDatabase(conn,self.filenames[x]):
                     pass
                     # Archive is currently there no need to add
                 else:
@@ -113,7 +112,7 @@ class Archive():
                                         self.objects[x],self.qos[x],
                                         settings.ARCHIVE_FEED_URLS+'images/'+self.thumb[x]+'.jpg')
             log('Updated the Client database with Archived Videos')
-        except MySQL.Error as e:
+        except MySQLdb.Error as e:
             log("Error %d: %s" % (e.args[0], e.args[1]))
 
 def create_archive(vfeed, obj_i):
@@ -159,9 +158,9 @@ def cancel_archive(vfeed):
                 str(vfeed), str(vfeed.archive_proc.returncode)))
 
 if __name__ == '__main__':
-    # ar = Archive()
-    # ar.get_ArchiveFeeds()
-    # print(str(ar.thumb))
+    ar = Archive()
+    conn = db.connect()
+    ar.updateInital(conn)
     
     vf = VidFeed.VidFeed()
     vf.feed_url = 'http://archive-test/video.mjpeg'

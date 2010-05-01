@@ -89,6 +89,19 @@ def displayTable(conn,tableName):
     except MySQLdb.Error as e:
         log("Error %d: %s" % (e.args[0], e.args[1]))
 
+def deleteTable(conn,tableName):
+    """
+    Display a table
+    """
+    try:
+        cursor = conn.cursor()
+        sql = 'DELETE FROM '+tableName
+        cursor.execute(sql)
+        cursor.close()
+    except MySQLdb.Error as e:
+        log("Error %d: %s" % (e.args[0], e.args[1]))
+
+
 def checkArchive(conn,archiveUrl):
     """
     Checks if there is already a object with the given information
