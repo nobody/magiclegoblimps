@@ -158,9 +158,9 @@ def cancel_archive(vfeed):
                 str(vfeed), str(vfeed.archive_proc.returncode)))
 
 if __name__ == '__main__':
-    ar = Archive()
-    conn = db.connect()
-    ar.updateInital(conn)
+    # ar = Archive()
+    # conn = db.connect()
+    # ar.updateInital(conn)
     
     vf = VidFeed.VidFeed()
     vf.feed_url = 'http://archive-test/video.mjpeg'

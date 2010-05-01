@@ -64,6 +64,7 @@ def capture_archive(feed_url, object_id, qos):
     Saves 30 seconds of the given feed to the archives directory.
     Returns the filename for the archive file.
     """
+    # def capture_archvie(feed_url, object_id, qos)
     # ffmpeg -f mjpeg -i http://10.176.14.66/video.cgi -t 30 -f flv clip.flv
     archive_file = '{0}-{1}-{2}.flv'.format(
         str(qos), str(object_id), str(int(time())))
@@ -84,6 +85,7 @@ def capture_screenshot(feed_url, arch_video_url):
     Creates a screenshot for the specified feed.
     Returns the filename for the screenshot.
     """
+    # def capture_screenshot(feed_url, arch_video_url):
     screenshot_file = arch_video_url.replace('.flv', '.jpg')
     proc = None
     if not settings.DEBUG:
