@@ -28,7 +28,7 @@ def close(conn):
         conn.close()
         log('Closed connection to Database')
     except MySQLdb.Error as e:
-        log("Error %d: %s" % (e.args[0], e.args[1]))
+        log('mysql error ' + str(e))
 
 def addCameraFeed(conn,cameraId,cameraFeed):
     """

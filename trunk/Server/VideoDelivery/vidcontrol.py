@@ -7,6 +7,7 @@ feed and QoS status.
 """
 from __future__ import print_function, with_statement
 import os
+import signal
 import time
 import socket
 import sys
@@ -19,6 +20,14 @@ import qosupdate
 from VidFeed import VidFeed
 import archives
 import db
+
+active_video_controller = None
+
+def sigterm_handler(signum, stack_frame):
+    if active_video_controller is not None:
+        active_video_controller.killserver()
+    log('R.I.P.')
+    exit(signum)
 
 class VidControl():
     """
@@ -269,10 +278,12 @@ def change_working_directory():
             break
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, sigterm_handler)
     change_working_directory()
     clearlogs()
     try:
         vc = VidControl()
+        active_video_controller = vc
         vc.runserver()
     except Exception as ex:
         log('Fatal error: ' + str(ex))
