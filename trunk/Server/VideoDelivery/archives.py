@@ -63,7 +63,7 @@ class Archive():
         """
         try:
             cursor = conn.cursor()
-            sql = 'SELECT archives_url FROM archives'
+            sql = 'SELECT archive_url FROM archives'
             cursor.execute(sql)
             results = cursor.fetchall()
             for y in results:
