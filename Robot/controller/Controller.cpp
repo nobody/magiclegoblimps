@@ -809,8 +809,8 @@ void Controller::SearchObject(Robot* robot)
 
 void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 {
-	robot->setDestination(loc);
-	robot->setPath(genPath(*robot));
+	//robot->setDestination(loc);
+	//robot->setPath(genPath(*robot));
 
 	int x = loc->getX();
 	int y = loc->getY();
@@ -838,18 +838,22 @@ void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 		{
 			if (dir == 1) 
 			{
+				for(int i = x; i < x + xdir*countSpirals; i++)
+					robot->getPath()->extend(new GridLoc(i, y));
 				x += xdir*countSpirals;
 				xdir *= -1;
-				loc->setX(x);
-				Path* p = robot->getPath();
-				p->extend(loc);
+				//loc->setX(x);
+				//Path* p = robot->getPath();
+				//p->extend(loc);
 			}
 			else {
+				for(int i = y; i < y + ydir*countSpirals; i++)
+					robot->getPath()->extend(new GridLoc(x, i));
 				y += ydir*countSpirals;
 				ydir *= -1;
-				loc->setY(y);
-				Path* p = robot->getPath();
-				p->extend(loc);
+				//loc->setY(y);
+				//Path* p = robot->getPath();
+				//p->extend(loc);
 			}			
 			dir *= -1; //change heading
 		}		
