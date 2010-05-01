@@ -21,7 +21,7 @@ class Object {
         Object(int id, std::string name, char* color, int colorsize, char* box, int boxsize)
             : objID_(id), name_(name), colorsize_(colorsize), boxsize_(boxsize)
         {
-            pos = Point(0,0);
+            pos = Point(-1,-1);
             color_ = new char[colorsize];
             viewedFrom = NULL;
             while(colorsize){
