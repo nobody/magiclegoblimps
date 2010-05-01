@@ -1,3 +1,4 @@
+#!/usr/bin/python2.6
 """
 This is a program that spawns an archiving and thumbnailing process for the
 given parameters. If the archive/thumbnail processes complete successfully,
@@ -6,7 +7,6 @@ processes fail, this program will cleanup any artifacts and not update the
 client group's database.
 """
 
-#!/usr/bin/python2.6
 from __future__ import print_function, with_statement
 from datetime import datetime
 import ffserver
@@ -14,6 +14,8 @@ import settings
 from logger import log
 import db
 import sys
+import os
+import signal
 
 ffserver_video_process = None
 ffserver_thumb_process = None
@@ -22,10 +24,12 @@ def sigterm_handler(signum, stack_frame):
     """
     Cleanup in case of forced shutdown.
     """
-    if ffserver_video_process is not None:
+    if (ffserver_video_process is not None
+        and ffserver_video_process.returncode is None):
         os.kill(ffserver_video_process.pid, signal.SIGTERM)
         ffserver_video_process.wait()
-    if ffserver_thumb_process is not None:
+    if (ffserver_thumb_process is not None
+        and ffserver_thumb_process.returncode is None):
         os.kill(ffserver_thumb_process.pid, signal.SIGTERM)
         ffserver_thumb_process.wait()
     exit(signum)
@@ -53,7 +57,7 @@ def create_archive(feed_url, object_id, object_qos):
                                                  object_qos)
     ffserver_video_process = vidproc
     (ssfname, thumbproc) = ffserver.capture_screenshot(feed_url, vfname)
-    ffserver_thumb_process thumbproc
+    ffserver_thumb_process = thumbproc
 
     vidproc.wait()
     thumbproc.wait()
@@ -80,8 +84,10 @@ if __name__ == '__main__':
     if len(args) != 4:
         log('usage: python archiveproc.py video_url obj_id obj_qos')
         exit(1)
-    signal.signal(sigterm_handler, signal.SIGTERM)
+    signal.signal(signal.SIGTERM, sigterm_handler)
     feed_url = args[1]
     object_id = args[2]
     object_qos = args[3]
     create_archive(feed_url, object_id, object_qos)
+    while True:
+        pass
