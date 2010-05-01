@@ -15,6 +15,21 @@ from logger import log
 import db
 import sys
 
+ffserver_video_process = None
+ffserver_thumb_process = None
+
+def sigterm_handler(signum, stack_frame):
+    """
+    Cleanup in case of forced shutdown.
+    """
+    if ffserver_video_process is not None:
+        os.kill(ffserver_video_process.pid, signal.SIGTERM)
+        ffserver_video_process.wait()
+    if ffserver_thumb_process is not None:
+        os.kill(ffserver_thumb_process.pid, signal.SIGTERM)
+        ffserver_thumb_process.wait()
+    exit(signum)
+
 def update_database(vid_fname, thumb_fname, object_id, object_qos):
     """
     Update the client group's database.
@@ -32,10 +47,13 @@ def create_archive(feed_url, object_id, object_qos):
     Creates and archive video and screen shot for the given VidFeed object and
     waits for the archive to complete before updating the database.
     """
+    global ffserver_video_process, ffserver_thumb_process
     # create the archives
     (vfname, vidproc) = ffserver.capture_archive(feed_url, object_id,
                                                  object_qos)
+    ffserver_video_process = vidproc
     (ssfname, thumbproc) = ffserver.capture_screenshot(feed_url, vfname)
+    ffserver_thumb_process thumbproc
 
     vidproc.wait()
     thumbproc.wait()
@@ -62,6 +80,7 @@ if __name__ == '__main__':
     if len(args) != 4:
         log('usage: python archiveproc.py video_url obj_id obj_qos')
         exit(1)
+    signal.signal(sigterm_handler, signal.SIGTERM)
     feed_url = args[1]
     object_id = args[2]
     object_qos = args[3]
