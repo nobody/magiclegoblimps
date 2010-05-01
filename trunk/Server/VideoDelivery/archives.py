@@ -1,6 +1,7 @@
 #!/usr/bin/python2.6
 from __future__ import print_function, with_statement
 import os
+import signal
 from datetime import datetime
 import ffserver
 import settings
@@ -145,6 +146,17 @@ def create_archive(vfeed, obj_i):
     vfeed.archive_proc = subprocess.Popen(args, stdin=subprocess.PIPE,
                                           stdout=subprocess.PIPE,
                                           stderr=subprocess.PIPE)
+
+def cancel_archive(vfeed):
+    """
+    Terminates an outstanding archives processes. The archive process is
+    expected to clean up after itself.
+    """
+    if vfeed.archive_proc is not None:
+        os.kill(vfeed.archive_proc.pid, signal.SIGTERM)
+        vfeed.archive_proc.wait()
+        log('cancelled archive for {0} with return code {1}'.format(
+                str(vfeed), str(vfeed.archive_proc.returncode)))
 
 if __name__ == '__main__':
     # ar = Archive()
