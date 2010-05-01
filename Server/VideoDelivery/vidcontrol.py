@@ -185,8 +185,7 @@ class VidControl():
         log('Killing feed in_url:{0}, out_url:{1}'.format(
                 vfeed.feed_url, vfeed.stream_url, vfeed.config_file))
         ffserver.kill(vfeed)
-        if vfeed.archive_proc is not None:
-            vfeed.archive_proc.wait()
+        archives.cancel_archive(vfeed)
         os.remove(vfeed.config_file)
         self.feeds.remove(vfeed)
 
