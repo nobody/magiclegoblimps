@@ -48,6 +48,9 @@ class VidControl():
         log('Attempting to connect to database: ' + settings.MySQL_DATABASE)
         self.conn = db.connect()
         log('Connected to database: ' + settings.MySQL_DATABASE)
+        ar = Archive()
+        ar.updateInital(self.conn)
+        log('Setup Archive with videos from ' + settings.ARCHIVE_DIR)
 
     def connect_QoS(self, addr=settings.QOS_SERVER_URL,
                     port=settings.QOS_SERVER_PORT):
