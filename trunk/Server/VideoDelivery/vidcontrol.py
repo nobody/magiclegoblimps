@@ -48,7 +48,7 @@ class VidControl():
         log('Attempting to connect to database: ' + settings.MySQL_DATABASE)
         self.conn = db.connect()
         log('Connected to database: ' + settings.MySQL_DATABASE)
-        ar = Archive()
+        ar = archives.Archive()
         ar.updateInital(self.conn)
         log('Setup Archive with videos from ' + settings.ARCHIVE_DIR)
 
@@ -293,5 +293,6 @@ if __name__ == '__main__':
         if settings.DEBUG:
             raise ex
     finally:
-        vc.killserver()
+        if active_video_controller is not None:
+            active_video_controller.killserver()
     log('Video Delivery server shutdown normally')
