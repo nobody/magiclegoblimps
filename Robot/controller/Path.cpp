@@ -41,6 +41,17 @@ Path* Path::copy()
 	return cpy;
 }
 
+bool Path::contains(GridLoc& gl)
+{
+	vector<GridLoc*>::iterator glIt;
+	for(glIt = path.begin(); glIt != path.end(); glIt++)
+	{
+		if(gl == *(*glIt))
+			return true;
+	}
+	return false;
+}
+
 void Path::calcMetric(GridLoc curr, GridLoc dest)
 {
 	int rLocX = curr.getX();

@@ -599,33 +599,33 @@ void Controller::RobotThread(void* params)
 					cout << " Heading: " << robot->getHeading();
 					cout << " Batt: " << robot->getBatt();
 					cout << " Pan: " << robot->getCamDir() << endl;
-				}
 
-				robot->setRobotMoving(false);
+					robot->setRobotMoving(false);
 
-				if(!(robot->getStatus() & (INTERSECTION | IDLE)))
-				{}
-				else if(robot->GetCamera()->GetTargetVisible())
-					robot->GetNXT()->SendMessage(newCmd(robot));
-				else if(*(robot->getLocation()) == *(robot->getDestination())
-					|| !robot->getHasDest())
-				{
-					if (robot->GetCamera()->GetTargetID() != -1)
+					if(!(robot->getStatus() & (INTERSECTION | IDLE)))
+					{}
+					else if(robot->GetCamera()->GetTargetVisible())
 						robot->GetNXT()->SendMessage(newCmd(robot));
-				}
-				else if(!robot->getHasPath())
-				{
-					robot->setPath(genPath(*robot));
-					robot->GetNXT()->SendMessage(newCmd(robot));
-				}
-				else if(robot->getLocation()->calcDist(*robot->getPath()->getStart()) != 1)
-				{
-					robot->setPath(genPath(*robot));
-					robot->GetNXT()->SendMessage(newCmd(robot));
-				}
-				else
-				{
-					robot->GetNXT()->SendMessage(newCmd(robot));
+					else if(*(robot->getLocation()) == *(robot->getDestination())
+						|| !robot->getHasDest())
+					{
+						if (robot->GetCamera()->GetTargetID() != -1)
+							robot->GetNXT()->SendMessage(newCmd(robot));
+					}
+					else if(!robot->getHasPath())
+					{
+						robot->setPath(genPath(*robot));
+						robot->GetNXT()->SendMessage(newCmd(robot));
+					}
+					else if(robot->getLocation()->calcDist(*robot->getPath()->getStart()) != 1)
+					{
+						robot->setPath(genPath(*robot));
+						robot->GetNXT()->SendMessage(newCmd(robot));
+					}
+					else
+					{
+						robot->GetNXT()->SendMessage(newCmd(robot));
+					}
 				}
 			}
 			catch (Nxt_exception& e)
@@ -802,15 +802,16 @@ void Controller::SearchObject(Robot* robot)
 	}
 	else
 	{
-		robot->setDestination(robot->getSearchLoc());
-		robot->setPath(genPath(*robot));
+		/*robot->setDestination(robot->getSearchLoc());
+		robot->setPath(genPath(*robot));*/
+		SprialSearch(robot, robot->getSearchLoc());
 	}
 }
 
 void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 {
-	//robot->setDestination(loc);
-	//robot->setPath(genPath(*robot));
+	robot->setDestination(loc);
+	robot->setPath(genPath(*robot));
 
 	int x = loc->getX();
 	int y = loc->getY();
@@ -832,31 +833,51 @@ void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 
 	int countSpirals = 1;
 
-	while(countSpirals < xMax/2 && countSpirals < yMax/2)
+	while(countSpirals <= (xMax + yMax)/2)
 	{
 		for (int countTurns = 0; countTurns < 2; countTurns++) 
 		{
 			if (dir == 1) 
 			{
-				for(int i = x; i < x + xdir*countSpirals; i++)
-					robot->getPath()->extend(new GridLoc(i, y));
-				x += xdir*countSpirals;
+				for(int i = x; i != x + countSpirals*xdir; i += xdir)
+				{
+					GridLoc* gl = new GridLoc(i, y);
+					if(*robot->getPath()->getEnd() != *gl)
+						robot->getPath()->extend(gl);
+				}
+				if(x+xdir*countSpirals >= xMax)
+					x = xMax-1;
+				else if(x+xdir*countSpirals < 0)
+					x = 0;
+				else
+					x += xdir*countSpirals;
+				//countSpirals++;
 				xdir *= -1;
 				//loc->setX(x);
 				//Path* p = robot->getPath();
 				//p->extend(loc);
 			}
 			else {
-				for(int i = y; i < y + ydir*countSpirals; i++)
-					robot->getPath()->extend(new GridLoc(x, i));
-				y += ydir*countSpirals;
+				for(int i = y; i != y + ydir*countSpirals; i += ydir)
+				{
+					GridLoc* gl = new GridLoc(x, i);
+					if(*robot->getPath()->getEnd() != *gl)
+						robot->getPath()->extend(gl);
+				}
+				if(y + ydir*countSpirals >= yMax)
+					y = yMax-1;
+				else if(y+ydir*countSpirals < 0)
+					y = 0;
+				else
+					y += ydir*countSpirals;
+				//countSpirals++;
 				ydir *= -1;
 				//loc->setY(y);
 				//Path* p = robot->getPath();
 				//p->extend(loc);
 			}			
 			dir *= -1; //change heading
-		}		
+		}	
 		countSpirals++;
 	}
 }

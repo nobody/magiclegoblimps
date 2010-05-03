@@ -23,6 +23,7 @@ public:
 	int getSize(void);
 	double getMetric(void) const;
 	Path* copy(void);
+	bool contains(GridLoc& gl);
 
 	void calcMetric(GridLoc curr, GridLoc dest);
 
