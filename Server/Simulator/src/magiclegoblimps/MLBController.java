@@ -39,14 +39,14 @@ class MLBController{
         squirrel = addObject("Squirrel",new Color(255,100,200));
 
         //Assign cameras to objects
-        startTracking(r1, monkey);
-        startTracking(r2, giraffe);
-        startTracking(r3, penguin);
+        //startTracking(r1, monkey);
+       // startTracking(r2, giraffe);
+        //startTracking(r3, penguin);
 
-        demand.put(monkey,.2);
-        demand.put(giraffe,.3);
-        demand.put(penguin,.4);
-        demand.put(squirrel,.1);
+        //demand.put(monkey,.2);
+       // demand.put(giraffe,.3);
+       // demand.put(penguin,.4);
+        //demand.put(squirrel,.1);
     }
     
     public void runSimulation() {
@@ -64,6 +64,8 @@ class MLBController{
         r.swivelLeft();
     }
     
+    
+    public int tickCount = 0;
     public void tick() {
         //Move everything
         for(MovableEntity o : items) {
@@ -84,6 +86,7 @@ class MLBController{
         //For each robot, tell the robot to track its assigned object
         //If a robot can see where an object is supposed to be but it is not there,
         //update the lastSeen map with null.
+
         for(Robot r : assignments.keySet()){
             r.goTo(lastSeen.get(assignments.get(r)));
             r.centerOnObject(lastSeen.get(assignments.get(r)),assignments.get(r));
@@ -94,8 +97,21 @@ class MLBController{
                 }
             }
         }
-        optimizeQoS();
+        tickCount++;
+        
+        if(tickCount%100==0){
+            tickCount=0;
+            optimizeQoS();
+        }
 
+        for(ObjectOfInterest ooi : objects){
+            if(viewedFrom.containsKey(ooi)){
+                QoS.put(ooi,getQoS(ooi,viewedFrom.get(ooi)));
+            }else{
+                viewedFrom.put(ooi,null);
+                QoS.put(ooi,0.0);
+            }
+        }
         //System.out.println(getSystemQoS());
 
         f.graphPanel.update();
@@ -185,6 +201,44 @@ class MLBController{
         return ret;
     }
     private void optimizeQoS() {
+        
+        for(ObjectOfInterest ooi : objects){
+            if(!demand.containsKey(ooi)){
+                demand.put(ooi,0.0);
+            }
+        }
+        //Find max demand
+        assignments.clear();
+        while(true){
+            double maxDemand = 0;
+            ObjectOfInterest o = null;
+            for(ObjectOfInterest ooi : demand.keySet()){
+                if(!assignments.containsValue(ooi)&&(maxDemand==0||demand.get(ooi)>=maxDemand)){
+                    maxDemand = demand.get(ooi);
+                    o = ooi;
+                }
+            }
+            if(o==null)
+                break;
+            System.out.print(o.name);
+            double maxQoS = 0;
+            Robot r = null;
+            for(Robot rr : robots){
+                if(!assignments.containsKey(rr)&&(maxDemand==0||getAssQoS(o,rr)>=maxQoS)){
+                    maxQoS = getAssQoS(o,rr);
+                    r = rr;
+                }
+            }
+            if(r==null)
+                break;
+            System.out.print(r.name);
+            assignments.put(r,o);
+            viewedFrom.put(o,r);
+        }
+        System.out.println();
+
+
+        /*
         for(ObjectOfInterest ooi : objects){
             Robot maxQoS = null;
             double d = 0;
@@ -215,7 +269,8 @@ class MLBController{
                     }
                 }
             }
-        }
+         
+        }*/
     }
     public double getQoS(ObjectOfInterest ooi, Robot r){
         if(ooi==null || r==null){
@@ -238,6 +293,25 @@ class MLBController{
             distMetric =  ooi.OPTIMAL_VIEWING_DISTANCE/(lastSeen.get(ooi).distance(r.pos));
         }
         return distMetric * visibleMetric;
+        //return Math.exp(-Math.abs(lastSeen.get(ooi).distance(r.pos))/100)*(r.canSee(ooi.pos)?1:0);
+    }
+    public double getAssQoS(ObjectOfInterest ooi, Robot r){
+        if(ooi==null || r==null){
+            return 0;
+        }
+        double distMetric = 0;
+      
+        if(!lastSeen.containsKey(ooi)||lastSeen.get(ooi)==null){
+            return 0;
+        }
+       
+
+        if(lastSeen.get(ooi).distance(r.pos)<ooi.OPTIMAL_VIEWING_DISTANCE){
+            distMetric =  lastSeen.get(ooi).distance(r.pos)/(ooi.OPTIMAL_VIEWING_DISTANCE);
+        }else{
+            distMetric =  ooi.OPTIMAL_VIEWING_DISTANCE/(lastSeen.get(ooi).distance(r.pos));
+        }
+        return distMetric ;
         //return Math.exp(-Math.abs(lastSeen.get(ooi).distance(r.pos))/100)*(r.canSee(ooi.pos)?1:0);
     }
 }
