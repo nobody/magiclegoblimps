@@ -26,6 +26,7 @@ class MLBFrame extends JFrame{
     public RobotPanel robotPanel;
     public ObjectPanel objectPanel;
     public GraphPanel graphPanel;
+    public DemandPanel demandPanel;
 
     public MLBFrame(MLBController controller) {
         mc = controller;
@@ -73,12 +74,13 @@ class MLBFrame extends JFrame{
         */
         robotPanel = new RobotPanel(mc);
         objectPanel = new ObjectPanel(mc);
-
+        demandPanel = new DemandPanel(mc);
 
         JPanel controls = new JPanel();
         controls.setLayout(new BoxLayout(controls, BoxLayout.X_AXIS));
         controls.add(robotPanel);
         controls.add(objectPanel);
+        controls.add(demandPanel);
         add(controls, BorderLayout.EAST);
         pack();
         setVisible(true);
@@ -87,5 +89,6 @@ class MLBFrame extends JFrame{
     public void update() {
         robotPanel.update();
         objectPanel.update();
+        demandPanel.update();
     }
 }
