@@ -103,14 +103,10 @@ class Archive():
         try:
             db.deleteTable(conn,'archives')
             for x in range(len(self.filenames)):
-                if self.checkDatabase(conn,self.filenames[x]):
-                    pass
-                    # Archive is currently there no need to add
-                else:
-                    # Archive is not there need to update database
-                    db.addArchiveFootage(conn,settings.ARCHIVE_FEED_URLS+self.filenames[x],
-                                        self.objects[x],self.qos[x],
-                                        settings.ARCHIVE_FEED_URLS+'images/'+self.thumb[x]+'.jpg')
+                # Archive is not there need to update database
+                db.addArchiveFootage(conn,settings.ARCHIVE_FEED_URLS+self.filenames[x],
+                                    self.objects[x],self.qos[x],
+                                    settings.ARCHIVE_FEED_URLS+self.thumb[x]+'.jpg')
             log('Updated the Client database with Archived Videos')
         except MySQLdb.Error as e:
             log("Error %d: %s" % (e.args[0], e.args[1]))
