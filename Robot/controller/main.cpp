@@ -62,14 +62,11 @@ void LocalInput()
 	else if (tokens[0].compare("testrobot") == 0)
 	{
 		//lazy connection for repeat testing
-		Robot* robot = new Robot(9, "10.176.14.89:7001", true);
-		//Robot* robot = new Robot(6, "192.168.1.101:7001", true);
+		Robot* robot = new Robot(9, "192.168.1.101:7001", true);
 		controller->AddRobot(robot);
 
-		/*
-		robot = new Robot(6, "10.176.14.89:7003", true);
+		robot = new Robot(6, "192.168.1.103:7003", true);
 		controller->AddRobot(robot);
-		*/
 	}
 
 	//addrobot port/id ip true/false
@@ -198,7 +195,17 @@ void LocalInput()
 
 int main(int argc, char* argv[])
 {
-	controller = new Controller(3, 3, "10.176.14.89");
+	/*
+	if (argc != 3)
+	{
+		cout << "Incorrect number of arguments" << endl;
+		cout << "Usage: controller.exe <gridx> <gridy> <routerip>" << endl;
+	}
+
+	controller = new Controller(atoi(argv[0]), atoi(argv[1]), argv[2]);
+	*/
+
+	controller = new Controller(5, 4, "10.110.95.228");
 
 	cout << "ROBOT CONTROLLER" << endl;
 	cout << "----------------" << endl;

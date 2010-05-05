@@ -84,10 +84,16 @@ void Robot::Connect()
 void Robot::Disconnect()
 {
 	if (nxtConnected_)
+	{
 		nxt_->Disconnect();
+		nxtConnected_ = false;
+	}
 
 	if (camConnected_)
+	{
 		camera_->Disconnect();
+		camConnected_ = false;
+	}
 
 	robotOnline_ = false;
 
@@ -168,6 +174,9 @@ void Robot::ExecuteCommand(string command)
 	tokenize(command, tokens, " ");
 
 	if (tokens.size() == 0)
+		return;
+
+	if (!nxtConnected_)
 		return;
 	
 	//catch NXT dead exception
@@ -293,6 +302,7 @@ void Robot::centerCameraOnTarget()
 	*/
 }
 
+/*
 string Robot::newCmd()
 {
 	string cmd;
@@ -432,6 +442,7 @@ string Robot::newCmd()
 
 	return cmd;
 }
+*/
 
 void Robot::setDestination(GridLoc* newD)
 {

@@ -105,6 +105,8 @@ void Camera::SetRouterIP(string ip)
 
 string Camera::GetExtURL()
 {
+	user_ = "admin";
+
 	string url = "http://" + user_ + ":" + pass_ + "@" + routerIP_ + ":" + 
 		port_;
 
@@ -265,6 +267,8 @@ void Camera::Update()
 		return;
 	}
 
+	try
+	{
 	int binWidth;
 
 	IplImage* frame = cvQueryFrame(capture_);
@@ -380,12 +384,12 @@ void Camera::Update()
 			{
 				if ((*it)->GetID() == target_)
 				{
-					cvEllipseBox(image_, (*it)->GetTrackingBox(), 
+					cvEllipseBox(image_, trackBox, 
 						CV_RGB(0, 255, 0), 3, CV_AA, 0);
 				}
 				else
 				{
-					cvEllipseBox(image_, (*it)->GetTrackingBox(), 
+					cvEllipseBox(image_, trackBox, 
 						CV_RGB(0, 0, 255), 3, CV_AA, 0);
 				}
 			}
@@ -437,6 +441,10 @@ void Camera::Update()
 			Lock();
 
 		targetVisible_ = isTargetVisible();
+	}
+	}
+	catch (...)
+	{
 	}
 }
 
@@ -553,22 +561,25 @@ bool Camera::isTargetVisible()
 
 TrackingObject* Camera::GetTrackingObject(int id)
 {	
-	trackableObjects_.readLock();
 	vector<TrackingObject*>::iterator it;
+	trackableObjects_.readLock();
 	for (it = trackableObjects_.begin(); it != trackableObjects_.end(); it++)
 	{
 		if ((*it)->GetID() == id)
+		{	
+			trackableObjects_.readUnlock();
 			return (*it);
+		}
 	}
+	trackableObjects_.readUnlock();
 
 	return NULL;
-	trackableObjects_.readUnlock();
 }
 
 void Camera::RemoveTrackingObject(int id)
 {
-	trackableObjects_.lock();
 	vector<TrackingObject*>::iterator it;
+	trackableObjects_.lock();
 	for (it = trackableObjects_.begin(); it != trackableObjects_.end(); it++)
 	{
 		if ((*it)->GetID() == id)

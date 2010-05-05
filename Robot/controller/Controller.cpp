@@ -169,6 +169,12 @@ void Controller::Disconnect()
 		for (it = robots_.begin(); it != robots_.end(); it++)
 		{
 			(*it)->StopRunning();
+
+			while ((*it)->GetCamConnected() && (*it)->GetNXTConnected())
+			{
+				//wait for disconnection
+			}
+			
 			delete (*it);
 		}
 
@@ -225,6 +231,13 @@ void Controller::ClientThread(void* params)
 
 					newObj->SetID(obj[i].OID);
 
+					CvRect rect;
+					rect.x = 0;
+					rect.y = 0;
+					rect.height = 1;
+					rect.width = 1;
+					newObj->SetTrackingWindow(rect);
+
 					Vector_ts<TrackingObject*>* objects = 
 						Camera::GetTrackableObjects();
 
@@ -251,9 +264,7 @@ void Controller::ClientThread(void* params)
 
 					Robot* robot = GetRobot(assign[i].RID);
 
-					WaitForSingleObject(robot->GetSemaphore(), INFINITE);
 					robot->ExecuteCommand(cmd);
-					ReleaseSemaphore(robot->GetSemaphore(), 1, NULL);
 				}
 
 				delete[] assign;
@@ -355,6 +366,12 @@ void Controller::RemoveRobot(int id)
 		if ((*it)->GetID() == id)
 		{
 			(*it)->StopRunning();
+
+			while ((*it)->GetCamConnected() && (*it)->GetNXTConnected())
+			{
+				//wait for disconnection
+			}
+
 			delete (*it);
 			robots_.erase(it);
 			break;
@@ -791,6 +808,11 @@ vector<GridLoc*> Controller::getIllMoves()
 
 void Controller::SearchObject(Robot* robot)
 {
+	cout << "Searching..." << endl;
+	cout << robot->getLocation()->getX() << " " <<
+		robot->getLocation()->getY() << endl;
+	cout << robot->getSearchLoc()->getX() << " " <<
+		robot->getSearchLoc()->getY() << endl;
 	if(robot->getSearchLoc()->getY() == -1)
 	{
 		SpiralSearch(robot, new GridLoc(yMax / 2, xMax / 2));
@@ -804,14 +826,26 @@ void Controller::SearchObject(Robot* robot)
 	{
 		/*robot->setDestination(robot->getSearchLoc());
 		robot->setPath(genPath(*robot));*/
-		SprialSearch(robot, robot->getSearchLoc());
+		SpiralSearch(robot, robot->getSearchLoc());
 	}
+
+	string cmd = "";
+	stringstream oss;
+	oss << "coord " << robot->getLocation()->getX() << " " << 
+		robot->getLocation()->getY() << " " << robot->getHeading();
+	cmd = oss.str();
+	robot->GetNXT()->SendMessage(cmd);
 }
 
 void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 {
-	robot->setDestination(loc);
-	robot->setPath(genPath(*robot));
+	//if (robot->getLocation() != loc)
+	//{
+		robot->setDestination(loc);
+		robot->setPath(genPath(*robot));
+	//}
+	//else
+	//	robot->setPath(new Path());
 
 	int x = loc->getX();
 	int y = loc->getY();
@@ -832,6 +866,7 @@ void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 	int dir = 1; //1 is x, -1 is y
 
 	int countSpirals = 1;
+	Path* pth = robot->getPath();
 
 	while(countSpirals <= (xMax + yMax)/2)
 	{
@@ -880,6 +915,8 @@ void Controller::SpiralSearch(Robot* robot, GridLoc* loc)
 		}	
 		countSpirals++;
 	}
+	robot->setPath(pth);
+	robot->getPath()->print();
 }
 
 string Controller::newCmd(Robot* rob)
@@ -887,6 +924,7 @@ string Controller::newCmd(Robot* rob)
 	string cmd;
 	if(rob->GetCamera()->GetTargetVisible())
 	{
+		/*
 		rob->setHasDest(false);
 		if(rob->getCamDir() <= 45 || rob->getCamDir() > 315)
 		{
@@ -898,20 +936,22 @@ string Controller::newCmd(Robot* rob)
 		{
 			cmd = "left";
 			cout << "left-turn-tracking" << endl;
-			rob->ExecuteCommand("pan 90");
+			rob->GetNXT()->SendMessage("pan 90");
 		}
 		else if(rob->getCamDir() <= 225 && rob->getCamDir() > 135)
 		{
 			cmd = "turnaround";
 			cout << "turnaround-tracking" << endl;
-			rob->ExecuteCommand("pan 180");
+			rob->GetNXT()->SendMessage("pan 180");
 		}
 		else if(rob->getCamDir() <= 315 && rob->getCamDir() > 225)
 		{
 			cmd = "right";
 			cout << "right-turn-tracking" << endl;
-			rob->ExecuteCommand("pan -90");
+			rob->GetNXT()->SendMessage("pan -90");
 		}
+		*/
+		return cmd;
 	}
 	else if(!rob->getHasPath())
 	{
