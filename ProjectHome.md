@@ -1,0 +1,5 @@
+The purpose of this system is to provide remote monitoring capabilities to a large number of users through a web based interface.  Cameras and objects of interest can be added to the system by an administrator with little difficulty.  Users will have choices presented about which objects they wish to view and will influence the system's decisions by visiting pages dedicated to these objects.  Artificial Intelligence and Quality of Service models will be used by the server back-end to ensure the system is always providing the highest possible level of service to the users.
+
+All aspects of the system will be extensible and fault tolerant.  An in-depth user's manual will be provided with the finished product that details all implemented features.  This proposal should be used as a guide to illustrate current ideas and progress concerning the project.  Ideas and their implementations are subject to change as the project progresses.
+
+For a more detailed description, see [this page](http://www.utd.edu/~kjh061000/Remote%20Monitoring%20System.htm)
